@@ -92,16 +92,42 @@ export class Portal {
     this.loaded = true;
     this.entries = this.urls.map(u => loadTexture(u));
   }
+  /* The element, its decoder and its GPU texture are created the first time a video is wanted.
+     Doing that mid-scroll cost a 50 to 90 ms frame, so prewarmVideo() does it behind the loading veil: the
+     clip plays for one decoded frame, is uploaded once, then rests paused until it is needed. */
+  _makeVideo(){
+    if (this.video || !this.videoUrl) return;
+    const v = document.createElement('video');
+    v.muted = true; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
+    v.crossOrigin = 'anonymous'; v.src = this.videoUrl;
+    this.video = v;
+    this.videoTex = new THREE.VideoTexture(v); this.videoTex.colorSpace = THREE.SRGBColorSpace;
+    v.addEventListener('loadedmetadata', () => { this.material.uniforms.uAspV.value = v.videoWidth / v.videoHeight; });
+  }
+  prewarmVideo(){
+    if (!this.videoUrl || this.video) return Promise.resolve();
+    this._makeVideo();
+    const v = this.video;
+    return new Promise(done => {
+      const give = setTimeout(done, 2500);              // a slow connection never holds the veil
+      const finish = () => { clearTimeout(give); done(); };
+      const warm = () => {
+        if (this.playing) return finish();               // the camera got here first: nothing to warm
+        v.play().then(() => {
+          const settle = () => {
+            if (!this.playing) { v.pause(); v.currentTime = 0; }
+            if (gpu && v.readyState >= 2) gpu.initTexture(this.videoTex);
+            finish();
+          };
+          if (v.requestVideoFrameCallback) v.requestVideoFrameCallback(settle); else setTimeout(settle, 200);
+        }).catch(finish);
+      };
+      if (v.readyState >= 2) warm(); else v.addEventListener('loadeddata', warm, {once:true});
+    });
+  }
   setVideoPlaying(on){
     if (!this.videoUrl) return;
-    if (on && !this.video) {
-      const v = document.createElement('video');
-      v.muted = true; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
-      v.crossOrigin = 'anonymous'; v.src = this.videoUrl;
-      this.video = v;
-      this.videoTex = new THREE.VideoTexture(v); this.videoTex.colorSpace = THREE.SRGBColorSpace;
-      v.addEventListener('loadedmetadata', () => { this.material.uniforms.uAspV.value = v.videoWidth / v.videoHeight; });
-    }
+    if (on && !this.video) this._makeVideo();
     if (on && !this.playing && this.video) { this.video.play().catch(() => {}); this.playing = true; this.material.uniforms.uV.value = this.videoTex; }
     if (!on && this.playing) { this.video.pause(); this.playing = false; }
   }

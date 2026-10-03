@@ -57,6 +57,15 @@ const slot = (id, extra = {}) => ({
   pins: id === 'decks' ? 'decks' : 'none'
 });
 
+/* Transit between two worlds: the camera backs off to where both vitrines fit in frame and looks at the
+   gap between them. Cutting straight from one close-up to the next crossed bare wall (the gap between
+   vitrines is wider than the frame at close-up distance) with the pair of vitrines cropped at both edges. */
+const link = (a, b, extra = {}) => ({
+  id: 'link:' + a + '-' + b, look: 'world', hold: 0, fov: extra.fov ?? 36,
+  pos: {at:'between', a, b, d: extra.d ?? 62, up: extra.up ?? 9},
+  target: {at:'between', a, b, role:'look', up: extra.lookUp ?? -0.2}
+});
+
 /* hold = dwell weight (the camera is still, the viewer reads).
    Keyframes with hold 0 are in-camera waypoints between stops. */
 export const JOURNEY = [
@@ -77,11 +86,17 @@ export const JOURNEY = [
   {id:'hall',    copy:'hall', look:'hall', hold:3.4, label:'The hall of worlds', pins:'hall',
    pos:{at:'hall', p:[-30, 25, 108]}, target:{at:'hall', p:[14, 15, 6]}, pscale:1.3},
   slot('cyber'),
+  link('cyber', 'launchboard'),
   slot('launchboard'),
+  link('launchboard', 'mgmtio'),
   slot('mgmtio'),
+  link('mgmtio', 'round'),
   slot('round'),
+  link('round', 'fieldfold'),
   slot('fieldfold'),
+  link('fieldfold', 'workbench'),
   slot('workbench'),
+  link('workbench', 'jev'),
   slot('jev'),
   slot('decks', {d:112, up:5.0, shift:14.0, lookUp:-2.5, hold:3.6}),
   slot('deadend'),

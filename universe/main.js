@@ -326,6 +326,16 @@ function activeStop(sc){
   for (let i = 0; i < stops.length; i++) { const s = stops[i]; if (s.hold > 0 && sc >= s.s0 - m && sc <= s.s1 + m) return i; }
   return -1;
 }
+/* Resting on a world: its own shafts are hidden. Travelling: the shafts of the world just left and
+   of the one being approached, so no drive line crosses the transit shot. */
+function focusShafts(sample){
+  const fr = journey.frames;
+  if (sample.dwelling) { hall.focusWorld(fr[sample.i].world || null); return; }
+  let a = null, b = null;
+  for (let k = sample.i; k >= 0 && !a; k--) a = fr[k].world || null;
+  for (let k = sample.i + 1; k < fr.length && !b; k++) b = fr[k].world || null;
+  hall.focusWorld(a, b);
+}
 let firstFrames = 0;
 let cpuEma = 0;
 function frame(time, deltaMs){
@@ -350,8 +360,8 @@ function frame(time, deltaMs){
   place(sample, sc);
   applyLook(sample, sc);
   paintBackdrop(sample.i === 0 ? 1 - smooth((sample.f - 0.15)/0.7) : 0);
-  hall.focusWorld(journey.frames[sample.near].world || null);
-  hall.update({spin, time:clock, dt, rackOn:sc > 0.02 && sc < 0.33 && frameN % 2 === 0, reflect:sc > 0.045 && !(sample.dwelling && stops[sample.i].world) && camera.position.distanceTo(sample.look) < 150});
+  focusShafts(sample);
+  hall.update({spin, time:clock, dt, camPos:camera.position, rackOn:sc > 0.02 && sc < 0.33 && frameN % 2 === 0, reflect:sc > 0.045 && !(sample.dwelling && stops[sample.i].world) && camera.position.distanceTo(sample.look) < 150});
   if (frameN % 20 === 0) chooseVideos(hall.portals, camera.position, 2, 230);
   // shadows: every frame inside the machine, every third once it is small
   if (key.intensity > 0.02 && sc < 0.3 && frameN % (sc < 0.05 ? shadowEvery/2 : shadowEvery) === 0) renderer.shadowMap.needsUpdate = true;
@@ -434,6 +444,7 @@ async function warmHall(){
   const t0 = performance.now(), nap = () => new Promise(r => setTimeout(r, 0));
   while (hall.pending() && performance.now() - t0 < 14000) { warmDraw(hall.revealNext()); await nap(); }
   if (hall.plainFloor) { hall.plainFloor.visible = true; warmDraw(hall.plainFloor); hall.plainFloor.visible = false; }
+  await Promise.race([hall.prewarmVideos(), new Promise(r => setTimeout(r, 7000))]);
   hall.startLoading();      // images are fetched after the blocking draws, so their staggered timers do not fire in one burst
 }
 const bootTimes = {};

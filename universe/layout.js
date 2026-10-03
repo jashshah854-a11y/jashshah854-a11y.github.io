@@ -61,6 +61,15 @@ export function resolve(spec){
     case 'hall': return hallToWorld(...spec.p);
     case 'line': return LINE_P0.clone().addScaledVector(LINE_DIR, spec.along)
         .addScaledVector(new THREE.Vector3(LINE_DIR.z, 0, -LINE_DIR.x), spec.side || 0).add(new THREE.Vector3(0, spec.up || 0, 0));
+    case 'between': {
+      // a point between two neighbouring slots, for the camera's transit beat: pulled back from the
+      // pair by d (position) or on the pair's portals themselves (look), so both vitrines stay in frame
+      const A = SLOT[spec.a], B = SLOT[spec.b], t = spec.t ?? 0.5, up = spec.up ?? 0;
+      const mid = A.portal.clone().lerp(B.portal, t).add(new THREE.Vector3(0, up, 0));
+      if (spec.role === 'look') return mid;
+      const inward = A.inward.clone().lerp(B.inward, t).normalize();
+      return mid.addScaledVector(inward, spec.d ?? 56);
+    }
     case 'slot': {
       const s = SLOT[spec.id], d = spec.d ?? 24, up = spec.up ?? 0, shift = spec.shift ?? 0;
       if (spec.role === 'look') {

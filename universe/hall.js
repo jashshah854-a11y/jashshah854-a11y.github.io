@@ -7,7 +7,7 @@ import { Portal } from './portal.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { makeMaterials, glowTexture, washTexture, beamTexture, gearGeometry, makeShaft, makeVitrine, roundedBox } from './parts.js';
-import { buildRack, makeCityMaterial } from './rack.js';
+import { buildRack } from './rack.js';
 
 const PORTALS = {
   cyber:       {zoom:1.34, pan0:[-0.55,-0.6], images:['media/diorama-district.jpg', 'media/diorama-cinema.jpg', 'media/diorama-junction.jpg'], cycle:9, tint:'#d9953f', gain:1.05},
@@ -153,13 +153,33 @@ export function buildHall({scene, lite, perpetua}){
     dm.compose(fp, q, new THREE.Vector3(c.dim ? 20 : 38, 1, c.dim ? 12 : 22)); fwashes.setMatrixAt(i, dm);
   });
   root.add(pierMesh, washes, fwashes);
-  // the long back wall: a paper-warm plane that falls to shadow
+  // the long back wall: a paper-warm plane that falls to shadow. Its far end used to stop dead at
+  // WALL_END, a hard vertical edge that swept across the frame as the camera ran along the city
+  // (bright wall one side, black the other, and the same cut in the mirror). Both layers now
+  // darken with distance along the line, so the wall reaches the end already fully in shadow.
   const wallLen = WALL_END + 60;
-  const wallBody = new THREE.Mesh(new THREE.PlaneGeometry(wallLen, 90), new THREE.MeshStandardMaterial({color:'#6f6552', roughness:0.95, metalness:0, emissive:'#3a2f1c', emissiveIntensity:0.5}));
+  const WALL_FADE0 = 30;
+  const wallFade = (shader, wash) => {
+    const d = L.LINE_DIR, p = L.LINE_P0, NL = '\n';
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>' + NL + 'varying vec3 vWallP;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>' + NL + 'vWallP = (modelMatrix*vec4(transformed, 1.0)).xyz;');
+    const fade = `float wallK = 1.0 - smoothstep(${WALL_FADE0.toFixed(1)}, ${WALL_END.toFixed(1)}, dot(vWallP - vec3(${p.x.toFixed(4)}, ${p.y.toFixed(4)}, ${p.z.toFixed(4)}), vec3(${d.x.toFixed(5)}, ${d.y.toFixed(5)}, ${d.z.toFixed(5)})));`;
+    shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>' + NL + 'varying vec3 vWallP;');
+    shader.fragmentShader = wash
+      ? shader.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>' + NL + fade + NL + 'diffuseColor.a *= wallK;')
+      : shader.fragmentShader.replace('#include <opaque_fragment>', fade + NL + 'outgoingLight *= wallK;' + NL + '#include <opaque_fragment>');
+  };
+  const wallMat = new THREE.MeshStandardMaterial({color:'#6f6552', roughness:0.95, metalness:0, emissive:'#3a2f1c', emissiveIntensity:0.5});
+  wallMat.onBeforeCompile = sh => wallFade(sh, false); wallMat.customProgramCacheKey = () => 'wallfade';
+  const wallBody = new THREE.Mesh(new THREE.PlaneGeometry(wallLen, 90), wallMat);
   wallBody.position.copy(L.LINE_P0).addScaledVector(L.LINE_DIR, WALL_END/2 - 30).addScaledVector(side, 60.5); wallBody.position.y = 45;
   wallBody.rotation.y = Math.atan2(-side.x, -side.z); root.add(wallBody);
   const wallWashGeo = new THREE.PlaneGeometry(wallLen, 50); wallWashGeo.translate(0, 25, 0);
-  const wallWash = new THREE.Mesh(wallWashGeo, new THREE.MeshBasicMaterial({map:wash, color:'#fff0d2', transparent:true, opacity:0.55, blending:THREE.AdditiveBlending, depthWrite:false}));
+  const wallWashMat = new THREE.MeshBasicMaterial({map:wash, color:'#fff0d2', transparent:true, opacity:0.55, blending:THREE.AdditiveBlending, depthWrite:false});
+  wallWashMat.onBeforeCompile = sh => wallFade(sh, true); wallWashMat.customProgramCacheKey = () => 'wallwashfade';
+  const wallWash = new THREE.Mesh(wallWashGeo, wallWashMat);
+  wallWash.userData.keep = true;       // own material: stays out of the shared glow batch
   wallWash.position.copy(wallBody.position).addScaledVector(side, -0.2); wallWash.position.y = 0;
   wallWash.rotation.y = wallBody.rotation.y; root.add(wallWash);
 
@@ -198,7 +218,6 @@ export function buildHall({scene, lite, perpetua}){
 
   const shaftRatios = [1, -1.5, 2, -1, 1.5, -2, 1, -1.5, 1, -2];
   const axles = [];     // {L:Vector3, R:Vector3} world, per standard station in order
-  const miniSites = []; // vitrine groups that get a miniature city in front of the portal
   function standardStation(slot, i){
     const g = new THREE.Group(); g.position.copy(slot.pos); g.rotation.y = slot.yaw; root.add(g);
     // deck
@@ -229,7 +248,6 @@ export function buildHall({scene, lite, perpetua}){
       rf.position.set(0, 0.07, pz + 2.1); g.add(rf);
       portal.worldPos = slot.portal.clone(); portal.slot = slot.id; portals.push(portal);
     }
-    miniSites.push({g, i});
     // gear trains on the deck face
     const zf = L.DECK.d/2 + 0.45;
     const rL = i === 0 ? 1 : shaftRatios[i-1], rR = shaftRatios[i];
@@ -376,37 +394,6 @@ export function buildHall({scene, lite, perpetua}){
   });
   addProjector();
 
-  /* A few brass blocks with lit windows in front of every portal: the world behind the glass
-     has depth, and it is built from the same parts as the city on the floor. */
-  {
-    const per = 15, N = miniSites.length*per;
-    const box = new THREE.BoxGeometry(1, 1, 1); box.translate(0, 0.5, 0);
-    const morph = new Float32Array(N).fill(1), seed = new Float32Array(N);
-    box.setAttribute('aMorph', new THREE.InstancedBufferAttribute(morph, 1));
-    box.setAttribute('aSeed', new THREE.InstancedBufferAttribute(seed, 1));
-    const mini = new THREE.InstancedMesh(box, makeCityMaterial(), N);
-    const c = new THREE.Color(), q0 = new THREE.Quaternion(), local = new THREE.Matrix4(), world = new THREE.Matrix4();
-    let n = 0;
-    const rnd = k => { const x = Math.sin(k*127.1 + 311.7)*43758.5453; return x - Math.floor(x); };
-    for (const site of miniSites) {
-      site.g.updateMatrixWorld(true);
-      for (let b = 0; b < per; b++) {
-        const k = site.i*100 + b;
-        const x = -7.2 + (b + rnd(k))*(14.4/per), z = 1.2 + rnd(k + 7)*2.6;
-        const w = 0.5 + rnd(k + 3)*0.8, d = 0.5 + rnd(k + 5)*0.7, hgt = 0.45 + Math.pow(rnd(k + 9), 1.6)*1.5;
-        local.compose(new THREE.Vector3(x, 0.08, z), q0, new THREE.Vector3(w, hgt, d));
-        world.multiplyMatrices(site.g.matrixWorld, local);
-        mini.setMatrixAt(n, world);
-        seed[n] = rnd(k + 11);
-        c.set('#5a5042').lerp(new THREE.Color('#c8a766'), rnd(k + 13)); mini.setColorAt(n, c);
-        n++;
-      }
-    }
-    mini.instanceMatrix.needsUpdate = true; mini.instanceColor.needsUpdate = true; box.attributes.aSeed.needsUpdate = true;
-    mini.frustumCulled = false;
-    root.add(mini);
-  }
-
   /* shafts between neighbouring stations: one drive line, Perpetua at its root */
   const linkShafts = [];
   for (let i = 0; i < axles.length - 1; i++) {
@@ -484,21 +471,39 @@ export function buildHall({scene, lite, perpetua}){
   }
 
   /* ---------- per-frame ---------- */
-  function update({spin, time, dt, reflect, rackOn = true}){
+  function update({spin, time, dt, reflect, rackOn = true, camPos = null}){
+    if (camPos) applyShafts(camPos);
     reflWant = !!reflect && mirrorOn;
     if (reflector) { reflFade += ((reflWant ? 1 : 0) - reflFade)*Math.min(1, dt*3); reflector.material.uniforms.uStrength.value = reflFade*0.4; }
     rackActive = rackOn;
     for (const d of drivers) d(spin);
     for (const p of portals) p.update(time, dt);
   }
-  /* While the camera rests on a world, the two drive shafts that reach it are hidden: they run in
-     front of the vitrine and would cut across the screen and the title. */
-  let focused = undefined;
-  function focusWorld(id){
-    if (id === focused) return;
-    focused = id;
-    const k = id ? SLOT_INDEX[id] : -9;
-    linkShafts.forEach((g, i) => { g.visible = !(i === k || i === k - 1); });
+  /* The drive shafts that reach the world the camera rests on, or the two worlds it is travelling
+     between, are hidden: slanting from deck to deck they run in front of the vitrines and cut across
+     the screen and the title. Any shaft that comes within CLEAR units of the lens is hidden too. */
+  const CLEAR = 8;
+  const shaftHide = new Set(), shaftSeg = [];
+  for (let i = 0; i < axles.length - 1; i++) shaftSeg.push(new THREE.Line3(axles[i].R, axles[i+1].L));
+  const _cp = new THREE.Vector3(), _near = new THREE.Vector3();
+  let focused = '';
+  function focusWorld(a, b = null){
+    const key = (a || '') + '|' + (b || '');
+    if (key === focused) return;
+    focused = key; shaftHide.clear();
+    for (const id of [a, b]) {
+      if (!id) continue;
+      const k = SLOT_INDEX[id];
+      shaftHide.add(k); shaftHide.add(k - 1);
+    }
+    applyShafts(null);
+  }
+  function applyShafts(camPos){
+    linkShafts.forEach((g, i) => {
+      let vis = !shaftHide.has(i);
+      if (vis && camPos) { shaftSeg[i].closestPointToPoint(camPos, true, _near); vis = _near.distanceTo(camPos) > CLEAR; }
+      g.visible = vis;
+    });
   }
   /* Everything except Perpetua's own vitrine lives in `far`, so the first frame
      can be shown before the rest of the gallery's shaders are linked. */
@@ -520,5 +525,7 @@ export function buildHall({scene, lite, perpetua}){
     singularLoad();
     portals.forEach((p, i) => setTimeout(() => p.ensureLoaded(), 60 + i*140));
   }
-  return {root, update, portals, anchors, M, shell, rack, SLOT_INDEX, pending, revealNext, revealAll, startLoading, setBackdrop, focusWorld, setMirror, plainFloor, hasMirror:() => !!reflector, mirrorIsOn:() => mirrorOn};
+  /* One clip at a time, behind the loading veil: starting a decoder costs a 50 to 150 ms stall. */
+  const prewarmVideos = async () => { for (const p of portals) await p.prewarmVideo(); };
+  return {root, update, portals, prewarmVideos, axles, gearMeshes, linkShafts, anchors, M, shell, rack, SLOT_INDEX, pending, revealNext, revealAll, startLoading, setBackdrop, focusWorld, setMirror, plainFloor, hasMirror:() => !!reflector, mirrorIsOn:() => mirrorOn};
 }
