@@ -5,7 +5,7 @@
 export const WORLDS = [
   {id:'cyber', pin:'Cyberpunk City', title:['Cyberpunk','City'],
    line:'One block at 2:14 AM in the rain. Walk in, drag it around, summon the dragon.',
-   href:'corner-block/', actions:[{label:'See the renders', kind:'renders'}],
+   href:'cyberpunk/', actions:[{label:'See the renders', kind:'renders'}],
    still:'media/cb-04-district.jpg'},
   {id:'launchboard', pin:'Launchboard', title:['Launchboard'],
    line:'Tells a marketing team what needs a decision today.', href:'launchboard/', still:'media/lb-today.jpg'},
