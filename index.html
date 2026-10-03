@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14130f">
+<title>Jash Shah</title>
+<meta name="description" content="One machine, many worlds inside it. Interactive machines, decks, a music video and more, built by Jash Shah.">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="universe/universe.css">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
+  "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.15.0/index.js",
+  "lenis": "https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.mjs"
+} }
+</script>
+</head>
+<body data-mode="inside">
+<a class="skip" href="#worlds">Skip to the Worlds list</a>
+
+<canvas id="gl" aria-label="A live 3D machine. Drag to turn it. Scroll to step back through the gallery." role="img"></canvas>
+<img id="still" alt="" hidden>
+<div id="scroller" aria-hidden="true"></div>
+
+<div id="shade" aria-hidden="true"></div>
+<div id="shade-bottom" aria-hidden="true"></div>
+<div id="shade-right" aria-hidden="true"></div>
+
+<header id="top">
+  <a id="brand" class="brand" href="./" aria-label="Jash Shah, home">
+    <svg width="38" height="26" viewBox="0 0 38 26" aria-hidden="true"><path d="M19 13C14 3 4 3 4 13s10 10 15 0S34 3 34 13s-10 10-15 0Z"/></svg>
+    <span>Jash Shah</span>
+  </a>
+  <button id="back" class="pill ghost-dark" type="button" tabindex="-1">
+    <svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true"><path d="M15 6H2M6 1L1 6l5 5"/></svg>Back to the hall
+  </button>
+  <button id="worldsBtn" class="pill ghost-dark" type="button" aria-expanded="false" aria-controls="worlds">Worlds</button>
+</header>
+
+<section class="copy" data-copy="inside" aria-label="Introduction">
+  <h1>You are inside<br><em>a machine.</em></h1>
+  <p>Drag to turn it. Scroll to step back.</p>
+</section>
+<button id="stepback" class="pill ghost" type="button">
+  <svg width="14" height="18" viewBox="0 0 14 18" aria-hidden="true"><path d="M7 1v15M1 10l6 6 6-6"/></svg>Step back
+</button>
+
+<section class="copy" data-copy="vitrine">
+  <h2>Every world here<br><em>grew out of the last one.</em></h2>
+  <p>The teeth keep going. Follow them.</p>
+</section>
+
+<section class="copy" data-copy="hall">
+  <h2>One machine.<br><em>Many worlds inside it.</em></h2>
+  <p>Tap a world to fly in. Keep scrolling to visit them in order.</p>
+</section>
+
+<section class="copy" data-copy="end">
+  <h2>Built by<br><em>Jash Shah</em></h2>
+  <p class="links">
+    <a class="pill solid" href="https://www.linkedin.com/in/jashshah-analytics" rel="noopener noreferrer" target="_blank">LinkedIn</a>
+    <button id="toStart" class="pill ghost" type="button">Back to the start</button>
+  </p>
+</section>
+
+<div id="pins" aria-label="Worlds, projected onto the vitrines"></div>
+
+<aside id="card" aria-live="polite" aria-label="World">
+  <h2 id="cardTitle"></h2>
+  <p id="cardLine"></p>
+  <p id="cardStatus" class="chip" hidden><span class="dot"></span>Still building</p>
+  <ul id="cardDecks" class="decks" hidden></ul>
+  <div class="row">
+    <a id="walkIn" class="pill solid" href="#">Walk in</a>
+    <button id="seeRenders" class="pill solid" type="button" hidden>See the renders</button>
+    <button id="nextWorld" class="pill ghost" type="button">Next world</button>
+  </div>
+</aside>
+
+<nav id="worlds" aria-label="Worlds" hidden>
+  <ul id="worldsList"></ul>
+</nav>
+
+<nav id="stills" aria-label="Stops" hidden>
+  <button id="prevStop" class="pill ghost-dark" type="button">Previous</button>
+  <span id="stopCount" aria-live="polite"></span>
+  <button id="nextStop" class="pill solid" type="button">Next</button>
+</nav>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<dialog id="renders" aria-label="Cyberpunk City renders">
+  <form method="dialog"><button class="pill ghost-dark" id="rendersClose">Close</button></form>
+  <div class="gallery">
+    <img src="media/diorama-district.jpg" alt="The district: a rain-soaked block at night" loading="lazy">
+    <img src="media/diorama-cinema.jpg" alt="The cinema on the corner" loading="lazy">
+    <img src="media/diorama-junction.jpg" alt="The junction" loading="lazy">
+  </div>
+</dialog>
+
+<div id="veil" role="status"><span>Assembling the machine</span></div>
+<nav id="plain" aria-label="Worlds (plain list)" hidden><p>The 3D view could not start here. The worlds are plain links:</p>
+<ul><li><a href="perpetua/">Perpetua</a></li><li><a href="launchboard/">Launchboard</a></li><li><a href="mgmtio/index.html">MGMTIO</a></li><li><a href="round-and-round/">Round &amp; Round</a></li><li><a href="fieldfold/">Fieldfold</a></li><li><a href="workbench/">Robot Workbench</a></li><li><a href="jev/">Jev in Motion</a></li><li><a href="https://www.linkedin.com/in/jashshah-analytics" rel="noopener noreferrer">LinkedIn</a></li></ul></nav>
+<script>
+// If the module graph never boots (offline CDN, blocked WebGL): say so and show plain links.
+setTimeout(function(){ if (!window.__universe && !window.__booting) { document.getElementById('veil').classList.add('fail'); document.getElementById('plain').hidden = false; } }, 25000);
+</script>
+<div id="ink" aria-hidden="true"></div>
+<div id="ink2" aria-hidden="true"></div>
+
+<noscript><div class="noscript"><p>This page is a 3D gallery and needs JavaScript. The worlds are also here as plain links.</p>
+<ul><li><a href="perpetua/">Perpetua</a></li><li><a href="launchboard/">Launchboard</a></li><li><a href="mgmtio/index.html">MGMTIO</a></li><li><a href="round-and-round/">Round &amp; Round</a></li><li><a href="fieldfold/">Fieldfold</a></li><li><a href="workbench/">Robot Workbench</a></li><li><a href="jev/">Jev in Motion</a></li></ul></div></noscript>
+
+<script>
+// The host runs vite build on this page; a module script tag would make vite try to bundle a public file and fail.
+(function () { var s = document.createElement('script'); s.type = 'module'; s.src = 'universe/main.js'; document.body.appendChild(s); })();
+</script>
+</body>
+</html>

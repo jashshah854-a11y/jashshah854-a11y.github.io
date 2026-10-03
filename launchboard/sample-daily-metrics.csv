@@ -1,0 +1,26 @@
+Day,Client,Platform,Impressions,Clicks,Sessions,Cost,Orders,Sales,Notes
+2026-06-09,Ridgeway,Email,48821,1367,1271,29.29,51,7548.00,backfill after tracking outage
+2026-06-10,Ridgeway,Email,48607,1361,1266,29.16,51,7548.00,backfill after tracking outage
+2026-06-11,Ridgeway,Email,48000,1344,1250,28.80,50,7400.00,backfill after tracking outage
+2026-06-12,Ridgeway,Email,46607,1305,1214,27.96,49,7252.00,backfill after tracking outage
+2026-09-28,Ledgerly,Paid social,63273,696,647,1087.73,10,700.00,
+2026-09-29,Ledgerly,Paid social,63364,697,648,1089.57,10,700.00,
+2026-09-30,Ledgerly,Paid social,63364,697,648,1091.41,10,700.00,
+2026-10-01,Ledgerly,Paid social,64091,705,656,1098.76,10,700.00,
+2026-10-02,Ledgerly,Paid social,64545,710,660,1100.62,10,700.00,
+2026-10-03,Ledgerly,Paid social,65545,721,671,1107.99,10,700.00,
+10/4/2026,Ledgerly,Paid social,66000,726,675,1115.39,10,700.00,US date format
+2026-09-29,Hearthline,Paid search,26575,1262,1186,1895.02,46,4700.97,revised after order reconciliation
+2026-09-30,Kiln Coffee,Organic,81971,2327,2187,0.00,58,2165.70,revised after order reconciliation
+2026-10-02,Mossé,Email,33354,958,886,20.01,47,2814.38,revised after order reconciliation
+2026-10-01,Hearthline,Email,42206,1226,1129,25.32,53,4742.32,
+2026-10-02,Ridgeway,Paid social,183515,2025,1891,2252.65,30,4799.30,
+2026-10-03,Mossé,Organic,80450,2492,2245,0.00,61,4073.76,
+2026-10-03,Kiln Coffee,Paid search,23088,1027,949,1368.66,50,1710.53,
+2026-02-30,Hearthline,Organic,97726,3157,2960,0.00,69,5644.92,
+2026-10-04,Zenith Co,Organic,97726,3157,2960,0.00,69,5644.92,brand not in this workspace
+2026-10-04,Kiln Coffee,TikTok ads,97726,3157,2960,0.00,69,5644.92,
+2026-10-04,Ridgeway,Paid search,41200,820,760,n/a,19,2410.50,spend missing
+2026-10-04,Mossé,Paid social,38000,-14,12,88.10,0,0,
+2026-10-09,Hearthline,Email,97726,3157,2960,0.00,69,5644.92,future date
+2026-09-30,Ledgerly,Paid social,63364,697,648,1091.41,10,700.00,sent twice

@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>The internet is getting a second user</title>
+<meta name="description" content="Your company's agent will talk to their company's agent. A deck about the space between us becoming something AI runs, with the protocols that already exist.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@700;900&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<noscript><style>#stage{display:none!important}html,body{overflow:auto!important;height:auto!important}</style></noscript>
+<style>
+:root{
+  --paper:#f3f0e8; --sheet:#fbfaf5; --ink:#191a1c; --ink2:#3a3b3e; --blue:#2b4aa0;
+  --rule:rgba(25,26,28,.2); --fd:'Big Shoulders Stencil Display',sans-serif; --fm:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);font-family:var(--fm);overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--ink);text-decoration:none}
+a:hover{color:#000}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+#stage{position:absolute;left:50%;top:50%;width:1440px;height:810px;transform-origin:50% 50%;transform:translate(-50%,-50%);overflow:hidden;background:var(--paper)}
+#viz{position:absolute;left:0;top:0;width:64%;height:100%;overflow:hidden;background:var(--paper)}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block}
+#cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:30% center;transition:opacity .7s;z-index:2}
+#cover.off{opacity:0;pointer-events:none}
+#ovs{position:absolute;left:0;top:0;width:64%;height:100%;pointer-events:none;z-index:3}
+.ov{position:absolute;inset:0;display:none}
+.ov.on{display:block}
+.ov>*{pointer-events:auto}
+
+#panel{position:absolute;left:64%;top:0;right:0;bottom:0;background:var(--paper);border-left:3px dashed var(--blue);z-index:4}
+.slide{position:absolute;left:0;right:0;top:0;bottom:0;display:none}
+.slide.on{display:flex;flex-direction:column;gap:22px;padding:70px 56px 0 45px}
+.hd{margin:0;font-family:var(--fd);font-weight:900;font-size:56px;line-height:.9;letter-spacing:.005em;text-transform:uppercase;color:var(--ink)}
+.slide[data-n="1"] .hd{font-size:92px;line-height:.88}
+.slide[data-n="10"] .hd{font-size:50px}
+.hd em{font-style:normal;color:var(--blue)}
+.bd{margin:0;font-size:15px;line-height:1.65;color:var(--ink2)}
+.ref{display:inline-block;margin-left:1px;font-size:10px;line-height:1;vertical-align:super;color:var(--blue);border-bottom:1px solid var(--blue);cursor:pointer;background:none;border-top:0;border-left:0;border-right:0;padding:0 1px}
+
+.navc{position:absolute;right:56px;top:12px;display:flex;gap:8px;z-index:6}
+.nb{min-width:44px;min-height:44px;padding:0 12px;background:transparent;border:1px solid var(--ink);display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+.nb:hover{background:var(--ink);color:var(--paper)}
+.nb:disabled{opacity:.3;cursor:default}
+.nb:disabled:hover{background:transparent;color:var(--ink)}
+.nvc{display:none}
+.foot{position:absolute;left:45px;right:56px;bottom:44px;display:flex;flex-direction:column;gap:12px;font-size:13px}
+.ct{border-top:1px solid var(--ink);padding-top:12px;display:flex;justify-content:space-between;gap:12px}
+.cta{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:48px;padding:0 18px;background:var(--ink);color:var(--paper);border:0;font-size:13px;text-align:left}
+.cta:hover{background:var(--blue)}
+.cta:disabled{opacity:.45;cursor:default}
+.cta:disabled:hover{background:var(--ink)}
+.status{min-height:1.4em;font-size:12.5px;line-height:1.4;color:var(--ink2)}
+
+/* receipts and overlays */
+.rc{background:var(--sheet);border:1px solid var(--rule);box-shadow:0 1px 0 var(--rule);padding:10px 12px 12px;font-size:11.5px;line-height:1.45;position:relative;transform:translateY(14px);opacity:0;transition:transform .35s cubic-bezier(0,0,.2,1),opacity .25s}
+.rc.in{transform:rotate(var(--r,0deg));opacity:1}
+.rc b{display:block;font-family:var(--fd);font-weight:900;font-size:19px;letter-spacing:.02em;text-transform:uppercase;line-height:1}
+.rc i{display:block;font-style:normal;color:#6a6b6e;margin:3px 0 6px;padding-right:64px}
+.rc p{margin:0;white-space:pre-line}
+.stp{position:absolute;right:10px;top:8px;border:2px solid var(--blue);color:var(--blue);font-family:var(--fd);font-weight:900;font-size:20px;line-height:1;padding:3px 7px 2px;transform:rotate(-6deg);letter-spacing:.04em}
+.tape{position:absolute;left:18px;right:18px;bottom:12px;display:flex;align-items:flex-end;gap:10px}
+.tape .rc{flex:1 1 0;min-width:0;padding-bottom:24px;-webkit-mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/14px 100%;mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/14px 100%}
+.tape .rc:nth-child(1){--r:-1deg}.tape .rc:nth-child(2){--r:.8deg}.tape .rc:nth-child(3){--r:-.6deg}.tape .rc:nth-child(4){--r:1.2deg}
+.tape .hint{border:1px dashed var(--rule);padding:10px 14px;font-size:11.5px;color:#7a7b7e;background:var(--paper)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{min-height:44px;padding:0 14px;border:1px solid var(--ink);background:var(--sheet);font-size:12.5px;display:inline-flex;align-items:center;gap:8px}
+.chip[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:var(--paper)}
+.chip:hover{border-color:var(--blue)}
+.ledger{position:absolute;left:18px;right:18px;bottom:16px;display:flex;flex-direction:column;gap:10px}
+.rows{margin:0;padding:10px 14px;list-style:none;background:var(--sheet);border:1px solid var(--rule);font-size:12px;line-height:1.35}
+.rows li{display:grid;grid-template-columns:96px 1fr auto;gap:10px;padding:3px 0;border-bottom:1px dashed var(--rule)}
+.rows li:last-child{border-bottom:0}
+.rows time{color:var(--ink)}
+.y26{display:inline-block;margin-left:6px;border:1px solid var(--blue);color:var(--blue);padding:0 4px;font-size:10px}
+.log{position:absolute;left:18px;bottom:16px;width:340px;display:flex;flex-direction:column;gap:8px}
+.log .rc{padding:9px 12px}
+.log .rc b{font-size:17px}
+.log .rc p{margin:2px 0 0;padding-right:58px}
+.hold{border-left:0}
+.rc.bad .stp{border-color:var(--ink);color:var(--ink)}
+
+#src{position:absolute;right:0;top:0;bottom:0;width:600px;background:var(--paper);border-left:3px dashed var(--blue);z-index:20;transform:translateX(102%);transition:transform .3s cubic-bezier(0,0,.2,1);padding:28px 32px;overflow:auto}
+#src.on{transform:none}
+#src h2{margin:0 0 14px;font-family:var(--fd);font-weight:900;font-size:44px;line-height:.9;text-transform:uppercase}
+#src ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:11px}
+#src li{padding:0 0 11px;border-bottom:1px dashed var(--rule);font-size:12.5px;line-height:1.5}
+#src li.hl{background:var(--sheet);outline:2px solid var(--blue);outline-offset:4px}
+#src li b{display:block;font-weight:500}
+#src li span{color:#5a5b5e}
+#src li a{color:var(--blue);word-break:break-all}
+#src .x{position:sticky;top:0;float:right;margin:-8px -10px 0 0}
+
+.reader{max-width:720px;margin:0 auto;padding:24px 16px 60px}
+.reader h1{font-family:var(--fd);font-weight:900;font-size:42px;line-height:.92;text-transform:uppercase}
+.reader h2{font-family:var(--fd);font-weight:900;font-size:34px;line-height:.92;text-transform:uppercase;margin:34px 0 8px}
+.reader p{line-height:1.6;color:var(--ink2)}
+
+/* reduced motion: discrete states */
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms!important;animation-duration:.01ms!important}
+  .rc{transform:none}
+}
+
+/* phone: a reflowed vertical reader, not a scaled 16:9 */
+@media (max-width:760px){
+  html,body{overflow:auto;height:auto}
+  #stage{position:relative;left:auto;top:auto;width:100%;height:auto;min-height:100dvh;transform:none;display:flex;flex-direction:column;overflow:visible;padding-bottom:70px}
+  #panel,.slide.on{display:contents!important}
+  .slide{position:static;padding:0}
+  .hd{position:static;order:1;padding:16px 16px 10px;font-size:38px!important;line-height:.92!important}
+  .slide[data-n="1"] .hd{font-size:50px!important}
+  #viz{position:relative;order:2;width:100%;height:min(46dvh,420px);border-bottom:3px dashed var(--blue)}
+  #ovs{position:static;order:3;width:100%;height:auto;pointer-events:auto}
+  .ov{position:static}
+  .ov.on{display:block;padding:10px 16px 0}
+  .tape{position:static;flex-wrap:wrap;align-items:stretch}
+  .tape .rc{flex:1 1 44%}
+  .tape .hint{flex:1 1 100%}
+  .ledger,.log{position:static;width:auto}
+  .rows li{grid-template-columns:84px 1fr auto}
+  .bd{position:static;order:4;padding:12px 16px 4px;font-size:14.5px}
+  .foot{position:static;order:5;padding:12px 16px 0}
+  .navc{position:fixed;left:0;right:0;bottom:0;top:auto;gap:0;background:var(--paper);border-top:1px solid var(--ink);padding:0 8px 0 0;z-index:30;align-items:stretch;justify-content:space-between}
+  .nb{min-height:56px;min-width:56px;border:0;border-right:1px solid var(--rule)}
+  .nvc{display:flex;align-items:center;flex:1;justify-content:center;font-size:12px;border-right:1px solid var(--rule)}
+  #nb-src{order:5;border-right:0}
+  #src{width:100%;border-left:0;padding:20px 16px 80px;z-index:40;position:fixed}
+  .chip{min-height:44px}
+}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="viz">
+    <canvas id="gl" role="img" aria-label="A model city block on a turntable. It turns from lit shopfronts to the freight corridor behind them, where parcels move only when an agent passes them."></canvas>
+    <img id="cover" src="./cover.jpg" alt="A city block in cutaway: lit shopfronts on one side, and behind them a freight corridor where white parcels ride conveyors between buildings.">
+  </div>
+  <div id="ovs">
+    <div class="ov" data-s="4"><div class="tape" id="tape" aria-live="polite"></div></div>
+    <div class="ov" data-s="5"><div class="ledger">
+      <div class="chips" role="group" aria-label="Protocol layer">
+        <button class="chip" data-tier="0" aria-pressed="true">MCP, tools</button>
+        <button class="chip" data-tier="1" aria-pressed="false">A2A, agent to agent</button>
+        <button class="chip" data-tier="2" aria-pressed="false">Checkout, payments</button>
+      </div>
+      <ol class="rows" id="rows" aria-live="polite"></ol>
+    </div></div>
+    <div class="ov" data-s="6"><div class="log" id="log6" aria-live="polite"></div></div>
+    <div class="ov" data-s="7"><div class="log" id="log7" aria-live="polite"></div></div>
+    <div class="ov" data-s="9"><div class="log" id="stk9" aria-live="polite"></div></div>
+    <div class="ov" data-s="10"><div class="log" id="log10" aria-live="polite"></div></div>
+  </div>
+
+  <aside id="panel">
+    <div class="navc">
+      <button class="nb" id="nb-prev" aria-label="Previous parcel">&larr;</button>
+      <span class="nvc" id="nvc" aria-hidden="true"></span>
+      <button class="nb" id="nb-next" aria-label="Next parcel">&rarr;</button>
+      <button class="nb" id="nb-src" aria-haspopup="dialog" aria-controls="src">Sources</button>
+    </div>
+
+    <section class="slide on" data-n="1" data-screen-label="1 The second user">
+      <h1 class="hd">The internet is getting a <em>second user.</em></h1>
+      <p class="bd">Your company's agent will talk to their company's agent. The space between us becomes something AI runs.</p>
+    </section>
+    <section class="slide" data-n="2" data-screen-label="2 People who click">
+      <h2 class="hd">Today the web is built for people who click.</h2>
+      <p class="bd">Every shopfront on this block is a page. A person walks up, reads, fills in a form and waits for a reply. The whole street assumes someone is standing at the glass.</p>
+    </section>
+    <section class="slide" data-n="3" data-screen-label="3 Every company gets an agent">
+      <h2 class="hd">Every company gets an agent that speaks for it.</h2>
+      <p class="bd">Behind each shopfront sits a terminal that knows the prices, the policies and what is in stock. It answers for the business at any hour, in a form a machine can read.</p>
+    </section>
+    <section class="slide" data-n="4" data-screen-label="4 Agent to agent">
+      <h2 class="hd">Your agent talks to their agent.</h2>
+      <p class="bd">No website in between. Mine asks, yours offers, mine counters, yours confirms. Press Send. Each message prints, rides the corridor and gets a stamp for the layer it would use. Scripted example.</p>
+    </section>
+    <section class="slide" data-n="5" data-screen-label="5 The plumbing">
+      <h2 class="hd">The plumbing already exists.</h2>
+      <p class="bd">MCP<button class="ref" data-src="1" aria-label="Source 1">1</button> connects an agent to tools. A2A<button class="ref" data-src="2" aria-label="Source 2">2</button> lets agents from different vendors talk. Payment protocols<button class="ref" data-src="7" aria-label="Source 7">7</button> let them check out. Pick a layer for the dates and the sources.</p>
+    </section>
+    <section class="slide" data-n="6" data-screen-label="6 What disappears">
+      <h2 class="hd">Forms, search pages and contact sales fall away.</h2>
+      <p class="bd">Step through it. An agent does not fill in a form, scroll ten results or wait for a rep. It asks the one agent that knows.</p>
+    </section>
+    <section class="slide" data-n="7" data-screen-label="7 What appears">
+      <h2 class="hd">Negotiation, verification and reputation move in.</h2>
+      <p class="bd">When agents deal with agents, the work moves into the gaps: haggling over terms, checking who is who, and keeping score of who delivered.</p>
+    </section>
+    <section class="slide" data-n="8" data-screen-label="8 The space between">
+      <h2 class="hd">The space between becomes a market agents run.</h2>
+      <p class="bd">Zoom out and the street is a network. Parcels hop from agent to agent and nobody is in the loop. One law holds: nothing moves until an agent passes it.</p>
+    </section>
+    <section class="slide" data-n="9" data-screen-label="9 The real risk">
+      <h2 class="hd">The real risk is trust.</h2>
+      <p class="bd">Who is this agent, and is it allowed to do this? A parcel with no credentials stops at the gate. So does one whose credential does not cover the job. The standards are adding signed identity for this<button class="ref" data-src="4" aria-label="Source 4">4</button><button class="ref" data-src="7" aria-label="Source 7">7</button>.</p>
+    </section>
+    <section class="slide" data-n="10" data-screen-label="10 Build your agent">
+      <h2 class="hd">Build your agent before someone else's agent decides for you.</h2>
+      <p class="bd">I already run this<button class="ref" data-src="11" aria-label="Source 11">11</button>. Codex and Claude hand work to each other. A messaging agent routes my requests to coding agents. An agent deployed this portfolio by calling another company's agent tools.</p>
+    </section>
+
+    <div class="foot">
+      <div class="status" id="status" aria-live="polite"></div>
+      <div class="ct"><span id="ctr">PARCEL 01 OF 10</span><span id="route">ROUTE: HUMAN → AGENT</span></div>
+      <button class="cta" id="act"><span id="actl">Send the first request</span><span>→</span></button>
+    </div>
+  </aside>
+
+  <div id="src" role="dialog" aria-label="Sources" aria-modal="false">
+    <button class="nb x" id="src-x" aria-label="Close sources">Close</button>
+    <h2>Sources</h2>
+    <ol id="srclist"></ol>
+  </div>
+</div>
+
+<noscript>
+<main class="reader">
+  <h1>The internet is getting a second user.</h1>
+  <p>Your company's agent will talk to their company's agent. The space between us becomes something AI runs.</p>
+  <h2>Parcel 2 of 10. Today the web is built for people who click.</h2>
+  <p>Every shopfront on this block is a page. A person walks up, reads, fills in a form and waits for a reply. The whole street assumes someone is standing at the glass.</p>
+  <h2>Parcel 3 of 10. Every company gets an agent that speaks for it.</h2>
+  <p>Behind each shopfront sits a terminal that knows the prices, the policies and what is in stock. It answers for the business at any hour, in a form a machine can read.</p>
+  <h2>Parcel 4 of 10. Your agent talks to their agent.</h2>
+  <p>No website in between. Mine asks, yours offers, mine counters, yours confirms. Each message gets a stamp for the layer it would use. Scripted example.</p>
+  <h2>Parcel 5 of 10. The plumbing already exists.</h2>
+  <p>MCP (Anthropic, 25 Nov 2024) connects an agent to tools. A2A (Google, 9 Apr 2025, now a Linux Foundation project) lets agents from different vendors talk. Payment protocols let them check out: Visa Intelligent Commerce and Mastercard Agent Pay (Apr 2025), Google AP2 (16 Sep 2025), Stripe and OpenAI's Agentic Commerce Protocol (29 Sep 2025), and in 2026 the Universal Commerce Protocol from Shopify and Google (11 Jan 2026).</p>
+  <h2>Parcel 6 of 10. Forms, search pages and contact sales fall away.</h2>
+  <p>An agent does not fill in a form, scroll ten results or wait for a rep. It asks the one agent that knows.</p>
+  <h2>Parcel 7 of 10. Negotiation, verification and reputation move in.</h2>
+  <p>When agents deal with agents, the work moves into the gaps: haggling over terms, checking who is who, and keeping score of who delivered.</p>
+  <h2>Parcel 8 of 10. The space between becomes a market agents run.</h2>
+  <p>Zoom out and the street is a network. Parcels hop from agent to agent and nobody is in the loop. One law holds: nothing moves until an agent passes it.</p>
+  <h2>Parcel 9 of 10. The real risk is trust.</h2>
+  <p>Who is this agent, and is it allowed to do this? A parcel with no credentials stops at the gate. So does one whose credential does not cover the job. A2A v1.0 (Linux Foundation, 9 Apr 2026) adds Signed Agent Cards, and AP2 payments carry signed mandates.</p>
+  <h2>Parcel 10 of 10. Build your agent before someone else's agent decides for you.</h2>
+  <p>I already run this. Codex and Claude hand work to each other. A messaging agent routes my requests to coding agents. An agent deployed this portfolio by calling another company's agent tools.</p>
+</main>
+</noscript>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}
+</script>
+<script type="module" src="./deck.js"></script>
+</body>
+</html>

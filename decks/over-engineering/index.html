@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Everything is possible. That is the problem.</title>
+<meta name="description" content="When building is nearly free, the danger is carrying too much. A watch movement shows what every extra part costs, and a sundial shows what is left when you chuck it.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,600;1,6..96,400&amp;family=Jost:wght@300;400;500&amp;display=swap" rel="stylesheet">
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}
+</script>
+<style>
+:root{--bg:#060606;--cream:#f1e6cc;--text:#e9dcc0;--body:#c9bfa8;--dim:#a99f88;--brass:#c9a35b;--brass-dim:#6e6247;--rule:rgba(201,163,91,.3)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);overflow:hidden}
+body{font-family:'Jost',sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+a{color:var(--text);text-decoration:none}
+a:hover{color:#fff}
+:focus-visible{outline:2px solid var(--cream);outline-offset:3px}
+
+#frame{position:fixed;inset:0;overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;margin:-405px 0 0 -720px;width:1440px;height:810px;overflow:hidden;background:var(--bg);transform:scale(var(--s,1));transform-origin:center center}
+
+.slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .4s,visibility 0s .4s}
+.slide.on{opacity:1;visibility:visible;transition:opacity .4s}
+.cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:30% center}
+.slot{position:absolute;left:0;top:0;width:860px;height:690px}
+.col{position:absolute;right:80px;top:50%;transform:translateY(-50%);width:500px;display:flex;flex-direction:column;gap:26px}
+h1,h2{margin:0;font-family:'Bodoni Moda',serif;font-weight:400;letter-spacing:-.01em;color:var(--cream)}
+h1{font-size:74px;line-height:1.04}
+h2{font-size:52px;line-height:1.07}
+h1 em,h2 em{font-style:italic;color:var(--brass)}
+.col p{margin:0;font-weight:300;font-size:19px;line-height:1.6;color:var(--body)}
+.col p.small{font-size:15px;line-height:1.5;color:var(--dim)}
+.ctl{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.count{font-size:14px;letter-spacing:.02em;color:var(--dim)}
+.row{display:flex;align-items:center;gap:20px;padding-top:10px}
+
+.pill{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:48px;padding:0 22px;border:1px solid var(--brass);border-radius:999px;background:transparent;color:var(--cream);font-size:15px;letter-spacing:.02em;cursor:pointer;transition:background .15s,color .15s}
+.pill:hover{background:rgba(201,163,91,.16)}
+.pill:active{background:rgba(201,163,91,.3)}
+.pill.quiet{border-color:var(--brass-dim)}
+.pill[disabled]{opacity:.38;cursor:not-allowed}
+.pill[disabled]:hover{background:transparent}
+.pill.attn{background:var(--brass);color:#060606}
+.pill[aria-pressed="true"]{background:rgba(201,163,91,.28)}
+
+.readout{position:absolute;left:70px;bottom:46px;width:760px;display:flex;flex-direction:column;gap:18px}
+.figs{display:flex;gap:46px;align-items:flex-end}
+.fig b{display:block;font-family:'Bodoni Moda',serif;font-weight:400;font-size:46px;line-height:1;color:var(--cream);font-variant-numeric:lining-nums tabular-nums;min-width:2ch}
+.fig small{display:block;margin-top:8px;font-weight:300;font-size:14px;color:var(--dim)}
+.reserve{display:flex;align-items:center;gap:14px;font-size:14px;font-weight:300;color:var(--dim)}
+.reserve i{display:block;position:relative;width:260px;height:2px;background:rgba(201,163,91,.24)}
+.reserve i b{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--brass)}
+.verdict{margin:0;min-height:3.4em;max-width:700px;font-family:'Bodoni Moda',serif;font-style:italic;font-size:26px;line-height:1.3;color:var(--cream)}
+.verdict span{color:var(--brass);font-style:normal}
+.tokens{display:flex;flex-direction:column;gap:10px}
+.tokens .big{font-family:'Bodoni Moda',serif;font-size:38px;line-height:1;color:var(--cream);min-height:1em}
+.tokens .bar{position:relative;width:560px;height:6px;background:rgba(201,163,91,.18)}
+.tokens .bar b{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--brass)}
+.tokens small{font-weight:300;font-size:14px;color:var(--dim)}
+
+.chips{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chip{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;padding:0 16px;border:1px solid var(--brass-dim);border-radius:999px;background:transparent;color:var(--body);font-size:14px;text-align:left;cursor:pointer;transition:background .15s,border-color .15s}
+.chip:hover,.chip:focus-visible{border-color:var(--brass);background:rgba(201,163,91,.1)}
+.chip small{font-size:12px;color:var(--dim)}
+.chip.kept{border-color:var(--brass);color:var(--cream)}
+.chip.gone{color:#7d7462;text-decoration:line-through;border-color:#3a352a}
+.chip.gone small{text-decoration:none}
+
+.smells{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.smell{display:block;width:100%;padding:14px 4px 14px 18px;border:0;border-left:1px solid var(--brass-dim);background:transparent;text-align:left;font-weight:300;font-size:18px;line-height:1.5;color:var(--body);cursor:pointer}
+.smell em{display:block;font-family:'Bodoni Moda',serif;font-size:24px;color:var(--cream);margin-bottom:2px}
+.smell:hover,.smell:focus-visible,.smell.pin{border-left-color:var(--brass);background:rgba(201,163,91,.07)}
+
+.slide.s1 .col{gap:30px}
+.slide.s1 .col p{color:var(--body)}
+
+.sl{display:flex;flex-direction:column;gap:12px;width:100%}
+.sl label{font-size:15px;color:var(--cream)}
+.sl .track{position:relative;padding:14px 0 30px}
+.sl input[type=range]{width:100%;margin:0;height:44px;background:transparent;-webkit-appearance:none;appearance:none}
+.sl input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--brass-dim)}
+.sl input[type=range]::-moz-range-track{height:2px;background:var(--brass-dim)}
+.sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;margin-top:-13px;border-radius:50%;background:var(--cream);border:2px solid var(--brass)}
+.sl input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--cream);border:2px solid var(--brass)}
+.sl .mark{position:absolute;top:12px;width:1px;height:36px;background:var(--brass)}
+.sl .mark span{position:absolute;top:38px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:13px;color:var(--brass)}
+.sl .ends{display:flex;justify-content:space-between;font-size:13px;color:var(--dim)}
+.status{margin:0;font-size:16px;color:var(--cream);min-height:1.5em}
+select.pick{min-height:48px;padding:0 18px;border:1px solid var(--brass-dim);border-radius:999px;background:#0d0c0a;color:var(--cream);font-size:15px;max-width:100%}
+
+/* chrome */
+.nav{position:absolute;right:80px;bottom:26px;display:flex;align-items:center;gap:10px;z-index:6}
+.nav .n{font-size:14px;letter-spacing:.02em;color:var(--dim);min-width:60px;text-align:center}
+.nav button{min-width:44px;min-height:44px;border:1px solid var(--brass-dim);border-radius:999px;background:transparent;cursor:pointer;color:var(--cream);font-size:15px;padding:0 14px;transition:background .15s,border-color .15s}
+.nav button:hover{border-color:var(--brass);background:rgba(201,163,91,.1)}
+.nav button[disabled]{opacity:.3;cursor:default}
+#stage.is-first .nav .n{display:none}
+
+#vis{position:absolute;inset:0;background:var(--bg);-webkit-mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 72%,transparent 100%);mask-image:radial-gradient(ellipse 50% 50% at 50% 50%,#000 72%,transparent 100%)}
+#vis canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#park{display:none}
+.loading,.fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:30px;font-family:'Bodoni Moda',serif;font-style:italic;font-size:24px;color:var(--dim)}
+#vis.loading-on .loading{display:flex}
+#vis.failed .fallback{display:flex;background:var(--bg) url(./cover.jpg) 30% center/cover no-repeat;color:var(--cream);align-items:flex-end;justify-content:flex-start;text-align:left}
+#vis.failed .fallback p{margin:0;padding:12px 16px;background:rgba(6,6,6,.82);font-size:20px}
+#vis.failed canvas{display:none}
+
+#sources{position:absolute;top:0;right:0;bottom:0;width:560px;z-index:10;background:#0b0a09;border-left:1px solid var(--rule);padding:34px 36px 30px;overflow:auto;transform:translateX(102%);visibility:hidden;transition:transform .35s,visibility 0s .35s}
+#sources.open{transform:none;visibility:visible;transition:transform .35s}
+#sources h2{font-size:36px;margin-bottom:6px}
+#sources ol{margin:20px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:22px}
+#sources li{padding-top:16px;border-top:1px solid var(--rule)}
+#sources .t{display:block;font-family:'Bodoni Moda',serif;font-size:20px;line-height:1.3;color:var(--cream)}
+#sources .m{display:block;margin-top:4px;font-size:14px;color:var(--dim)}
+#sources .u{display:block;margin-top:6px;font-size:14px;color:var(--brass);overflow-wrap:anywhere;text-decoration:underline;text-underline-offset:3px}
+#sources .w{display:block;margin-top:6px;font-weight:300;font-size:14px;line-height:1.5;color:var(--body)}
+#sources .x{position:absolute;top:22px;right:24px;min-width:44px;min-height:44px;border:1px solid var(--brass-dim);border-radius:999px;background:transparent;cursor:pointer;color:var(--cream)}
+
+noscript .reader{max-width:640px;margin:0 auto;padding:40px 20px;font-family:'Jost',sans-serif;color:var(--body);background:var(--bg)}
+noscript .reader h2{font-size:34px;margin:30px 0 8px}
+
+/* phone: a reflowed vertical reader */
+@media (max-width:820px),(max-aspect-ratio:4/5){
+  html,body{overflow:auto;height:auto;min-height:100%}
+  #frame{position:static;overflow:visible}
+  #stage{position:relative;left:auto;top:auto;margin:0;width:100%;height:auto;min-height:100dvh;transform:none;overflow:visible}
+  .slide{position:relative;inset:auto;display:none;opacity:1;visibility:visible;flex-direction:column;gap:16px;padding:22px 18px 104px;transition:none}
+  .slide.on{display:flex}
+  .col{display:contents;position:static;transform:none;width:auto}
+  h1{font-size:40px;order:1}
+  h2{font-size:34px;order:1}
+  .slot{position:relative;order:2;width:100%;height:min(88vw,46dvh);min-height:260px}
+  .readout{position:static;order:3;width:auto;gap:14px}
+  .ctl,.row{order:4}
+  .col p{order:5;font-size:17px}
+  .col p.small{order:6}
+  .col .chips,.col .smells,.col .sl{order:4}
+  .col .status{order:4}
+  .figs{gap:24px;flex-wrap:wrap}
+  .fig b{font-size:34px}
+  .reserve i{width:150px}
+  .tokens .bar{width:100%}
+  .tokens .big{font-size:34px}
+  .verdict{font-size:20px;min-height:3.2em}
+  .slide.s1{padding-top:0}
+  .slide.s1 .cover{position:relative;order:0;height:42dvh;margin:0 -18px;width:calc(100% + 36px)}
+  .slide.s1 .col p{order:2}
+  .slide.s1 .row{order:3}
+  .chips{grid-template-columns:1fr}
+  .smell{font-size:16px}
+  .smell em{font-size:21px}
+  .nav{position:fixed;left:0;right:0;bottom:0;padding:10px 16px;justify-content:space-between;background:rgba(6,6,6,.94);border-top:1px solid var(--rule);z-index:8}
+  #stage.is-first .nav .n{display:block}
+  #sources{position:fixed;width:100%;padding:30px 20px}
+  #vis{position:absolute}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .slide,.slide.on,#sources,#sources.open,.pill,.chip,.nav button{transition:none}
+}
+</style>
+</head>
+<body>
+<div id="frame">
+<div id="stage" class="is-first">
+
+  <section class="slide s1 on" data-screen-label="1" aria-label="Title">
+    <img class="cover" src="./cover.jpg" alt="A crowded mechanical watch movement on black velvet, dozens of gears stacked on each other, its single hand bent under the load.">
+    <div class="col">
+      <h1>Everything is possible.<br><em>That is the problem.</em></h1>
+      <p>Building got cheap. Carrying didn't. Every part you add, you pay for on every turn.</p>
+      <div class="row">
+        <span class="count">1 of 10</span>
+        <button class="pill" id="wind0" type="button">Wind it up</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide s2" data-screen-label="2" data-view="movement" aria-label="The cost moved">
+    <div class="slot"></div>
+    <div class="readout">
+      <div class="figs">
+        <div class="fig"><b data-f="n">2</b><small>parts</small></div>
+        <div class="fig"><b data-f="play">0</b><small>hand play</small></div>
+        <div class="fig"><b data-f="behind">0</b><small>minutes an hour behind true time</small></div>
+      </div>
+      <div class="reserve"><i><b data-f="bar"></b></i><span data-f="reserve">Reserve</span></div>
+    </div>
+    <div class="col">
+      <h2>The cost moved.</h2>
+      <p>A part is nearly free to add now. You still pay for it on every turn after. Add a few and watch the cream hand fall behind the brass one, which is true time.</p>
+      <div class="ctl">
+        <button class="pill" type="button" data-act="wind">Wind it up</button>
+        <button class="pill quiet" type="button" data-act="add">Add a part</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide s3" data-screen-label="3" data-view="movement" aria-label="Two hundred thousand tokens">
+    <div class="slot"></div>
+    <div class="readout">
+      <div class="tokens">
+        <div class="big" data-f="tok">&nbsp;</div>
+        <div class="bar"><b data-f="tokbar"></b></div>
+        <small>loaded before I typed anything, out of a 1,000,000 token window</small>
+      </div>
+      <div class="reserve"><i><b data-f="bar"></b></i><span data-f="reserve">Reserve</span></div>
+    </div>
+    <div class="col">
+      <h2>Two hundred thousand tokens before my first word.</h2>
+      <p>That is what my setup loaded on every turn: rules, hooks, routers, context. My million-token window evaporated like water.</p>
+      <div class="ctl"><button class="pill" type="button" data-act="wind">Wind it up</button></div>
+    </div>
+  </section>
+
+  <section class="slide s4" data-screen-label="4" data-view="movement" aria-label="The test">
+    <div class="slot"></div>
+    <div class="readout">
+      <p class="verdict" data-f="verdict" role="status">Tap a part to ask it.</p>
+      <div class="reserve"><i><b data-f="bar"></b></i><span data-f="reserve">Reserve</span></div>
+    </div>
+    <div class="col">
+      <h2>Ask one thing: did it change a decision?</h2>
+      <p>I tested every part of my setup that way. If the answer is no, it comes out.</p>
+      <div class="chips" data-f="chips"></div>
+      <div class="ctl"><button class="pill quiet" type="button" data-act="wind">Wind it up</button></div>
+    </div>
+  </section>
+
+  <section class="slide s5" data-screen-label="5" data-view="ratchet" aria-label="The ratchet">
+    <div class="slot"></div>
+    <div class="readout">
+      <p class="verdict" data-f="verdict" role="status">Every part clicks on. Try to take one off.</p>
+      <div class="figs"><div class="fig"><b data-f="n">3</b><small>parts on the stack</small></div></div>
+    </div>
+    <div class="col">
+      <h2>Easy to add. Hard to take off.</h2>
+      <p>Each part clicks on in a second. Nothing clicks off. To remove one, you have to lift the pawl on purpose.</p>
+      <div class="ctl">
+        <button class="pill" type="button" data-act="add">Add a part</button>
+        <button class="pill quiet" type="button" data-act="chuck">Chuck one</button>
+        <button class="pill quiet" type="button" data-act="pawl" aria-pressed="false">Lift the pawl</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide s6" data-screen-label="6" data-view="movement" aria-label="Gall's law">
+    <div class="slot"></div>
+    <div class="readout">
+      <div class="figs">
+        <div class="fig"><b data-f="n">2</b><small>parts</small></div>
+        <div class="fig"><b data-f="behind">0</b><small>minutes an hour behind true time</small></div>
+      </div>
+      <div class="reserve"><i><b data-f="bar"></b></i><span data-f="reserve">Reserve</span></div>
+    </div>
+    <div class="col">
+      <h2>What works grew out of something that worked.</h2>
+      <p>John Gall wrote that down in 1975. Start with a simple thing that keeps time, then grow it one part at a time. Slide it out and find where it stops.</p>
+      <div class="sl">
+        <label for="grow">Parts</label>
+        <div class="track">
+          <input id="grow" type="range" min="2" max="12" step="1" value="2">
+          <div class="mark" data-f="mark"><span>last one that kept time</span></div>
+        </div>
+        <p class="status" data-f="status" role="status">Keeps time.</p>
+      </div>
+      <div class="ctl"><button class="pill quiet" type="button" data-act="wind">Wind it up</button></div>
+    </div>
+  </section>
+
+  <section class="slide s7" data-screen-label="7" data-view="movement" aria-label="Three smells">
+    <div class="slot"></div>
+    <div class="readout">
+      <div class="reserve"><i><b data-f="bar"></b></i><span data-f="reserve">Reserve</span></div>
+    </div>
+    <div class="col">
+      <h2>Three ways to know you over-built.</h2>
+      <ul class="smells">
+        <li><button class="smell" type="button" data-k="stub"><em>One caller.</em>A layer used in one place.</button></li>
+        <li><button class="smell" type="button" data-k="spare"><em>Might need it later.</em>Build it when you need it, not when you foresee it.</button></li>
+        <li><button class="smell" type="button" data-k="watch"><em>A system watching a system.</em>My optimizer only saw the first 3,000 characters of what it tuned.</button></li>
+      </ul>
+      <div class="ctl"><button class="pill quiet" type="button" data-act="wind">Wind it up</button></div>
+    </div>
+  </section>
+
+  <section class="slide s8" data-screen-label="8" data-view="movement" aria-label="Chuck it">
+    <div class="slot"></div>
+    <div class="readout">
+      <div class="figs">
+        <div class="fig"><b data-f="n">12</b><small>parts</small></div>
+        <div class="fig"><b data-f="play">0</b><small>hand play</small></div>
+        <div class="fig"><b data-f="behind">0</b><small>minutes an hour behind true time</small></div>
+      </div>
+      <div class="reserve"><i><b data-f="bar"></b></i><span data-f="reserve">Reserve</span></div>
+    </div>
+    <div class="col">
+      <h2>One rule doing real work beats ten that sound wise.</h2>
+      <p>When I retired the routing layer, my instruction file went from 1,013 words to 734. Pull the slider and watch the hand steady.</p>
+      <div class="sl">
+        <label for="chuck">Chuck it</label>
+        <div class="track"><input id="chuck" type="range" min="0" max="10" step="1" value="0"></div>
+        <div class="ends"><span>All of it</span><span>Down to the base</span></div>
+      </div>
+      <div class="ctl"><button class="pill quiet" type="button" data-act="wind">Wind it up</button></div>
+    </div>
+  </section>
+
+  <section class="slide s9" data-screen-label="9" data-view="movement" aria-label="The habit">
+    <div class="slot"></div>
+    <div class="readout">
+      <div class="figs">
+        <div class="fig"><b data-f="n">8</b><small>parts</small></div>
+        <div class="fig"><b data-f="behind">0</b><small>minutes an hour behind true time</small></div>
+      </div>
+      <div class="reserve"><i><b data-f="bar"></b></i><span data-f="reserve">Reserve</span></div>
+    </div>
+    <div class="col">
+      <h2>Before you add, name what you will delete.</h2>
+      <p>Pick the part you will give up first. Only then can you add one. The count holds, and so does the drift.</p>
+      <div class="ctl">
+        <label for="give" class="count">Give up</label>
+        <select id="give" class="pick" data-f="give"></select>
+        <button class="pill" type="button" data-act="swap" disabled>Add a part</button>
+      </div>
+      <p class="status" data-f="status" role="status"></p>
+    </div>
+  </section>
+
+  <section class="slide s10" data-screen-label="10" data-view="sundial" aria-label="The sundial">
+    <div class="slot"></div>
+    <div class="readout">
+      <div class="figs">
+        <div class="fig"><b>1</b><small>part</small></div>
+        <div class="fig"><b>0</b><small>gears meshed</small></div>
+        <div class="fig"><b>0</b><small>minutes an hour behind true time</small></div>
+      </div>
+    </div>
+    <div class="col">
+      <h2>Chuck it. <em>It&rsquo;s extra weight.</em></h2>
+      <p>One part, one shadow. It keeps time. The simplest thing that works.</p>
+      <div class="ctl"><a class="pill quiet" href="#1">Back to the start</a></div>
+    </div>
+  </section>
+
+  <div id="vis" class="loading-on" aria-hidden="false">
+    <canvas id="gl" aria-label="A watch movement that shows the cost of every extra part"></canvas>
+    <div class="loading">Setting the movement</div>
+    <div class="fallback"><p>The movement needs WebGL. This is the finished one.</p></div>
+  </div>
+
+  <div class="nav" role="navigation" aria-label="Slides">
+    <button type="button" id="prev" aria-label="Previous slide">&larr;</button>
+    <span class="n" id="count" aria-live="polite">1 of 10</span>
+    <button type="button" id="next" aria-label="Next slide">&rarr;</button>
+    <button type="button" id="srcbtn" aria-haspopup="dialog" aria-controls="sources" aria-expanded="false">Sources</button>
+  </div>
+
+  <aside id="sources" role="dialog" aria-label="Sources" aria-modal="false">
+    <button class="x" type="button" id="srcx" aria-label="Close sources">Close</button>
+    <h2>Sources</h2>
+    <ol>
+      <li><span class="t">General Systemantics, later Systemantics, by John Gall</span><span class="m">Wikipedia, entry on John Gall (author). Book first published 1975.</span><a class="u" href="https://en.wikipedia.org/wiki/John_Gall_(author)" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/John_Gall_(author)</a><span class="w">Gall's law: a complex system that works grew out of a simple system that worked. Paraphrased on slide 6.</span></li>
+      <li><span class="t">You aren't gonna need it</span><span class="m">Wikipedia. The principle comes from Extreme Programming, quoting Ron Jeffries: implement things when you need them, not when you foresee needing them.</span><a class="u" href="https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it</a><span class="w">Paraphrased on slide 7.</span></li>
+      <li><span class="t">Jash Shah, setup notes: the lean base is deliberate</span><span class="m">Private working notes, 21 July 2026. No public URL.</span><span class="w">About 200,000 tokens of context preloaded on every turn, a 1,000,000 token window that evaporated, the strip-down to a lean base. The bar on slide 3 shows 200,000 of 1,000,000, one fifth. Slides 3 and 4.</span></li>
+      <li><span class="t">Jash Shah, setup notes: TwinRail and the dock retired</span><span class="m">Private working notes, 2 October 2026. No public URL.</span><span class="w">Instruction file from 1,013 to 734 words, "Chuck it. It's extra weight.", the dock answering "no doctrine matched", the idle hook governor (last fired Sept 9), scheduled jobs switched off (Sept 8, Aug 4). Slides 4, 8 and 10.</span></li>
+      <li><span class="t">Jash Shah, setup notes: the optimizer saw only the first part</span><span class="m">Private working notes, 18 July 2026. No public URL.</span><span class="w">The skill optimizer only ever saw the first 3,000 characters of what it was optimizing. Slide 7.</span></li>
+      <li><span class="t">Model note for the movement</span><span class="m">This deck, 3 October 2026. A simulation, not a measurement of a real watch.</span><span class="w">Play at each mesh is 20 percent of a tooth pitch, taken from the drawn teeth. Hand play adds every mesh's play, scaled by the speed ratio down to the hand. Time lost per hour is 0.4 percent per part beyond two, plus 15 percent of the hand play. The reserve drains 32 percent faster for each extra part. "Keeps time" means under two minutes an hour. These constants are illustrative. Slides 2 to 9.</span></li>
+    </ol>
+  </aside>
+
+</div>
+</div>
+
+<div id="park"></div>
+
+<noscript>
+<main class="reader">
+  <h1>Everything is possible. That is the problem.</h1>
+  <p>Building got cheap. Carrying didn't. Every part you add, you pay for on every turn.</p>
+  <h2>The cost moved.</h2><p>A part is nearly free to add now. You still pay for it on every turn after.</p>
+  <h2>Two hundred thousand tokens before my first word.</h2><p>That is what my setup loaded on every turn: rules, hooks, routers, context. My million-token window evaporated like water.</p>
+  <h2>Ask one thing: did it change a decision?</h2><p>I tested every part of my setup that way. If the answer is no, it comes out.</p>
+  <h2>Easy to add. Hard to take off.</h2><p>Each part clicks on in a second. Nothing clicks off. To remove one, you have to lift the pawl on purpose.</p>
+  <h2>What works grew out of something that worked.</h2><p>John Gall wrote that down in 1975. Start with a simple thing that keeps time, then grow it one part at a time.</p>
+  <h2>Three ways to know you over-built.</h2><p>One caller. Might need it later. A system watching a system: my optimizer only saw the first 3,000 characters of what it tuned.</p>
+  <h2>One rule doing real work beats ten that sound wise.</h2><p>When I retired the routing layer, my instruction file went from 1,013 words to 734.</p>
+  <h2>Before you add, name what you will delete.</h2><p>Pick the part you will give up first. Only then can you add one.</p>
+  <h2>Chuck it. It's extra weight.</h2><p>One part, one shadow. It keeps time. The simplest thing that works.</p>
+</main>
+<style>html,body{overflow:auto;height:auto}#frame,#park{display:none}</style>
+</noscript>
+
+<script type="module" src="./deck.js"></script>
+</body>
+</html>

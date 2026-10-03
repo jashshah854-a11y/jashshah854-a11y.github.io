@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Russia has a free hand</title>
+<meta name="description" content="Scenario analysis of Russia's strike campaign on Kyiv and what still constrains it, as of 3 October 2026.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400&amp;family=PT+Sans+Narrow:wght@400;700&amp;family=PT+Mono&amp;display=swap" rel="stylesheet">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="./deck.css">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js"}}</script>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="pencil" x="-4%" y="-4%" width="108%" height="108%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="3"/>
+    </filter>
+  </defs>
+</svg>
+
+<noscript>
+  <style>#stage{display:none}.noscript-reader{display:block!important}</style>
+  <div class="noscript-reader" style="display:none;max-width:42rem;margin:0 auto;padding:24px;color:#f1e9d6;font-family:'PT Serif',serif">
+    <h1>Russia has a free hand. In the air.</h1>
+    <p>Scenario analysis, as of 3 October 2026. Turn on JavaScript for the interactive sheets.</p>
+    <ol>
+      <li><h2>Russia has a free hand. In the air.</h2><p>Kyiv's winter under the strike campaign, and what still stands between a hard winter and the worst case.</p></li>
+      <li><h2>What changed in 2026.</h2><p>This deck tests one scenario: the total destruction of Kyiv and the collapse of Ukraine's forces. It is scenario analysis, not prediction.</p></li>
+      <li><h2>On the ground, Russia is stuck.</h2><p>ISW counts 622.6 km2 of Russian gains in January to June 2026, 28% of the 2,189.87 km2 in the same months of 2025. In September ISW records a net Russian loss of 80.81 km2.</p></li>
+      <li><h2>In the air, the pressure is rising.</h2><p>Russia launched 376 missiles in July, a monthly record, and 4,956 long-range drones. Totals for March, April, August and September were not found.</p></li>
+      <li><h2>The gap is ballistic missiles.</h2><p>On 6 July Russia launched 29 ballistic missiles and Ukraine intercepted none. In July it launched 126, and under a third were downed.</p></li>
+      <li><h2>Count the nights on Kyiv.</h2><p>Five nights in the sources reviewed. Three have a stated weapon count: 690, 729 and 570.</p></li>
+      <li><h2>Kyiv is being cut up, not only hit.</h2><p>Eight bridges cross the Dnipro in Kyiv. On 1 and 2 October the Southern Bridge was struck repeatedly and the Paton Bridge was open in one direction only.</p></li>
+      <li><h2>The cost falls on civilians.</h2><p>The UN verified 293 civilians killed in June and 372 in August. January to August: 2,222 killed and 13,058 injured. The UN says the true figure is higher.</p></li>
+      <li><h2>The danger is a winter campaign.</h2><p>Reporting says Russia plans to isolate Kyiv, Kharkiv, Lviv and Odesa as winter begins and to collapse Ukraine's energy system.</p></li>
+      <li><h2>Limits on both sides.</h2><p>Russia's deficit already exceeds its full-year plan. The US package has no Patriot missiles and Europe is shifting aid toward buying US weapons.</p></li>
+      <li><h2>What to watch.</h2><p>The evidence does not support the collapse of Ukraine's forces. It supports a hard winter by air.</p></li>
+    </ol>
+  </div>
+</noscript>
+
+<div id="stage">
+  <canvas id="bgCanvas" aria-hidden="true"></canvas>
+  <div id="viz-layer" aria-hidden="true"></div>
+  <div id="viz-msg" class="viz-msg" role="status" hidden></div>
+
+  <main id="slides">
+
+    <!-- 1 -->
+    <section class="slide s-cover on" id="s1" data-screen-label="1 Title">
+      <img class="cover" src="./cover.jpg" alt="Clear acetate sheets with red and blue grease-pencil front lines lifted above an old topographic map of a river city, lit by a desk lamp.">
+      <div class="cover-shade"></div>
+      <div class="copy">
+        <h1>Russia has a free hand.<br><em>In the air.</em></h1>
+        <p class="body">Kyiv's winter under the strike campaign, and what still stands between a hard winter and the worst case.</p>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="slide wide" id="s2" data-screen-label="2 What changed">
+      <div class="copy">
+        <h2>What changed <em>in 2026.</em></h2>
+        <p class="body">This deck tests one scenario: the total destruction of Kyiv and the collapse of Ukraine's forces. It is scenario analysis, not prediction. The sheets show what supports it, what constrains it, and what would mean it is coming.</p>
+      </div>
+      <ol class="timeline">
+        <li><time>18 Feb</time><p>Geneva talks end after about two hours. Zelensky says Russia is dragging out negotiations. <span class="src">S34</span></p></li>
+        <li><time>25 Mar</time><p>Largest 24-hour drone wave of the year: 948 drones, western cities hit. <span class="src">S11</span></p></li>
+        <li><time>23 Apr</time><p>The EU approves a EUR 90bn loan for 2026 and 2027 after Hungary lifts its veto. <span class="src">S26</span></p></li>
+        <li><time>24 May to 2 Jul</time><p>Three heavy nights on Kyiv. July brings 376 missiles, a monthly record. <span class="src">S12 S8</span></p></li>
+        <li><time>5 to 6 Sep</time><p>US envoys reach Kyiv. Putin orders a 72-hour pause in strikes on the capital. <span class="src">S30 S32</span></p></li>
+        <li><time>1 to 2 Oct</time><p>Southern Bridge struck repeatedly. Paton Bridge open in one direction only. <span class="src">S19</span></p></li>
+      </ol>
+    </section>
+
+    <!-- 3 -->
+    <section class="slide v3" id="s3" data-screen-label="3 On the ground" data-steps="4" data-viz="front" data-step-word="Overlay">
+      <div class="copy">
+        <h2>On the ground, <em>Russia is stuck.</em></h2>
+        <p class="body">ISW counts 622.6 km² of Russian gains in January to June 2026, 28% of the 2,189.87 km² in the same months of 2025. In September ISW records a net Russian loss.</p>
+        <table class="readout" id="ro-ground">
+          <caption class="sr">One month of Russian territorial change, per sheet</caption>
+          <tbody>
+            <tr data-i="1"><th>June 2025</th><td>+481.25 km²</td><td class="src">S4</td></tr>
+            <tr data-i="2"><th>June 2026</th><td>+30.42 km²</td><td class="src">S4</td></tr>
+            <tr data-i="3"><th>Sept 2026, ISW</th><td>−80.81 km²</td><td class="src">S1</td></tr>
+            <tr data-i="4" class="claim"><th>Sept 2026, Putin</th><td>+1,301 km²</td><td class="src">S1</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="viz-mount js-only" aria-hidden="true"></div>
+      <div class="stepper js-only" role="group" aria-label="Overlay steps"></div>
+      <p class="stepcap" aria-live="polite"></p>
+      <p class="note">Schematic sheet. Line shape is illustrative and place positions are approximate. The red line moves in proportion to the ISW area figure for one month. The dotted line is the start line. Blue is the Ukrainian line. <span class="src">S4 S1 S2</span></p>
+    </section>
+
+    <!-- 4 -->
+    <section class="slide wide" id="s4" data-screen-label="4 In the air">
+      <div class="copy">
+        <h2>In the air, <em>the pressure is rising.</em></h2>
+        <p class="body">Russia launched 376 missiles in July, a monthly record, and 4,956 long-range drones. Totals for March, April, August and September were not found, so those months are left blank.</p>
+      </div>
+      <div class="charts" id="charts-air"></div>
+      <p class="note">Ukrainian Air Force data compiled by AFP. Hatched bars are derived from AFP percentage changes. Largest single 24 hours: 948 drones on 25 March. <span class="src">S10 S9 S8 S11</span></p>
+    </section>
+
+    <!-- 5 -->
+    <section class="slide wide" id="s5" data-screen-label="5 Ballistic gap">
+      <div class="copy">
+        <h2>The gap is <em>ballistic missiles.</em></h2>
+        <p class="body">On 6 July Russia launched 29 ballistic missiles and Ukraine intercepted none. In July it launched 126, and analysts count under a third downed. The interceptors that stop them are in short supply everywhere.</p>
+      </div>
+      <div class="dots-wrap">
+        <figure class="dotpanel a">
+          <figcaption><b>6 July</b><span>29 launched, 0 intercepted <i class="src">S15</i></span></figcaption>
+          <div class="dots" id="dots-a" role="img" aria-label="29 ring marks, none crossed out"></div>
+        </figure>
+        <figure class="dotpanel b">
+          <figcaption><b>July</b><span>126 launched, under a third downed <i class="src">S8</i></span></figcaption>
+          <div class="dots" id="dots-b" role="img" aria-label="126 ring marks, with the first third bracketed"></div>
+          <p class="third">Dashed rows: a third of 126 is 42. Under a third were downed.</p>
+        </figure>
+      </div>
+      <ul class="supply">
+        <li><b>About 120 a month</b> Ukrainian officials' estimate of Russian ballistic production <span class="src">S15</span></li>
+        <li><b>About 60 to 65 a month</b> Patriot interceptors from Lockheed Martin, about 600 a year (Zelensky) <span class="src">S15</span></li>
+        <li><b>One third</b> of the 2025 interceptor deliveries arrived in 2026 (Zelensky, 5 Aug) <span class="src">S16</span></li>
+      </ul>
+    </section>
+
+    <!-- 6 -->
+    <section class="slide v3" id="s6" data-screen-label="6 Strike ledger" data-steps="5" data-viz="cityLedger" data-step-word="Night">
+      <div class="copy">
+        <h2>Count the nights <em>on Kyiv.</em></h2>
+        <p class="body">Five nights in the sources reviewed, not every night of the campaign. One mark is one weapon: a dot for a drone, a ring for a missile. Step through to add a night.</p>
+        <dl class="tally" id="tally">
+          <div><dt>Nights logged</dt><dd><span id="t-nights">0</span> of 5</dd></div>
+          <div><dt>Weapons counted</dt><dd id="t-weap">0</dd></div>
+        </dl>
+      </div>
+      <div class="viz-mount js-only" aria-hidden="true"></div>
+      <div class="stepper js-only" role="group" aria-label="Night steps"></div>
+      <p class="stepcap" aria-live="polite"></p>
+      <p class="note">Schematic city sheet. Strike positions inside Kyiv are not in the sources, so each night is logged on the ledger acetate rather than placed on the streets. Weapon counts: Ukrainian Air Force figures. <span class="src">S12 S52 S51 S8 S18 S19</span></p>
+    </section>
+
+    <!-- 7 -->
+    <section class="slide v3" id="s7" data-screen-label="7 Bridges" data-steps="2" data-viz="cityBridges" data-step-word="Bridge">
+      <div class="copy">
+        <h2>Kyiv is being cut up, <em>not only hit.</em></h2>
+        <p class="body">Eight bridges cross the Dnipro in Kyiv. On 1 and 2 October the Southern Bridge was struck repeatedly and the Paton Bridge was open in one direction only. The mayor: "The enemy is tearing Kyiv apart." <span class="src">S19</span></p>
+        <ul class="key">
+          <li><i class="k hit"></i>Struck</li>
+          <li><i class="k lim"></i>Restricted</li>
+          <li><i class="k nr"></i>No report in the sources</li>
+        </ul>
+      </div>
+      <div class="viz-mount js-only" aria-hidden="true"></div>
+      <div class="stepper js-only" role="group" aria-label="Bridge steps"></div>
+      <p class="stepcap" aria-live="polite"></p>
+      <p class="note">Schematic city sheet. Bridge positions along the river are approximate, and reports differ on whether eight counts road bridges only.</p>
+    </section>
+
+    <!-- 8 -->
+    <section class="slide wide" id="s8" data-screen-label="8 Civilians">
+      <div class="copy">
+        <h2>The cost <em>falls on civilians.</em></h2>
+        <p class="body">The UN verified 293 civilians killed in June, the deadliest month since April 2022, and 372 in August. January to August: 2,222 killed and 13,058 injured. The UN says the true figure is higher.</p>
+      </div>
+      <dl class="bigstat hero"><div class="hk"><dt>Civilians killed, Jan to Aug 2026</dt><dd>2,222 <span class="src">S23</span></dd></div><div class="hi"><dt>Injured, Jan to Aug 2026</dt><dd>13,058 <span class="src">S23</span></dd></div></dl>
+      <div class="bars two" id="bars-civ">
+        <div class="bgroup" data-max="500">
+          <h3>Civilians killed, UN verified</h3>
+          <div class="hb" data-v="293"><span class="hb-l">June 2026</span><span class="hb-t"><i></i></span><span class="hb-v">293 <b class="src">S22</b></span></div>
+          <div class="hb derived" data-v="454"><span class="hb-l">July 2026</span><span class="hb-t"><i></i></span><span class="hb-v">454 <em>derived</em></span></div>
+          <div class="hb" data-v="372"><span class="hb-l">August 2026</span><span class="hb-t"><i></i></span><span class="hb-v">372 <b class="src">S23</b></span></div>
+          <p class="gnote">July is not stated. 454 is 2,222 minus 1,396 minus 372, and assumes no revisions.</p>
+        </div>
+        <div class="bgroup" data-max="1500">
+          <h3>First half of the year</h3>
+          <div class="hb" data-v="1019"><span class="hb-l">2025</span><span class="hb-t"><i></i></span><span class="hb-v">1,019 <b class="src">S22</b></span></div>
+          <div class="hb" data-v="1396"><span class="hb-l">2026</span><span class="hb-t"><i></i></span><span class="hb-v">1,396 <b class="src">S22</b></span></div>
+          <p class="gnote">UN cumulative since February 2022: 16,431 verified deaths, 803 of them children, to June 2026. Verification is impossible in occupied areas. <span class="src">S22</span></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 -->
+    <section class="slide v3" id="s9" data-screen-label="9 Winter chain" data-steps="3" data-viz="chain" data-step-word="Link">
+      <div class="copy">
+        <h2>The danger is <em>a winter campaign.</em></h2>
+        <p class="body">Reporting says Russia plans to isolate Kyiv, Kharkiv, Lviv and Odesa as winter begins and to collapse Ukraine's energy system. Step through the chain, one link at a time.</p>
+        <p class="link-status" id="link-status" hidden></p>
+      </div>
+      <div class="viz-mount js-only" aria-hidden="true"></div>
+      <div class="stepper js-only" role="group" aria-label="Link steps"></div>
+      <p class="stepcap" aria-live="polite"></p>
+      <p class="note">Arcs show direction and named targets only. Launch sites are not mapped. Hatched oval is schematic. <span class="src">S1 S45 S53</span></p>
+    </section>
+
+    <!-- 10 -->
+    <section class="slide wide" id="s10" data-screen-label="10 Limits">
+      <div class="copy">
+        <h2>Limits <em>on both sides.</em></h2>
+        <p class="body">Russia's deficit already exceeds its full-year plan, and contract recruitment is slower. Europe is shifting aid toward buying US weapons, and the US package has no Patriot missiles.</p>
+      </div>
+      <div class="bars two" id="bars-lim">
+        <div class="bgroup">
+          <h3>Russia</h3>
+          <div class="sub" data-max="6.5"><p>Budget deficit, trillion rubles</p>
+            <div class="hb" data-v="5.8"><span class="hb-l">Jan to Aug actual</span><span class="hb-t"><i></i></span><span class="hb-v">5.8 <b class="src">S35</b></span></div>
+            <div class="hb cmp" data-v="3.8"><span class="hb-l">Full-year plan</span><span class="hb-t"><i></i></span><span class="hb-v">3.8 <b class="src">S35</b></span></div>
+          </div>
+          <div class="sub" data-max="300"><p>Army contracts signed, Jan to Aug, thousand</p>
+            <div class="hb" data-v="234"><span class="hb-l">2026</span><span class="hb-t"><i></i></span><span class="hb-v">234 <b class="src">S38</b></span></div>
+            <div class="hb cmp" data-v="260"><span class="hb-l">2025</span><span class="hb-t"><i></i></span><span class="hb-v">260 <b class="src">S38</b></span></div>
+          </div>
+          <div class="sub" data-max="40"><p>Per month in 2026, thousand (CSIS)</p>
+            <div class="hb" data-v="30" data-ext="4"><span class="hb-l">Casualties</span><span class="hb-t"><i></i><u></u></span><span class="hb-v">30 to 34 <b class="src">S37</b></span></div>
+            <div class="hb cmp" data-v="27"><span class="hb-l">New recruits</span><span class="hb-t"><i></i></span><span class="hb-v">about 27 <b class="src">S37</b></span></div>
+          </div>
+        </div>
+        <div class="bgroup">
+          <h3>Ukraine's supporters</h3>
+          <div class="sub" data-max="8"><p>European allocations, May to June, EUR billion</p>
+            <div class="hb" data-v="4.3"><span class="hb-l">Military</span><span class="hb-t"><i></i></span><span class="hb-v">4.3 <b class="src">S24</b></span></div>
+            <div class="hb cmp" data-v="6.7"><span class="hb-l">Financial and humanitarian</span><span class="hb-t"><i></i></span><span class="hb-v">6.7 <b class="src">S24</b></span></div>
+          </div>
+          <ul class="facts">
+            <li><b>EUR 90bn</b> EU loan for 2026 and 2027, approved 23 April <span class="src">S26</span></li>
+            <li><b>About $400M</b> US package, $307M contracted, no Patriot missiles <span class="src">S27</span></li>
+            <li><b>EUR 3bn or more</b> spent by Europe on US weapons, January to June <span class="src">S24</span></li>
+            <li><b>No new pledges</b> of Patriot interceptors at the 1 September EU defence ministers' meeting <span class="src">S29</span></li>
+          </ul>
+        </div>
+      </div>
+      <p class="note">Estimates of Russian casualties and recruitment differ by source. Financial and humanitarian aid ran 41% below the 2025 monthly average. <span class="src">S24 S37</span></p>
+    </section>
+
+    <!-- 11 -->
+    <section class="slide v3 gauge-slide" id="s11" data-screen-label="11 What to watch" data-viz="pressure">
+      <div class="copy">
+        <h2>What <em>to watch.</em></h2>
+        <p class="body">The evidence does not support the collapse of Ukraine's forces. It supports a hard winter by air. Weight the indicators yourself: this is a reasoning tool, not a forecast.</p>
+        <div class="gauge" id="gauge">
+          <svg viewBox="0 0 320 190" role="img" aria-label="Scenario pressure gauge">
+            <g filter="url(#pencil)">
+              <path id="g-b1" class="gband" d="M20 170 A140 140 0 0 1 77 57" />
+              <path id="g-b2" class="gband" d="M77 57 A140 140 0 0 1 245 52" />
+              <path id="g-b3" class="gband" d="M245 52 A140 140 0 0 1 300 170" />
+              <line id="g-needle" x1="160" y1="170" x2="160" y2="52" />
+              <circle cx="160" cy="170" r="7" class="hub"/>
+            </g>
+            <text x="20" y="188" class="gl">calmer</text>
+            <text x="300" y="188" text-anchor="end" class="gl">harsher</text>
+          </svg>
+          <div class="g-read"><output id="g-val" aria-live="polite">42</output><span id="g-band">Coercive attrition</span></div>
+        </div>
+        <p class="gnote2">Scenario pressure, 0 to 100. Bands follow the brief's three scenarios: stabilization, coercive attrition (central case), systemic shock (the scenario tested). The cut points at 34 and 67 are arbitrary. Starting positions are the author's reading of the evidence, set by hand.</p>
+      </div>
+      <div class="viz-mount js-only" aria-hidden="true"></div>
+      <div class="panel" id="panel" role="group" aria-label="Indicator weights">
+        <div class="panel-h"><span>Indicator</span><span>Your reading</span><span>Weight</span></div>
+        <div id="panel-rows"></div>
+        <button class="reset js-only" id="panel-reset" type="button">Back to starting positions</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bar" id="bar">
+    <span id="counter" class="counter">Sheet 1 of 11 · as of 3 Oct 2026</span>
+    <div class="bar-btns">
+      <button id="btn-sources" type="button" aria-haspopup="dialog" aria-controls="sources">Sources</button>
+      <button id="btn-prev" type="button" aria-label="Previous sheet">←</button>
+      <button id="btn-next" type="button" aria-label="Next sheet" class="primary">→</button>
+    </div>
+  </footer>
+</div>
+
+<aside id="sources" class="sources" role="dialog" aria-modal="true" aria-labelledby="sources-h" hidden>
+  <div class="sources-in">
+    <div class="sources-top"><h2 id="sources-h">Sources</h2><button id="sources-close" type="button" aria-label="Close sources">Close</button></div>
+    <p class="sources-lead">Every number on a sheet traces to one entry below. Facts after mid-2026 come only from these. Scenario analysis, as of 3 October 2026.</p>
+    <ol id="sources-list"></ol>
+    <h3>Derived, excluded, not used</h3>
+    <ul id="sources-notes"></ul>
+  </div>
+</aside>
+
+<script type="module" src="./deck.js"></script>
+</body>
+</html>

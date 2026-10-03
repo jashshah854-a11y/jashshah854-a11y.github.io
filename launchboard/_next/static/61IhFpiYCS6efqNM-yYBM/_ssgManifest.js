@@ -1,0 +1,1 @@
+self.__SSG_MANIFEST=new Set(["\u002Fautomations\u002F[id]","\u002Fcampaigns\u002F[id]","\u002Flaunches\u002F[id]","\u002Fpipeline\u002F[id]","\u002Fsync\u002F[id]"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()

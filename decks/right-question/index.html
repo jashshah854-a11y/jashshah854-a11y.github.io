@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The right question</title>
+<meta name="description" content="Most hard problems are hard because the question is too wide. Change the mesh and the pour changes what it keeps.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&amp;family=Martian+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link rel="icon" href="data:,">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}</script>
+<style>
+:root{
+  --bench:#0e0f10;
+  --ink:#f2efe8;
+  --soft:#e9e6df;
+  --mute:#b9b4aa;
+  --gold:#d8a93f;
+  --hair:#2c2d2e;
+  --line:#3a3b3c;
+  --serif:'Young Serif',Georgia,serif;
+  --mono:'Martian Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bench);color:var(--soft);font-family:var(--mono);overflow:hidden;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+/* ---------- stage (desktop: fixed 16:9 scaled to fit) ---------- */
+#deck{position:fixed;inset:0;overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;width:1440px;height:810px;margin:-405px 0 0 -720px;transform:scale(var(--s,1));transform-origin:center center;overflow:hidden;background:var(--bench)}
+.cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;opacity:1;transition:opacity .8s ease}
+#stage:not(.is-cover) .cover{opacity:0}
+#viz{position:absolute;inset:0;z-index:2;opacity:0;transition:opacity .8s ease}
+#stage:not(.is-cover) #viz{opacity:1}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block}
+.veil,.veil-viz{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to left,rgba(14,15,16,.9) 0%,rgba(14,15,16,.55) 30%,rgba(14,15,16,0) 52%)}
+.veil{z-index:3;transition:opacity .8s ease}
+#stage:not(.is-cover) .veil{opacity:0}
+.veil-viz{z-index:0}
+.veil-deep{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0;background:linear-gradient(to left,rgba(14,15,16,.97) 0%,rgba(14,15,16,.9) 36%,rgba(14,15,16,.4) 50%,rgba(14,15,16,0) 62%)}
+#lead{z-index:1}
+#lead{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+#lead line{stroke:var(--gold);stroke-width:1;opacity:0;transition:opacity .35s}
+#lead line.on{opacity:.9}
+#lead line.dim{stroke:var(--mute)}
+#lead circle{fill:none;stroke:var(--gold);stroke-width:1.5;opacity:0;transition:opacity .35s}
+#lead circle.on{opacity:1}
+.lab{z-index:2;position:absolute;left:0;top:0;pointer-events:none;opacity:0;transition:opacity .35s ease;will-change:transform}
+.lab.on{opacity:1}
+.lab.flake{max-width:250px;text-shadow:0 1px 10px rgba(14,15,16,.95)}
+.lab.flake b{display:block;font:400 26px/1.1 var(--serif);color:var(--gold)}
+.lab.flake i{display:block;margin-top:6px;font-style:normal;font-size:11.5px;line-height:1.5;color:#d3cec4}
+.lab.lost{font-size:12px;color:var(--soft);white-space:nowrap;background:rgba(14,15,16,.8);padding:4px 8px;border-radius:2px}
+.lab.tag{font-size:11.5px;line-height:1.4;color:var(--soft);background:rgba(14,15,16,.84);border:1px solid var(--line);padding:6px 10px;border-radius:2px;max-width:210px}
+.lab.tag.hot{border-color:var(--gold)}
+.lab.note{font-size:11px;color:var(--soft);white-space:nowrap;background:rgba(14,15,16,.8);padding:3px 7px;border-radius:2px}
+.lab.cand{display:flex;align-items:center;gap:10px;white-space:nowrap;padding:6px 12px;background:rgba(14,15,16,.88);border:1px solid var(--line);border-radius:2px;min-height:34px}
+.lab.cand b{font:400 17px/1 var(--serif);color:var(--gold)}
+.lab.cand i{font-style:normal;font-size:11px;color:var(--mute)}
+.lab.cand u{display:none;text-decoration:none;font:400 16px/1 var(--serif);color:var(--ink);border:1.5px solid var(--ink);padding:3px 9px;border-radius:2px;transform:rotate(-3deg)}
+.lab.cand.rej{border-color:var(--hair)}
+.lab.cand.rej b{color:var(--mute)}
+.lab.cand.rej i{display:none}
+.lab.cand.rej u{display:inline-block;animation:stamp .3s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes stamp{from{opacity:0;transform:rotate(-3deg) scale(1.8)}to{opacity:1;transform:rotate(-3deg) scale(1)}}
+.viz-msg{position:absolute;left:72px;top:50%;font-size:13px;color:var(--mute);transform:translateY(-50%)}
+.viz-msg[hidden]{display:none}
+
+/* ---------- slides ---------- */
+.slide{position:absolute;inset:0;z-index:4;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .5s ease,visibility 0s linear .5s}
+.slide.on{opacity:1;visibility:visible;pointer-events:none;transition:opacity .5s ease .12s,visibility 0s}
+.copy{position:absolute;right:72px;top:150px;width:520px;display:flex;flex-direction:column;gap:24px}
+.copy h1{margin:0;font-family:var(--serif);font-weight:400;font-size:56px;line-height:1.05;color:var(--ink)}
+.copy p{margin:0;font-size:15px;line-height:1.7;color:var(--mute)}
+.slide.on .copy>*{pointer-events:auto}
+.slide.on .copy p,.slide.on .copy h1{pointer-events:none}
+.slide .slot{display:none}
+.gold{color:var(--gold)}
+.s1 .copy h1{font-size:78px;line-height:1.02;gap:0}
+.s1 .copy{gap:26px}
+.s7 .copy{top:92px;gap:20px}
+.s8 .copy{top:118px;gap:20px}
+.s7 .copy h1,.s8 .copy h1{font-size:48px}
+
+.qline{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 14px;border-top:1px solid var(--hair);padding-top:18px;min-height:64px}
+.qline .qt{font:400 25px/1.2 var(--serif);color:var(--ink);transition:color .4s}
+.qline .mt{font-size:11px;color:var(--mute);border:1px solid var(--line);padding:2px 8px;border-radius:2px;white-space:nowrap;transition:color .4s,border-color .4s}
+.qline[data-m="wide"] .qt{color:var(--mute)}
+.qline[data-m="fine"] .mt{color:var(--gold);border-color:var(--gold)}
+.qline.pop .qt,.qline.pop .mt{animation:qin .4s ease both}
+@keyframes qin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.chips{display:flex;flex-direction:column;border-top:1px solid var(--hair)}
+.chip,.row{display:flex;justify-content:space-between;align-items:baseline;gap:16px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--hair);color:var(--soft);padding:12px 2px;min-height:44px}
+.chip{font-size:13.5px}
+.chip:hover,.row:hover{color:var(--ink)}
+.chip .st,.row .st{font-size:11px;color:var(--mute);white-space:nowrap}
+.chip[aria-pressed="true"]{color:var(--ink)}
+.chip[aria-pressed="true"] .st,.row[aria-pressed="true"] .st{color:var(--gold)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.steps li button{display:block;width:100%;text-align:left;background:none;border:0;padding:5px 2px;min-height:32px;font:400 19px/1.25 var(--serif);color:#6f6c66;transition:color .35s}
+.steps li.past button{color:var(--mute)}
+.steps li.now button{color:var(--ink)}
+.steps li.now.last button{color:var(--gold)}
+.note{font-size:11px!important;line-height:1.5!important;color:#8b877f!important}
+.rows{list-style:none;margin:0;padding:0;border-top:1px solid var(--hair)}
+.row{flex-direction:column;align-items:stretch;gap:4px;padding:14px 2px}
+.row .top{display:flex;justify-content:space-between;align-items:baseline;gap:16px}
+.row .rq{font:400 24px/1.2 var(--serif);color:var(--ink)}
+.row .rg{font-size:12px;line-height:1.55;color:var(--mute)}
+
+/* ---------- controls ---------- */
+.bar{display:contents}
+.ctl-r{position:absolute;right:72px;bottom:44px;width:520px;z-index:6;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mute)}
+.btn{display:inline-flex;align-items:center;gap:12px;min-height:48px;padding:0 22px;border:1px solid var(--gold);background:rgba(14,15,16,.4);color:var(--ink);border-radius:3px;font-size:13px;transition:background .2s}
+.btn:hover{background:rgba(216,169,63,.14)}
+.btn span{color:var(--gold)}
+.ctl-l{position:absolute;left:72px;bottom:44px;z-index:6;display:flex;gap:8px;align-items:center}
+.sq{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);background:rgba(14,15,16,.8);color:var(--soft);border-radius:3px;font-size:15px;padding:0}
+.sq:hover{border-color:var(--gold)}
+.sq[disabled]{opacity:.35;cursor:default}
+.srcbtn{height:44px;padding:0 16px;border:1px solid var(--line);background:rgba(14,15,16,.8);color:var(--soft);border-radius:3px;font-size:12px}
+.srcbtn:hover{border-color:var(--gold)}
+
+/* ---------- sources ---------- */
+#sources{position:fixed;top:0;right:0;bottom:0;width:min(460px,100vw);z-index:50;background:#131415;border-left:1px solid var(--hair);transform:translateX(102%);transition:transform .35s cubic-bezier(0,0,.2,1);overflow-y:auto;padding:28px 28px 40px;visibility:hidden}
+#sources.open{transform:none;visibility:visible}
+#sources h2{margin:0 44px 18px 0;font:400 28px/1.1 var(--serif);color:var(--ink)}
+#sources ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:20px}
+#sources li{border-top:1px solid var(--hair);padding-top:14px;font-size:12px;line-height:1.6;color:var(--mute)}
+#sources li b{display:block;font-weight:500;color:var(--soft);font-size:13px;line-height:1.45;margin-bottom:4px}
+#sources li code{font-family:var(--mono);font-size:11px;color:var(--soft);word-break:break-word}
+#sources .x{position:absolute;top:20px;right:20px}
+#sources .intro{margin:0 0 20px;font-size:12px;line-height:1.6;color:var(--mute)}
+#live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+.noscript-reader{display:none}
+
+/* ---------- phone: reflowed vertical reader ---------- */
+@media (max-width:720px){
+  html,body{overflow:hidden}
+  #deck{position:fixed;inset:0}
+  #stage{position:absolute;inset:0;left:0;top:0;width:auto;height:auto;margin:0;transform:none;overflow:hidden}
+  .cover,.veil,.veil-viz,.veil-deep{display:none}
+  #viz{position:relative;inset:auto;width:100%;height:100%;opacity:1}
+  .slide{position:absolute;inset:0 0 84px 0;overflow-y:auto;overflow-x:hidden;padding:60px 20px 24px;-webkit-overflow-scrolling:touch}
+  .slide.on{pointer-events:auto}
+  .copy{position:static;width:auto;gap:16px}
+  .copy h1,.s7 .copy h1,.s8 .copy h1{font-size:34px;line-height:1.08}
+  .s1 .copy h1{font-size:44px}
+  .s7 .copy,.s8 .copy{top:auto}
+  .slide .slot{display:block;position:relative;width:100%;height:min(46dvh,400px);min-height:250px;overflow:hidden;background:var(--bench);border:1px solid var(--hair)}
+  .s1 .slot{height:auto;aspect-ratio:16/9;min-height:0}
+  .s7 .slot,.s8 .slot{position:sticky;top:0;z-index:8}
+  .slot .slot-cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .copy p{font-size:14px}
+  .qline .qt{font-size:21px}
+  .row .rq{font-size:20px}
+  .steps li button{font-size:17px}
+  .bar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:30;height:84px;align-items:center;justify-content:space-between;gap:8px;padding:0 14px;background:rgba(14,15,16,.96);border-top:1px solid var(--hair)}
+  .ctl-l,.ctl-r{position:static;width:auto;z-index:auto}
+  .ctl-l{gap:6px}
+  .ctl-r{gap:10px;flex:1;justify-content:flex-end}
+  .ctl-r .cnt{font-size:11px;white-space:nowrap}
+  .btn{padding:0 12px;min-height:48px;font-size:12px;white-space:nowrap;gap:8px}
+  .srcbtn{position:fixed;top:10px;right:12px;z-index:31}
+  .lab.flake{max-width:165px;background:rgba(14,15,16,.88);padding:6px 9px;border-radius:2px}
+  .lab.flake b{font-size:19px}
+  .lab.flake i{font-size:10.5px}
+  .lab.tag{font-size:10px;padding:4px 7px;max-width:130px}
+  .lab.cand{padding:3px 8px;min-height:26px;gap:6px}
+  .lab.cand b{font-size:13px}
+  .lab.cand i{display:none}
+  .lab.cand u{font-size:12px;padding:2px 6px}
+  .viz-msg{left:16px}
+}
+@media (max-width:380px){
+  .ctl-r span.cnt{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .slide,.slide.on,.cover,.veil,#viz,#sources,.lab,.lab.cand u,.qline .qt,.qline .mt{transition:none!important;animation:none!important}
+}
+</style>
+<noscript>
+<style>#deck,#sources,.bar{display:none!important}html,body{overflow:auto;height:auto}.noscript-reader{display:block!important}</style>
+</noscript>
+</head>
+<body>
+
+<noscript>
+  <main class="noscript-reader" style="max-width:42rem;margin:0 auto;padding:28px 20px 60px;color:#e9e6df">
+    <h1 style="font-family:'Young Serif',Georgia,serif;font-weight:400;font-size:40px;line-height:1.1;color:#f2efe8">Ask better. The answer gets simple.</h1>
+    <p style="color:#b9b4aa;line-height:1.7">Most hard problems are hard because the question is too wide. Change the mesh and the pour changes what it keeps. This deck needs JavaScript for its 3D bench. Here is the text.</p>
+    <ol style="line-height:1.7;padding-left:1.2em">
+      <li><h2 style="font-family:'Young Serif',Georgia,serif;font-weight:400;color:#f2efe8">Ask better. The answer gets simple.</h2><p>Most hard problems are hard because the question is too wide. Change the mesh and the pour changes what it keeps.</p></li>
+      <li><h2 style="font-family:'Young Serif',Georgia,serif;font-weight:400;color:#f2efe8">A big question lets everything through.</h2><p>How do we automate support? Nobody can answer that. So every message pours straight through, and all you are left holding is the pile.</p></li>
+      <li><h2 style="font-family:'Young Serif',Georgia,serif;font-weight:400;color:#f2efe8">A small question has one answer.</h2><p>Same inbox. Which team should get this message? Every message has exactly one answer. The mesh closes and one thing stays.</p></li>
+      <li><h2 style="font-family:'Young Serif',Georgia,serif;font-weight:400;color:#f2efe8">Four wins on paper. Four rejections.</h2><p>My optimizer kept improving my skills. Its own scores said they got better. I rejected all four. Each had quietly lost its back half. So I asked the wide question: is the model bad?</p></li>
+      <li><h2 style="font-family:'Young Serif',Georgia,serif;font-weight:400;color:#f2efe8">What did it actually see?</h2><p>Only the first 3,000 characters of each skill. So every improvement quietly deleted the back half. Lifting that one cap fixed the loop.</p></li>
+      <li><h2 style="font-family:'Young Serif',Georgia,serif;font-weight:400;color:#f2efe8">The perfect number was two errors.</h2><p>In my Launchboard demo, ad spend read 99% of plan. It looked perfect. Is the math wrong? Dead end. Is anything cancelling out? One flight 15.7% over, another 27.0% under.</p></li>
+      <li><h2 style="font-family:'Young Serif',Georgia,serif;font-weight:400;color:#f2efe8">Wrong questions ask about the outcome.</h2><p>Each step asks about the input, the boundary, or what changed, until the mesh keeps something. Example: How do we automate support? What do people actually write in? What does each message need? Which team should get this message?</p></li>
+      <li><h2 style="font-family:'Young Serif',Georgia,serif;font-weight:400;color:#f2efe8">Three questions to carry.</h2><p>What changed? What can it actually see? What would make this obvious? Each one is a mesh.</p></li>
+      <li><h2 style="font-family:'Young Serif',Georgia,serif;font-weight:400;color:#f2efe8">The pour got cheap. The mesh did not.</h2><p>AI will answer anything, instantly. So the pour is free now, and the bottleneck moved to the question. A wide one only buys you a bigger pile, faster.</p></li>
+      <li><h2 style="font-family:'Young Serif',Georgia,serif;font-weight:400;color:#f2efe8">The tool was never the skill.</h2><p>Asking the right question is.</p></li>
+    </ol>
+  </main>
+</noscript>
+
+<div id="deck">
+<div id="stage" class="is-cover">
+  <img class="cover" src="./cover.jpg" alt="Stainless steel assay sieves on a black bench. Gravel pours in from a scoop, and one small gold flake rests on the finest mesh.">
+
+  <div id="viz">
+    <canvas id="gl" role="img" aria-label="Three stainless sieves on a black bench with a scoop of gravel above them."></canvas>
+    <div class="veil-viz"></div>
+    <div class="veil-deep"></div>
+    <svg id="lead" aria-hidden="true">
+      <line id="ld-flake" x1="0" y1="0" x2="0" y2="0"></line><circle id="ld-flake-dot" r="13" cx="0" cy="0"></circle>
+      <line id="ld-lost" class="dim" x1="0" y1="0" x2="0" y2="0"></line>
+    </svg>
+    <div class="lab flake" id="lbl-flake"><b></b><i></i></div>
+    <div class="lab lost" id="lbl-lost">Somewhere in there.</div>
+    <div class="lab tag" data-k="0"></div>
+    <div class="lab tag" data-k="1"></div>
+    <div class="lab tag" data-k="2"></div>
+    <div class="lab cand"><b>Winner 1</b><i>scored better</i><u>Rejected</u></div>
+    <div class="lab cand"><b>Winner 2</b><i>scored better</i><u>Rejected</u></div>
+    <div class="lab cand"><b>Winner 3</b><i>scored better</i><u>Rejected</u></div>
+    <div class="lab cand"><b>Winner 4</b><i>scored better</i><u>Rejected</u></div>
+    <div class="lab note" id="lbl-seen">seen</div>
+    <div class="lab note" id="lbl-unseen">never seen</div>
+    <div class="viz-msg" id="viz-msg" role="status">Setting up the bench</div>
+  </div>
+
+  <div class="veil"></div>
+
+  <!-- 1 -->
+  <section class="slide s1 on" data-i="1" data-screen-label="1 Title" aria-label="Pour 1 of 10">
+    <div class="copy">
+      <h1>Ask better.<br>The answer gets <span class="gold">simple.</span></h1>
+      <div class="slot"><img class="slot-cover" src="./cover.jpg" alt="Stainless steel assay sieves on a black bench. Gravel pours in from a scoop, and one small gold flake rests on the finest mesh."></div>
+      <p>Most hard problems are hard because the question is too wide. Change the mesh and the pour changes what it keeps.</p>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide s2" data-i="2" data-screen-label="2 Big question" aria-label="Pour 2 of 10">
+    <div class="copy">
+      <h1>A big question lets everything through.</h1>
+      <div class="slot"></div>
+      <p>How do we automate support? Nobody can answer that. So every message pours straight through, and all you are left holding is the pile.</p>
+      <div class="qline" data-q></div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide s3" data-i="3" data-screen-label="3 Small question" aria-label="Pour 3 of 10">
+    <div class="copy">
+      <h1>A small question has one answer.</h1>
+      <div class="slot"></div>
+      <p>Same inbox. Which team should get this message? Every message has exactly one answer. The mesh closes and one thing stays.</p>
+      <div class="qline" data-q></div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide s4" data-i="4" data-screen-label="4 Optimizer" aria-label="Pour 4 of 10">
+    <div class="copy">
+      <h1>Four wins on paper. Four rejections.</h1>
+      <div class="slot"></div>
+      <p>My optimizer kept improving my skills. Its own scores said they got better. I rejected all four. Each had quietly lost its back half. So I asked the wide question.</p>
+      <div class="qline" data-q></div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide s5" data-i="5" data-screen-label="5 What it saw" aria-label="Pour 5 of 10">
+    <div class="copy">
+      <h1>What did it actually see?</h1>
+      <div class="slot"></div>
+      <p>Only the first 3,000 characters of each skill. So every improvement quietly deleted the back half. Lifting that one cap fixed the loop.</p>
+      <div class="qline" data-q></div>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide s6" data-i="6" data-screen-label="6 Perfect number" aria-label="Pour 6 of 10">
+    <div class="copy">
+      <h1>The perfect number was two errors.</h1>
+      <div class="slot"></div>
+      <p>In my Launchboard demo, ad spend read 99% of plan. It looked perfect. Is the math wrong? Dead end. Is anything cancelling out? One flight 15.7% over, another 27.0% under.</p>
+      <div class="qline" data-q></div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide s7" data-i="7" data-screen-label="7 Narrow it" aria-label="Pour 7 of 10">
+    <div class="copy">
+      <h1>Wrong questions ask about the outcome.</h1>
+      <div class="slot"></div>
+      <p>Pick one. Each step asks about the input, the boundary, or what changed, until the mesh keeps something.</p>
+      <div class="chips" role="group" aria-label="Pick a vague question">
+        <button class="chip" type="button" data-pair="0" aria-pressed="false"><span>How do we automate support?</span><span class="st"></span></button>
+        <button class="chip" type="button" data-pair="1" aria-pressed="false"><span>Is the model bad?</span><span class="st"></span></button>
+        <button class="chip" type="button" data-pair="2" aria-pressed="false"><span>Is the math wrong?</span><span class="st"></span></button>
+      </div>
+      <ol class="steps" aria-live="polite"></ol>
+      <p class="note">Scripted examples, not live AI.</p>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide s8" data-i="8" data-screen-label="8 Three questions" aria-label="Pour 8 of 10">
+    <div class="copy">
+      <h1>Three questions to carry.</h1>
+      <div class="slot"></div>
+      <p>Each one is a mesh. Drop it on the stack and see what it keeps.</p>
+      <ul class="rows">
+        <li><button class="row" type="button" data-k="0" aria-pressed="false"><span class="top"><span class="rq">What changed?</span><span class="st">drop it</span></span><span class="rg">Sort out everything that stayed the same.</span></button></li>
+        <li><button class="row" type="button" data-k="1" aria-pressed="false"><span class="top"><span class="rq">What can it actually see?</span><span class="st">drop it</span></span><span class="rg">Check the input and where it stops.</span></button></li>
+        <li><button class="row" type="button" data-k="2" aria-pressed="false"><span class="top"><span class="rq">What would make this obvious?</span><span class="st">drop it</span></span><span class="rg">Ask for the one number that settles it.</span></button></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide s9" data-i="9" data-screen-label="9 Cheap pour" aria-label="Pour 9 of 10">
+    <div class="copy">
+      <h1>The pour got cheap. The mesh did not.</h1>
+      <div class="slot"></div>
+      <p>AI will answer anything, instantly. So the pour is free now, and the bottleneck moved to the question. A wide one only buys you a bigger pile, faster.</p>
+      <div class="qline" data-q></div>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide s10" data-i="10" data-screen-label="10 Close" aria-label="Pour 10 of 10">
+    <div class="copy">
+      <h1>The tool was never the skill.</h1>
+      <div class="slot"></div>
+      <p>Asking the right question is.</p>
+    </div>
+  </section>
+
+  <div class="bar">
+    <div class="ctl-l">
+      <button class="sq" id="prev" type="button" aria-label="Previous pour">&larr;</button>
+      <button class="sq" id="next" type="button" aria-label="Next pour">&rarr;</button>
+      <button class="srcbtn" id="srcbtn" type="button" aria-haspopup="dialog" aria-controls="sources" aria-expanded="false">Sources</button>
+    </div>
+    <div class="ctl-r">
+      <span class="cnt" id="counter">Pour 1 of 10</span>
+      <button class="btn" id="primary" type="button">Change the mesh <span aria-hidden="true">&rarr;</span></button>
+    </div>
+  </div>
+</div>
+</div>
+
+<aside id="sources" role="dialog" aria-modal="false" aria-labelledby="src-h" tabindex="-1">
+  <button class="sq x" id="srcclose" type="button" aria-label="Close sources">&times;</button>
+  <h2 id="src-h">Sources</h2>
+  <p class="intro">Every number on a slide traces to one entry here. The stories are my own work, so the records are private files, listed with where they live.</p>
+  <ol>
+    <li>
+      <b>Skill optimizer: truncation failure mode and its root cause, the 3,000-character input cap</b>
+      Jash Shah, working notes (private), 18 July 2026.<br>
+      Backs: four candidates reviewed and all four lost their back half; the optimizer saw only the first 3,000 characters; lifting the cap produced the first full-length variant.<br>
+      <code>No public URL. Local file: optimizer-truncation-failure-mode.md</code><br>
+      Slides 4, 5, 7.
+    </li>
+    <li>
+      <b>Jev, one message at a time (interactive explainer)</b>
+      Jash Shah (private), September 2026.<br>
+      Backs: the question "Which team should get this message?" and the example message about shoes, routed to Returns.<br>
+      <code>No public URL. Local file: Jev_Simply.html</code><br>
+      Slides 2, 3, 7.
+    </li>
+    <li>
+      <b>Launchboard demo, Campaigns view: pacing across running flights</b>
+      Jash Shah (private repo, fictional agency demo data), figures re-run from the app's own engine on 3 October 2026.<br>
+      Backs: total spend at 99% of plan across running flights; one flight +15.7% over plan, another -27.0% under; the two offset each other.<br>
+      <code>No public URL. Local repo: launchboard, src/lib/view/campaigns.ts and src/tests/views.test.ts</code><br>
+      Slides 6, 7.
+    </li>
+    <li>
+      <b>"The tool was never the skill. Asking the right question is."</b>
+      Jash Shah, Gumroad profile bio, undated, quoted in the deck 4 content brief.<br>
+      <code>Page URL not on file.</code><br>
+      Slide 10.
+    </li>
+  </ol>
+</aside>
+<div id="live" aria-live="polite" role="status"></div>
+
+<script type="module" src="./main.js"></script>
+</body>
+</html>

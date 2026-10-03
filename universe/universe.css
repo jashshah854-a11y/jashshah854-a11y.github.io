@@ -1,0 +1,173 @@
+:root{
+  --paper:#efeee8; --ink:#273c34; --night:#14130f; --gold:#c9a35b; --text:#efeee8; --muted:#c9c4b6;
+  --serif:'Instrument Serif',serif; --sans:'Instrument Sans',sans-serif;
+  --ease-out:cubic-bezier(0,0,.2,1);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--night);color-scheme:dark}
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+body{margin:0;background:var(--night);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--text);text-decoration:none}
+a:hover{color:#fff}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px}
+.pill:focus-visible,.pin:focus-visible{border-radius:999px}
+.skip{position:fixed;left:16px;top:-80px;z-index:300;background:var(--paper);color:var(--ink);padding:12px 18px;border-radius:999px;font-weight:600;transition:top .2s var(--ease-out)}
+.skip:focus{top:16px}
+
+#gl,#still{position:fixed;inset:0;width:100%;height:100dvh;display:block;touch-action:pan-y;cursor:grab;z-index:0;object-fit:cover;background:var(--night)}
+#gl.drag{cursor:grabbing}
+#still[hidden]{display:none}
+#scroller{position:relative;width:1px;height:calc(var(--journey,2000)*1dvh);pointer-events:none}
+body.stills #scroller{height:100dvh}
+
+#shade,#shade-bottom,#shade-right{position:fixed;inset:0;pointer-events:none;z-index:1;transition:opacity .6s var(--ease-out)}
+#shade{background:radial-gradient(120% 90% at 30% 45%,rgba(20,19,15,0) 55%,rgba(10,9,7,.62) 100%)}
+#shade-bottom{background:linear-gradient(to top,rgba(15,14,11,.82) 0%,rgba(15,14,11,0) 36%);opacity:0}
+#shade-right{background:linear-gradient(to right,rgba(12,11,10,0) 36%,rgba(12,11,10,.86) 100%);opacity:0}
+body[data-mode=hall] #shade-bottom,body[data-mode=end] #shade-bottom,body[data-mode=inside] #shade-bottom{opacity:1}
+body[data-mode=world] #shade-right{opacity:1}
+body[data-mode=vitrine] #shade-right{opacity:.85}
+/* The decks wing: its column lists seven titles over bright vitrines, so it gets real ground.
+   A gradient on the right edge of the screen, no card: clear until the vitrines end, dark behind the text. */
+body[data-world=decks] #shade-right{background:linear-gradient(to right,rgba(12,11,10,0) 50%,rgba(12,11,10,.55) 60%,rgba(12,11,10,.9) 67%,rgba(12,11,10,.95) 100%)}
+body[data-mode=inside] #shade-bottom{background:linear-gradient(to top,rgba(20,30,26,.5) 0%,rgba(20,30,26,0) 42%)}
+
+/* pills */
+.pill{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid transparent;background:none;color:var(--text);font:500 15px/1 var(--sans);cursor:pointer;white-space:nowrap;transition:background .2s var(--ease-out),border-color .2s var(--ease-out),transform .15s var(--ease-out)}
+.pill svg{fill:none;stroke:currentColor;stroke-width:1.6;flex:none}
+.pill:active{transform:scale(.97)}
+.pill.ghost{border-color:rgba(239,238,232,.5);backdrop-filter:blur(2px);min-height:48px;padding:0 22px}
+.pill.ghost:hover{background:rgba(239,238,232,.08)}
+.pill.ghost-dark{background:rgba(12,11,10,.55);border-color:rgba(239,238,232,.35)}
+.pill.ghost-dark:hover{background:rgba(12,11,10,.8)}
+.pill.solid{background:var(--gold);color:var(--night);font-weight:600;min-height:48px;padding:0 22px}
+.pill.solid:hover{background:#d8b36b;color:var(--night)}
+
+/* header */
+#top{position:fixed;left:0;right:0;top:0;z-index:20;pointer-events:none;height:96px}
+#top>*{pointer-events:auto}
+/* --paper is how much of the light cyclorama is behind the header (set from the 3D scene, 1 on the first beat).
+   The wordmark gets the same dark pill as the Worlds button in proportion, so it reads on paper and vanishes into the dark. */
+.brand{position:absolute;left:44px;top:40px;display:flex;align-items:center;gap:14px;min-height:44px;padding:0 16px 0 12px;border-radius:999px;font-size:16px;font-weight:600;letter-spacing:.01em;background:rgba(12,11,10,calc(var(--paper,0)*.6));border:1px solid rgba(239,238,232,calc(var(--paper,0)*.3));transition:opacity .4s var(--ease-out)}
+.brand svg{fill:none;stroke:var(--text);stroke-width:1.8}
+#back{position:absolute;left:56px;top:40px;opacity:0;visibility:hidden;transition:opacity .4s var(--ease-out),visibility 0s .4s}
+#worldsBtn{position:absolute;right:56px;top:40px}
+body[data-mode=world] #back{opacity:1;visibility:visible;transition-delay:0s}
+body[data-mode=world] .brand{opacity:0;pointer-events:none}
+
+/* copy blocks */
+.copy,#stepback,#card{position:fixed;z-index:10;opacity:0;visibility:hidden;transform:translateY(14px);transition:opacity .5s var(--ease-out),transform .6s var(--ease-out),visibility 0s .5s}
+.copy{pointer-events:none}
+.copy a,.copy button{pointer-events:auto}
+.copy.on,#stepback.on,#card.on{opacity:1;visibility:visible;transform:none;transition-delay:0s}
+.copy h1,.copy h2{margin:0;font-family:var(--serif);font-weight:400;color:#f7f6f0;text-shadow:0 2px 30px rgba(20,30,26,.45)}
+.copy em{font-style:italic}
+.copy p{margin:0;font-size:19px;color:#e4e3dc;text-shadow:0 1px 16px rgba(20,30,26,.6)}
+.copy[data-copy=inside]{left:56px;bottom:64px;max-width:640px;display:flex;flex-direction:column;gap:16px}
+.copy[data-copy=inside] h1{font-size:clamp(54px,6.4vw,92px);line-height:.95;letter-spacing:-.02em}
+#stepback{right:56px;bottom:64px}
+.copy[data-copy=vitrine]{right:64px;top:168px;max-width:520px;display:flex;flex-direction:column;gap:18px;text-align:right}
+.copy[data-copy=vitrine] h2{font-size:clamp(40px,4.5vw,64px);line-height:1;letter-spacing:-.015em;color:#f2efe6}
+.copy[data-copy=vitrine] p{font-size:18px;color:var(--muted)}
+.copy[data-copy=hall]{left:56px;right:56px;bottom:52px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px;pointer-events:none}
+.copy[data-copy=hall] h2{font-size:clamp(44px,5vw,72px);line-height:.98;letter-spacing:-.02em;max-width:760px;color:#f2efe6}
+.copy[data-copy=hall] p{font-size:18px;color:#d6d0c1;max-width:340px;text-align:right}
+.copy[data-copy=end]{left:56px;bottom:64px;display:flex;flex-direction:column;gap:22px}
+.copy[data-copy=end] h2{font-size:clamp(54px,6.4vw,92px);line-height:.95;letter-spacing:-.02em}
+.copy .links{display:flex;gap:10px;flex-wrap:wrap}
+.copy[data-copy=hall2]{display:none}
+
+/* world card (U4) */
+#card{right:64px;bottom:72px;width:430px;display:flex;flex-direction:column;gap:18px}
+#cardTitle{margin:0;font-family:var(--serif);font-weight:400;font-size:clamp(46px,5.4vw,80px);line-height:.95;letter-spacing:-.02em;color:#f4efe4;text-shadow:0 2px 24px rgba(8,7,5,.6)}
+#cardTitle em{font-style:italic;display:block}
+#cardLine{margin:0;font-size:18px;line-height:1.5;color:#e6dfd0;text-shadow:0 1px 14px rgba(8,7,5,.75)}
+.chip{display:inline-flex;align-items:center;gap:10px;align-self:flex-start;margin:0;min-height:34px;padding:0 14px;border-radius:999px;border:1px solid rgba(201,163,91,.55);font-size:14px;color:#e8e4d8}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:var(--gold)}
+.decks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.decks a{display:flex;align-items:center;min-height:36px;padding:2px 0;font-size:16px;color:#ddd5c6;border-bottom:1px solid rgba(239,238,232,.14)}
+.decks a:hover{color:#fff;border-color:rgba(201,163,91,.7)}
+#card .row{display:flex;gap:10px;flex-wrap:wrap}
+#card[hidden]{display:none}
+
+/* pins (U3) */
+#pins{position:fixed;inset:0;z-index:12;pointer-events:none;overflow:hidden}
+.pin{position:absolute;left:0;top:0;display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 16px 0 12px;border-radius:999px;background:rgba(15,14,11,.62);border:1px solid rgba(201,163,91,.6);font-size:15px;color:var(--text);white-space:nowrap;opacity:0;visibility:hidden;pointer-events:none;will-change:transform;transition:opacity .35s var(--ease-out),background .2s,visibility 0s .35s}
+.pin.show{opacity:1;visibility:visible;pointer-events:auto;transition-delay:0s}
+.pin:hover{background:rgba(15,14,11,.86);color:#fff}
+.pin .d{width:9px;height:9px;border-radius:50%;background:var(--gold);flex:none}
+.pin.perp .d{background:none;border:1.5px solid var(--gold)}
+.pin.deck{font-size:13px;min-height:36px}
+
+/* worlds list */
+#worlds{position:fixed;right:56px;top:92px;z-index:30;width:min(340px,calc(100vw - 32px));max-height:calc(100dvh - 120px);overflow:auto;padding:10px;border-radius:18px;background:rgba(12,11,10,.9);border:1px solid rgba(239,238,232,.22);backdrop-filter:blur(10px)}
+#worlds ul{list-style:none;margin:0;padding:0}
+#worlds a{display:flex;align-items:center;min-height:44px;padding:0 14px;border-radius:12px;font-size:16px}
+#worlds a:hover,#worlds a:focus-visible{background:rgba(239,238,232,.08)}
+#worlds ul ul{margin:0 0 6px 14px;padding-left:10px;border-left:1px solid rgba(239,238,232,.16)}
+#worlds ul ul a{font-size:14px;color:var(--muted);min-height:40px}
+
+/* reduced-motion / no-WebGL stops */
+#stills{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:25;display:flex;align-items:center;gap:14px;padding:6px;border-radius:999px;background:rgba(12,11,10,.55)}
+#stills[hidden]{display:none}
+#stopCount{font-size:14px;color:var(--muted);min-width:5ch;text-align:center}
+
+#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,10px);z-index:40;padding:10px 18px;border-radius:999px;background:rgba(12,11,10,.7);border:1px solid rgba(239,238,232,.25);font-size:14px;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+dialog#renders{border:0;padding:20px;max-width:min(1100px,94vw);width:100%;background:#0f0e0b;color:var(--text);border-radius:20px}
+dialog#renders::backdrop{background:rgba(8,7,5,.82)}
+dialog#renders form{display:flex;justify-content:flex-end;margin:0 0 14px}
+dialog#renders .gallery{display:grid;gap:14px}
+dialog#renders img{width:100%;height:auto;border-radius:12px;display:block}
+
+/* ink-mask transition and loading veil */
+#ink,#ink2{position:fixed;inset:0;z-index:100;pointer-events:none;clip-path:circle(0px at 50% 50%);visibility:hidden}
+#ink{background:#273c34}
+#ink2{background:#14130f;z-index:101}
+#veil{position:fixed;inset:0;z-index:200;background:var(--night);display:flex;align-items:center;justify-content:center;font:italic 30px/1.2 var(--serif);color:#c9c4b6;transition:opacity .8s var(--ease-out),visibility 0s .8s}
+#veil.done{opacity:0;visibility:hidden;pointer-events:none}
+#veil.fail{align-items:flex-start;padding-top:18dvh}
+#plain{position:fixed;left:0;right:0;top:34dvh;z-index:250;padding:0 56px;font-size:18px}
+#plain[hidden]{display:none!important}
+#plain ul{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px 22px}
+#plain a{display:inline-flex;align-items:center;min-height:44px;color:#efeee8;text-decoration:underline;text-underline-offset:4px}
+.noscript{position:fixed;inset:0;z-index:300;background:var(--night);padding:56px;font-size:18px}
+.noscript li{margin:10px 0}
+
+/* phone */
+@media (max-width:700px){
+  .brand{left:8px;top:20px}
+  #back{left:20px;top:20px}
+  #worldsBtn{right:20px;top:20px}
+  .copy[data-copy=inside]{left:20px;right:20px;bottom:calc(112px + env(safe-area-inset-bottom))}
+  .copy[data-copy=inside] p{font-size:17px}
+  #stepback{right:20px;bottom:calc(36px + env(safe-area-inset-bottom))}
+  .copy[data-copy=vitrine]{left:20px;right:20px;top:auto;bottom:calc(36px + env(safe-area-inset-bottom));text-align:left;max-width:none}
+  .copy[data-copy=hall]{left:20px;right:20px;bottom:calc(36px + env(safe-area-inset-bottom));flex-direction:column;align-items:flex-start;gap:12px}
+  .copy[data-copy=hall] p{text-align:left;max-width:none;font-size:16px}
+  .copy[data-copy=end]{left:20px;bottom:calc(36px + env(safe-area-inset-bottom))}
+  #card{left:16px;right:16px;width:auto;bottom:calc(16px + env(safe-area-inset-bottom));gap:12px;padding:20px 20px 18px;border-radius:22px;background:rgba(12,11,10,.74);backdrop-filter:blur(12px);border:1px solid rgba(239,238,232,.16)}
+  #cardTitle{font-size:44px}
+  #cardTitle em{display:inline}
+  #cardLine{font-size:16px}
+  .pin{display:none}
+  #worlds{left:0;right:0;top:auto;bottom:0;width:auto;max-height:72dvh;border-radius:22px 22px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom));z-index:60}
+  #worlds a{min-height:48px;font-size:17px}
+  #shade-right{background:linear-gradient(to top,rgba(12,11,10,.8) 0%,rgba(12,11,10,0) 55%)}
+}
+@media (max-width:1100px) and (min-width:701px){
+  #card{width:380px;right:40px}
+  .brand{left:24px}
+  #back{left:36px}
+  #worldsBtn{right:36px}
+  .copy[data-copy=inside],.copy[data-copy=end]{left:36px}
+  .copy[data-copy=hall]{left:36px;right:36px}
+  .copy[data-copy=vitrine]{right:40px}
+  #stepback{right:36px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms!important;animation:none!important}
+}

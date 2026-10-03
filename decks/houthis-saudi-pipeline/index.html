@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The bypass is under fire at both ends</title>
+<meta name="description" content="Saudi Arabia routed its oil around Hormuz through a 1,200 km pipe to the Red Sea. In 2026 both the strait and the detour came under attack.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700;800&family=B612+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js"}}
+</script>
+<style>
+:root{--paper:#e9e7e1;--enamel:#f4f2ec;--ink:#1d2226;--steel:#3b4247;--steel2:#7d878d;--red:#c8321c;--rule:rgba(29,34,38,.55);--u:1}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#cbc8c0;overflow:hidden}
+body{font-family:'B612 Mono',monospace;color:var(--ink);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+#app{position:fixed;inset:0;display:grid;place-items:center}
+#stage{position:relative;width:1440px;height:810px;overflow:hidden;background:var(--paper);
+  --fs-h1:calc(var(--u)*88px);--fs-h2:calc(var(--u)*62px);--fs-body:calc(var(--u)*15px);--fs-small:calc(var(--u)*12px);--fs-big:calc(var(--u)*96px)}
+#glwrap{position:absolute;inset:0;z-index:1;background:var(--paper)}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.lb{position:absolute;left:0;top:0;white-space:nowrap;font:400 var(--fs-small)/1.25 'B612 Mono',monospace;background:rgba(244,242,236,.93);border:1px solid var(--ink);padding:calc(var(--u)*2px) calc(var(--u)*6px);color:var(--ink);will-change:transform;visibility:hidden}
+.lb b{font-weight:700}
+.lb.red{border-color:var(--red);color:var(--red)}
+.lb.edge{font-weight:700;letter-spacing:.04em;padding-bottom:calc(var(--u)*8px)}
+.lb.edge::after{content:'';position:absolute;left:50%;bottom:calc(var(--u)*-7px);margin-left:calc(var(--u)*-6px);border:calc(var(--u)*6px) solid transparent;border-top:calc(var(--u)*7px) solid var(--red);border-bottom:0}
+.lb.dim{background:transparent;border-color:transparent;color:var(--steel)}
+.lb.ink{background:var(--ink);color:var(--enamel)}
+.lb.num{background:var(--ink);color:var(--enamel);border:0;border-radius:50%;width:calc(var(--u)*22px);height:calc(var(--u)*22px);padding:0;display:grid;place-items:center;font-weight:700}
+.lb.geo{background:none;border:0;padding:0;font:700 calc(var(--u)*24px)/1 'Barlow Condensed',sans-serif;letter-spacing:.06em;color:rgba(59,66,71,.5)}
+#glposter{position:absolute;inset:0;background-size:cover;background-position:center;display:none}
+#glfail{display:none;position:absolute;inset:0;place-items:center;text-align:center;padding:24px;font-size:var(--fs-body);color:var(--steel)}
+html.nogl #glfail{display:grid}
+html.nogl #gl,html.nogl #labels{display:none}
+#shade{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;transition:opacity .4s;background:linear-gradient(to right,rgba(233,231,225,.97) 0,rgba(233,231,225,.9) 26%,rgba(233,231,225,0) 42%)}
+#frame{position:absolute;inset:calc(var(--u)*12px);z-index:2;border:calc(var(--u)*1.5px) solid var(--rule);pointer-events:none;opacity:0;transition:opacity .4s}
+#stage.content #shade,#stage.content #frame{opacity:1}
+#stage.cover-on #glwrap{visibility:hidden}
+
+.slide{position:absolute;inset:0;z-index:3;pointer-events:none;visibility:hidden;opacity:0;transition:opacity .45s,visibility 0s .45s}
+.slide.on{visibility:visible;opacity:1;transition:opacity .45s,visibility 0s}
+.slide .copy,.slide .hud,.slide .stepper,.slide .tbl{pointer-events:auto}
+.copy{position:absolute;left:calc(var(--u)*64px);top:calc(var(--u)*50px);width:calc(var(--u)*430px);display:flex;flex-direction:column;gap:calc(var(--u)*14px)}
+h1,h2{margin:0;font-family:'Barlow Condensed',sans-serif;font-weight:800;letter-spacing:-.005em;color:var(--ink);text-transform:none}
+h1{font-size:var(--fs-h1);line-height:.92}
+h2{font-size:var(--fs-h2);line-height:.94}
+h1 em,h2 em{font-style:normal;color:var(--red)}
+.body{margin:0;font-size:var(--fs-body);line-height:1.55;color:#3b4247}
+.note{margin:0;font-size:var(--fs-small);line-height:1.5;color:#4b5459;border-top:1px solid var(--rule);padding-top:calc(var(--u)*8px)}
+.note a,.ref a{color:var(--red);text-decoration:none;border-bottom:1px solid currentColor}
+.ref{margin:0;font-size:var(--fs-small);color:#4b5459}
+.vis{display:none}
+
+/* cover: the approved artboard, 1440x810 */
+.slide.cover .cbg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.slide.cover .cshade{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(233,231,225,.94) 0%,rgba(233,231,225,.7) 26%,rgba(233,231,225,0) 46%)}
+.slide.cover .ctext{position:absolute;left:calc(var(--u)*64px);top:calc(var(--u)*52px);display:flex;flex-direction:column;gap:calc(var(--u)*14px);max-width:calc(var(--u)*980px)}
+.slide.cover p{margin:0;font-family:'B612 Mono',monospace;font-size:calc(var(--u)*17px);line-height:1.55;color:#3b4247;max-width:calc(var(--u)*760px)}
+
+/* bottom bar, shared with the cover artboard */
+#bar{position:absolute;left:calc(var(--u)*64px);right:calc(var(--u)*64px);bottom:calc(var(--u)*36px);z-index:6;display:flex;justify-content:space-between;align-items:center;font-size:calc(var(--u)*13px);color:#f4f2ec;pointer-events:none}
+#count{background:rgba(29,34,38,.78);padding:calc(var(--u)*10px) calc(var(--u)*14px);border-radius:2px;pointer-events:auto;min-height:calc(var(--u)*40px);display:flex;align-items:center}
+.btns{display:flex;gap:calc(var(--u)*8px);pointer-events:auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;padding:0 16px;background:var(--enamel);color:var(--ink);border:2px solid var(--ink);border-radius:2px;cursor:pointer;font-size:calc(var(--u)*13px);text-decoration:none}
+.btn.sq{padding:0}
+.btn.go{background:var(--red);color:var(--enamel)}
+.btn:hover{background:#fff}.btn.go:hover{background:#a82814}
+.btn svg{width:16px;height:16px;fill:currentColor}
+
+/* stepper: a valve wheel */
+.stepper{position:absolute;left:calc(var(--u)*64px);bottom:calc(var(--u)*100px);display:none;align-items:center;gap:12px;background:rgba(244,242,236,.92);border:1px solid var(--rule);padding:6px 14px 6px 6px;cursor:pointer;text-align:left}
+.stepper.show{display:flex}
+.stepper svg{width:52px;height:52px;flex:none;transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+.stepper .st{font-size:var(--fs-small);line-height:1.35;color:var(--ink);max-width:calc(var(--u)*300px)}
+.stepper .st b{display:block;font-weight:700;font-size:calc(var(--u)*13px)}
+.stepper .st span{color:#4b5459}
+
+/* hud readouts */
+.hud{position:absolute;left:calc(var(--u)*64px);bottom:calc(var(--u)*176px);display:flex;align-items:baseline;gap:calc(var(--u)*14px)}
+.hud b{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:var(--fs-big);line-height:.8;color:var(--red);min-width:calc(var(--u)*120px)}
+.hud span{font-size:var(--fs-small);line-height:1.4;color:var(--steel);max-width:calc(var(--u)*240px)}
+.tally{position:absolute;left:calc(var(--u)*64px);bottom:calc(var(--u)*176px);display:flex;gap:calc(var(--u)*22px);align-items:flex-end}
+.tally div{display:flex;flex-direction:column;gap:4px}
+.tally b{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:calc(var(--u)*84px);line-height:.8}
+.tally span{font-size:var(--fs-small);color:var(--steel)}
+.tally .s b{color:var(--red)}.tally .i b{color:var(--steel)}.tally .c b{color:transparent;-webkit-text-stroke:calc(var(--u)*2px) var(--red)}
+
+/* ledger schedule and scenario table: drafting schedules */
+.tbl{position:absolute;right:calc(var(--u)*64px);bottom:calc(var(--u)*100px);background:rgba(244,242,236,.94);border:1.5px solid var(--ink);font-size:calc(var(--u)*12px);line-height:1.35;border-collapse:collapse}
+.tbl th,.tbl td{border:1px solid var(--rule);padding:calc(var(--u)*5px) calc(var(--u)*9px);text-align:left;vertical-align:top}
+.tbl th{font-weight:700;background:var(--ink);color:var(--enamel);border-color:var(--ink)}
+.tbl tr.dim td{color:#9aa1a5}
+.tbl tr.hit td{background:#fff}
+#ledger-tbl{width:calc(var(--u)*470px)}
+#ledger-tbl td:last-child{white-space:nowrap}
+.k{display:inline-block;width:calc(var(--u)*10px);height:calc(var(--u)*10px);margin-right:3px;vertical-align:-1px}
+.k.s{background:var(--red)}.k.i{border:2px solid var(--steel);border-radius:50%}.k.c{border:2px dashed var(--red);border-radius:50%}
+#scen{left:calc(var(--u)*540px);right:calc(var(--u)*64px);top:auto;bottom:calc(var(--u)*100px)}
+#scen td:first-child{white-space:nowrap}
+#bkey{left:calc(var(--u)*64px);right:auto;bottom:calc(var(--u)*100px);width:calc(var(--u)*420px);font-size:calc(var(--u)*11px)}
+#bkey th,#bkey td{padding:calc(var(--u)*2px) calc(var(--u)*7px)}
+.stepper[data-for="10"]{left:auto;right:calc(var(--u)*64px);bottom:calc(var(--u)*100px);flex-direction:row-reverse;text-align:right}
+#bkey td:nth-child(-n+3){white-space:nowrap}
+#bkey td:first-child{font-weight:700;color:var(--red)}
+#scen tr{cursor:pointer}
+#scen tr.sel td{background:#fff;box-shadow:inset 3px 0 0 var(--red)}
+#scen tr:focus-visible{outline-offset:-3px}
+.closer{position:absolute;left:calc(var(--u)*64px);bottom:calc(var(--u)*120px);width:calc(var(--u)*430px);font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:calc(var(--u)*38px);line-height:1;color:var(--ink);text-align:left}
+.closer em{font-style:normal;color:var(--red)}
+
+/* sources drawer */
+#src{position:fixed;inset:0;z-index:50;display:none}
+#src.open{display:block}
+#src .scrim{position:absolute;inset:0;background:rgba(29,34,38,.45)}
+#src .panel{position:absolute;top:0;right:0;bottom:0;width:min(640px,100vw);background:var(--enamel);border-left:2px solid var(--ink);overflow:auto;padding:24px 28px 40px;font-size:13px;line-height:1.5}
+#src h2{font-size:44px;margin-bottom:6px}
+#src .x{position:absolute;top:12px;right:12px}
+#src ol{padding:0;margin:14px 0 0;list-style:none}
+#src li{padding:10px 0;border-top:1px solid var(--rule)}
+#src li.hl{background:#fff;box-shadow:-10px 0 0 #fff,inset 3px 0 0 var(--red)}
+#src li b{font-weight:700}
+#src li .m{color:#4b5459}
+#src li a{color:var(--red);word-break:break-all}
+#src h3{font-family:'Barlow Condensed',sans-serif;font-size:26px;margin:26px 0 4px}
+#src ul{padding-left:18px;margin:6px 0}
+#src p{margin:6px 0}
+
+/* wipe between plates */
+noscript .reader{padding:24px;max-width:720px;margin:0 auto;font-size:15px;line-height:1.55;background:var(--paper);color:var(--ink)}
+noscript .reader h2{font-size:34px;margin:22px 0 4px}
+noscript .reader h1{font-size:48px;line-height:.95;margin:0 0 12px}
+@media (prefers-reduced-motion:reduce){.slide,#shade,#frame,.stepper svg{transition:none!important}}
+
+/* phone: a reflowed vertical reader */
+html.m,html.m body{overflow:auto;height:auto;background:var(--paper)}
+html.m #app{position:static;display:block}
+html.m #stage{width:100%!important;height:auto!important;overflow:visible;--u:.5;--fs-h1:46px;--fs-h2:40px;--fs-body:15px;--fs-small:12px;--fs-big:72px}
+html.m #shade,html.m #frame{display:none}
+html.m #glwrap{position:relative;inset:auto;width:100%;height:min(88vw,380px);border:1.5px solid var(--ink);background:var(--paper);z-index:1}
+html.m #stage.cover-on #glwrap{visibility:visible}
+html.m .slide{position:relative;inset:auto;visibility:visible;opacity:1;pointer-events:auto;padding:28px 18px 8px;border-top:1px solid var(--rule);transition:none}
+html.m .slide.cover{padding:0;min-height:100svh;border-top:0;overflow:hidden}
+html.m .slide.cover .cbg{position:absolute}
+html.m .slide.cover .ctext{left:18px;right:18px;top:26px;gap:12px}
+html.m .slide.cover p{font-size:14px}
+html.m .copy{position:static;width:auto;gap:12px}
+html.m .vis{display:block;margin:0;position:relative;min-height:min(88vw,380px);background:var(--paper) center/cover no-repeat}
+html.m .hud,html.m .tally,html.m .stepper,html.m .tbl,html.m .closer{position:static}
+html.m .hud{margin:6px 0}
+html.m .tally{margin:6px 0;gap:16px}
+html.m .stepper{margin:10px 0 4px}
+html.m .tbl{width:100%!important;margin:10px 0;display:table}
+html.m #bkey,html.m #scen,html.m #ledger-tbl{right:auto;top:auto;bottom:auto;left:auto;font-size:12px}
+html.m .closer{left:auto;bottom:auto}
+html.m #bkey th,html.m #bkey td{padding:4px 7px}
+html.m #scen{width:100%!important}
+html.m .closer{width:auto;font-size:30px;margin:14px 0}
+html.m #bar{position:fixed;left:0;right:0;bottom:0;padding:8px 10px;background:rgba(29,34,38,.94);gap:8px}
+html.m #count{background:none;padding:0;font-size:12px}
+html.m .btn{min-height:44px;font-size:13px}
+html.m #bar{font-size:12px}
+html.m .slide:last-of-type{padding-bottom:96px}
+html.m .lb{font-size:10px}
+html.m .lb[data-m="0"]{display:none}
+html.m #src .panel{padding:18px}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="stage" class="cover-on">
+  <div id="glwrap"><canvas id="gl" aria-hidden="true"></canvas><div id="labels" aria-hidden="true"></div><div id="glposter"></div><div id="glfail" role="status">The isometric plate could not start in this browser. The plates below carry the same figures in text.</div></div>
+  <div id="shade"></div>
+  <div id="frame"></div>
+
+  <!-- Plate 1: the approved artboard -->
+  <section class="slide cover on" id="s1" data-screen-label="1 Cover" aria-labelledby="h-1">
+    <img class="cbg" src="./cover.jpg" alt="A tabletop model of a white enamel oil pipeline across desert terrain, with gauges and valve wheels, ending at red sea-gates at both ends.">
+    <div class="cshade"></div>
+    <div class="ctext">
+      <h1 id="h-1">The bypass is under fire <em>at both ends.</em></h1>
+      <p>Saudi Arabia routed its oil around Hormuz through a 1,200 km pipe to the Red Sea. In 2026 both the strait and the detour came under attack.</p>
+    </div>
+  </section>
+
+  <!-- Plate 2 -->
+  <section class="slide" id="s2" data-screen-label="2 Two exits" aria-labelledby="h-2">
+    <div class="copy">
+      <h2 id="h-2">Oil leaves by two <em>coasts.</em></h2>
+      <div class="vis"></div>
+      <p class="body">Ras Tanura loads on the Gulf, behind the Strait of Hormuz. Yanbu loads on the Red Sea, behind Bab el-Mandeb. One pipe joins them. In February 78 ships a day crossed Hormuz and 37 crossed Bab el-Mandeb.</p>
+      <p class="note">Each gate is an open valve: the wheel turns as that strait's traffic falls against February 2026. The pipe route is schematic.</p>
+      <p class="ref">Ref <a href="#src" data-ref="S1 S8 S30">S1 S8 S30</a></p>
+    </div>
+  </section>
+
+  <!-- Plate 3 -->
+  <section class="slide" id="s3" data-screen-label="3 Hormuz" aria-labelledby="h-3">
+    <div class="copy">
+      <h2 id="h-3">Hormuz went quiet in <em>March.</em></h2>
+      <div class="vis"></div>
+      <p class="body">The IRGC declared the strait closed on 2 March. Transits fell from 78 a day in February to 3 in March. They reached 13 in June and 4 in September.</p>
+      <p class="note">One mark is one transit a day, monthly average. Red marks are February transits that did not happen. A US-facilitated count gives 26.7 a day for September; a different definition, so this deck uses PortWatch.</p>
+      <p class="ref">Ref <a href="#src" data-ref="S1 S4 S26">S1 S4 S26</a></p>
+    </div>
+    <div class="hud"><b id="h3n">78</b><span id="h3t">transits a day, February 2026</span></div>
+    <button class="stepper" data-for="3" aria-label="Turn the valve to the next month"></button>
+  </section>
+
+  <!-- Plate 4 -->
+  <section class="slide" id="s4" data-screen-label="4 The pipe" aria-labelledby="h-4">
+    <div class="copy">
+      <h2 id="h-4">Seven million barrels, <em>1,200 km.</em></h2>
+      <div class="vis"></div>
+      <p class="body">Aramco ran the East-West pipeline at its 7.0 million barrels a day maximum by late March. About 2 stayed in Saudi refineries and about 5 left from Yanbu. Two pipes, 13 pump stations.</p>
+      <p class="note">EIA lists 5 as capacity and calls 7.0 a 2019 temporary expansion. Aramco calls 7.0 the 2026 maximum. This deck shows both ticks on the dial.</p>
+      <p class="ref">Ref <a href="#src" data-ref="S3 S6 S8">S3 S6 S8</a></p>
+    </div>
+  </section>
+
+  <!-- Plate 5 -->
+  <section class="slide" id="s5" data-screen-label="5 Yanbu" aria-labelledby="h-5">
+    <div class="copy">
+      <h2 id="h-5">Yanbu went from under one to <em>four.</em></h2>
+      <div class="vis"></div>
+      <p class="body">Yanbu loaded 0.75 to 0.97 million barrels a day in the second quarter of 2025. It reached 4.1 in June and 3.75 in July. Vortexa data put August near half of July.</p>
+      <p class="note">Point estimates from different sources, not one series. The 2025 baseline is 0.75 (Kpler) or 0.97 (Reuters), drawn as the midpoint. August is derived: half of July.</p>
+      <p class="ref">Ref <a href="#src" data-ref="S7 S9 S10 S11">S7 S9 S10 S11</a></p>
+    </div>
+    <div class="hud"><b id="h5n">0.9</b><span id="h5t">million barrels a day loaded at Yanbu, Q2 2025</span></div>
+    <button class="stepper" data-for="5" aria-label="Turn the valve to the next period"></button>
+  </section>
+
+  <!-- Plate 6 -->
+  <section class="slide" id="s6" data-screen-label="6 Houthi ledger" aria-labelledby="h-6">
+    <div class="copy">
+      <h2 id="h-6">The Houthis turned on <em>Saudi Arabia.</em></h2>
+      <div class="vis"></div>
+      <p class="body">The truce broke on 13 July and a blockade of Saudi shipping followed on 20 July. This ledger counts each itemised strike: hits, interceptions and claims nobody has confirmed.</p>
+      <p class="note">Windward counts eight Saudi tankers claimed struck by 5 August; only three are itemised here. The Yanbu and Riyadh strikes were on 24 September (Reuters). Launch points and ship positions are schematic.</p>
+      <p class="ref">Ref <a href="#src" data-ref="S5 S12 S13 S14 S15 S16 S17 S18 S19">S5 S12 to S19</a></p>
+    </div>
+    <div class="tally" id="tally"><div class="s"><b id="t-s">0</b><span><i class="k s"></i>struck</span></div><div class="i"><b id="t-i">0</b><span><i class="k i"></i>intercepted</span></div><div class="c"><b id="t-c">0</b><span><i class="k c"></i>claimed, unconfirmed</span></div></div>
+    <table class="tbl" id="ledger-tbl" aria-label="Attack ledger by date"><thead><tr><th>Date</th><th>Where</th><th>Marks</th></tr></thead><tbody></tbody></table>
+    <button class="stepper" data-for="6" aria-label="Reveal the next entry in the ledger"></button>
+  </section>
+
+  <!-- Plate 7 -->
+  <section class="slide" id="s7" data-screen-label="7 Red Sea exit" aria-labelledby="h-7">
+    <div class="copy">
+      <h2 id="h-7">The Red Sea exit <em>narrows.</em></h2>
+      <div class="vis"></div>
+      <p class="body">Bab el-Mandeb carried 256 ships a week in June. By the week of 14 September it carried 173. Tanker transits fell from 97 to 46.</p>
+      <p class="note">One mark is one transit. June is the average of four weeks; the week of 13 July peaked at 284. Lloyd's List counts 290 for the week to 27 September, PortWatch 190. This deck uses PortWatch.</p>
+      <p class="ref">Ref <a href="#src" data-ref="S1 S25">S1 S25</a></p>
+    </div>
+    <div class="hud"><b id="h7n">256</b><span id="h7t">ships a week, June average</span></div>
+    <button class="stepper" data-for="7" aria-label="Turn the valve to the next week"></button>
+  </section>
+
+  <!-- Plate 8 -->
+  <section class="slide" id="s8" data-screen-label="8 Pipeline cut" aria-labelledby="h-8">
+    <div class="copy">
+      <h2 id="h-8">Drones from Iraq cut the <em>pipe.</em></h2>
+      <div class="vis"></div>
+      <p class="body">Drones hit pumping stations on 10 September and Saudi Arabia shut the line. It restarted on 22 September. On 29 September Kpler put flow at 2.65 million barrels a day, against 5.5 before.</p>
+      <p class="note">Two stations damaged by one count, three by another; the third is drawn open. Other flow estimates run 2.0 to 3.5. A 2 October secondary report of near 6 is unconfirmed.</p>
+      <p class="ref">Ref <a href="#src" data-ref="S17 S20 S21 S22 S23">S17 S20 to S23</a></p>
+    </div>
+    <div class="hud"><b id="h8n">5.5</b><span id="h8t">million barrels a day through the pipe, before the attack</span></div>
+    <button class="stepper" data-for="8" aria-label="Turn the valve to the next state of the pipe"></button>
+  </section>
+
+  <!-- Plate 9 -->
+  <section class="slide" id="s9" data-screen-label="9 Cost" aria-labelledby="h-9">
+    <div class="copy">
+      <h2 id="h-9">Cargoes go dark and pay <em>more.</em></h2>
+      <div class="vis"></div>
+      <p class="body">Yanbu hull cover costs about 3% and south Saudi ports up to 7%. A supertanker earned $1.29 million a day on 24 September, against $678,000 in August. The Suez route to Asia adds about 22 days.</p>
+      <p class="note">Hormuz cover runs 6 to 9%. On 23 July the western Saudi route paid 0.1%. Ghost needles show the earlier reading; red needles the latest.</p>
+      <p class="ref">Ref <a href="#src" data-ref="S7 S23 S24">S7 S23 S24</a></p>
+    </div>
+    <button class="stepper" data-for="9" aria-label="Turn the valve to the earlier or later readings"></button>
+  </section>
+
+  <!-- Plate 10 -->
+  <section class="slide" id="s10" data-screen-label="10 Brent" aria-labelledby="h-10">
+    <div class="copy">
+      <h2 id="h-10">Brent follows the <em>map.</em></h2>
+      <div class="vis"></div>
+      <p class="body">Brent spot was $71 before the war and peaked at $138 on 7 April. It fell to $69 on 2 July, then climbed with the Saudi front: $105 after the tankers on 23 July, $131 on 15 September.</p>
+      <p class="note">FRED spot price. Futures differ, and one chronology gives lower intraday highs.</p>
+      <p class="ref">Ref <a href="#src" data-ref="S2">S2</a></p>
+    </div>
+    <table class="tbl" id="bkey" aria-label="Key to the numbered events on the Brent line"><thead><tr><th>No</th><th>Date</th><th>Brent</th><th>Event</th></tr></thead><tbody></tbody></table>
+    <button class="stepper" data-for="10" aria-label="Turn the valve to draw the next stretch of the line"></button>
+  </section>
+
+  <!-- Plate 11 -->
+  <section class="slide" id="s11" data-screen-label="11 What decides it" aria-labelledby="h-11">
+    <div class="copy">
+      <h2 id="h-11">Two cuts at once is the <em>risk.</em></h2>
+      <div class="vis"></div>
+      <p class="body">One cut is a bad month. Two at once is the risk: another pipeline hit while Bab el-Mandeb is unsafe. Rystad says Brent would very likely pass $150 if that strait is unsafe. Oil in the ground is not oil delivered.</p>
+      <p class="note">Select a row to set the valves. Valve positions illustrate each case; they are not forecasts. Case A is analyst judgment.</p>
+      <p class="ref">Ref <a href="#src" data-ref="S1 S21 S25 S27 S28 S29">S1 S21 S25 S27 to S29</a></p>
+    </div>
+    <table class="tbl" id="scen" aria-label="Four cases and the indicators to watch">
+      <thead><tr><th>Case</th><th>Indicators to watch</th></tr></thead>
+      <tbody>
+        <tr tabindex="0" data-case="A" class="sel"><td><b>A. Muddle</b><br>base case</td><td>Pipe back to 5 to 7 by late October. Kpler Yanbu loadings above 4. Bab el-Mandeb 180 to 200 a week. Saudi supertanker transits (19 in the week of 14 Sep).</td></tr>
+        <tr tabindex="0" data-case="B"><td><b>B. Truce</b></td><td>Sanaa answers the Oman offer (made 18 Sep, no reply yet). Strikes on Jizan and Yanbu stop. Yanbu cover falls below 3%.</td></tr>
+        <tr tabindex="0" data-case="C"><td><b>C. Double cut</b></td><td>Bab el-Mandeb tanker transits under 40 a week. Yanbu storage, 5 to 7 days of cover. New strikes on pump stations.</td></tr>
+        <tr tabindex="0" data-case="D"><td><b>D. Hormuz reopens</b></td><td>Hormuz transits (3.7 a day in September). The US-Iran reply to Iran's seven-point plan.</td></tr>
+      </tbody>
+    </table>
+    <p class="closer">The danger is not one broken route. <em>It is losing the fallback too.</em></p>
+  </section>
+
+  <div id="bar">
+    <span id="count" aria-live="polite">PLATE 01 OF 11 &middot; DATA TO 3 OCT 2026</span>
+    <div class="btns">
+      <button class="btn" id="b-src" aria-haspopup="dialog">Sources</button>
+      <button class="btn sq" id="b-prev" aria-label="Previous plate"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 2v12L3 8z"/></svg></button>
+      <button class="btn sq go" id="b-next" aria-label="Next plate"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2v12l10-6z"/></svg></button>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="src" role="dialog" aria-modal="true" aria-labelledby="src-t" aria-hidden="true">
+  <div class="scrim"></div>
+  <div class="panel" tabindex="-1">
+    <button class="btn x" id="src-x" aria-label="Close sources">Close</button>
+    <h2 id="src-t">Sources</h2>
+    <p>Every figure on a plate traces to one entry below. "Read" means the builder opened or searched the source on 3 Oct 2026. "Brief" means the figure comes from the research brief and was not re-fetched. Place coordinates and the pipe route are general geography and schematic.</p>
+    <ol>
+      <li id="S1"><b>S1</b> IMF PortWatch, daily chokepoint transits (Hormuz, Bab el-Mandeb, Suez, Cape). IMF. Pulled 3 Oct 2026; September runs to the 27th. Read. <a href="https://portwatch.imf.org">portwatch.imf.org</a></li>
+      <li id="S2"><b>S2</b> Brent crude spot price, daily close (DCOILBRENTEU). FRED, St. Louis Fed. Pulled 3 Oct 2026. Read. <a href="https://fred.stlouisfed.org/series/DCOILBRENTEU">fred.stlouisfed.org/series/DCOILBRENTEU</a></li>
+      <li id="S3"><b>S3</b> Saudi pipeline that bypasses Hormuz hits 7-million-barrel goal. Fortune, from Bloomberg. 28 Mar 2026. Read. <a href="https://fortune.com/2026/03/28/saudi-arabia-east-west-oil-pipeline-strait-hormuz-bypass-7-million-barrels-yanbu-red-sea/">fortune.com/2026/03/28/...</a></li>
+      <li id="S4"><b>S4</b> Iran's IRGC declares Strait of Hormuz closed. Marine Insight. 2 Mar 2026. Read. <a href="https://www.marineinsight.com/shipping-news/irans-irgc-declares-strait-of-hormuz-closed-warns-it-will-set-ships-ablaze-if-they-attempt-transit/">marineinsight.com</a></li>
+      <li id="S5"><b>S5</b> Aramco shuts Ras Tanura refinery following drone strike (two drones intercepted, limited fire). MEED; The Quint. 2 Mar 2026. Read. <a href="https://www.meed.com/aramco-shuts-ras-tanura-refinery-following-drone-strike">meed.com</a></li>
+      <li id="S6"><b>S6</b> Today in Energy: bypass capacity around Hormuz (5 mb/d; 7.0 a 2019 temporary expansion). EIA. 16 Jun 2025. Brief. <a href="https://www.eia.gov/todayinenergy/detail.php?id=65504">eia.gov/todayinenergy/detail.php?id=65504</a></li>
+      <li id="S7"><b>S7</b> Short-Term Energy Outlook, September 2026 (Saudi output 10.5 mb/d in Feb; shut-ins 2.9 Mar-Jun, 1.95 Jul, 3.55 Aug; Vortexa: Yanbu August about half of July). EIA. Sep 2026. Brief. <a href="https://www.eia.gov/outlooks/steo/pdf/steo_full.pdf">eia.gov/outlooks/steo</a></li>
+      <li id="S8"><b>S8</b> East-West Crude Oil Pipeline (about 1,200 km, 13 pump stations, 56 and 48 inch pipes). Wikipedia, used as an aggregator only. 2026. Brief. <a href="https://en.wikipedia.org/wiki/East%E2%80%93West_Crude_Oil_Pipeline">en.wikipedia.org</a></li>
+      <li id="S9"><b>S9</b> Saudi Arabia is ramping up oil exports as Gulf ports restart (Yanbu 4.1 mb/d in June). gCaptain, from Bloomberg. 26 Jun 2026. Brief. <a href="https://gcaptain.com/saudi-arabia-is-ramping-up-oil-exports-as-gulf-ports-restart/">gcaptain.com</a></li>
+      <li id="S10"><b>S10</b> Strait of Hormuz brief, 21 July 2026 (Yanbu 3.75 mb/d average). Lloyd's List Intelligence. 21 Jul 2026. Brief. <a href="https://www.lloydslistintelligence.com/resources/blog/strait-of-hormuz-brief-21-july-2026">lloydslistintelligence.com</a></li>
+      <li id="S11"><b>S11</b> Factbox: Red Sea crude flows (Yanbu Q2 2025 baseline 0.75 mb/d Kpler; 0.97 Reuters). Kpler. Brief, secondary. <a href="https://www.kpler.com/blog/factbox-red-sea-crude-flows-bab-el-mandeb-and-alternative-routes">kpler.com</a></li>
+      <li id="S12"><b>S12</b> Houthi strikes hit Yemen as Saudi Arabia braces for attacks: what we know (13 Jul missiles at Saudi Arabia; 20 Jul blockade). Al Jazeera. 7 Aug 2026. Read. <a href="https://www.aljazeera.com/news/2026/8/7/houthi-strikes-hit-yemen-as-saudi-arabia-braces-for-attacks-what-we-know">aljazeera.com</a></li>
+      <li id="S13"><b>S13</b> New front in US-Iran war escalates as Houthis fire at Saudi oil facilities (two ballistic missiles at Yanbu intercepted by a Greek-operated Patriot; smoke at Jizan, damage unconfirmed). Al Jazeera. 26 Jul 2026. Read. <a href="https://www.aljazeera.com/news/2026/7/26/new-front-in-us-iran-war-escalates-as-houthis-fire-at-saudi-oil-facilities">aljazeera.com</a></li>
+      <li id="S14"><b>S14</b> Houthis strike Saudi tankers as Red Sea route unravels (Encelia hit, confirmed by Vanguard Tech; Layla claimed). bne IntelliNews. 22 Jul 2026. Read via search. <a href="https://www.intellinews.com/houthis-strike-saudi-tankers-as-red-sea-route-unravels-456538/">intellinews.com</a></li>
+      <li id="S15"><b>S15</b> The Houthis strike a Saudi tanker off Yanbu (NCC Wafa, impact unverified; eighth Saudi tanker claimed since 22 Jul). Windward. 5 Aug 2026. Read. <a href="https://windward.ai/blog/the-houthis-strike-a-saudi-tanker-off-yanbu/">windward.ai</a></li>
+      <li id="S16"><b>S16</b> Four crew, two rescuers killed in Red Sea attack (Tihamah, 11 Aug). Reuters via Al-Monitor. 12 Aug 2026. Read via search. <a href="https://www.al-monitor.com/originals/2026/08/four-crew-two-rescuers-killed-red-sea-attack-us-strikes-ship-gulf-oman">al-monitor.com</a></li>
+      <li id="S17"><b>S17</b> Saudi Arabia says East-West pipeline hit by drones launched from Iraq (10 Sep); also CNBC 11 Sep and BOE Report 16 Sep (two stations damaged, sources) against Shafaq (three). Al Jazeera. 11 Sep 2026. Read via search. <a href="https://aljazeera.com/news/2026/9/11/saudi-arabia-says-east-west-pipeline-hit-by-drones-launched-from-iraq">aljazeera.com</a></li>
+      <li id="S18"><b>S18</b> Houthis report air strikes in Yemen after Saudi Arabia vows firm response (Khamis Mushait, Abha, Taif; 13 civilians wounded, seven homes damaged). Al Jazeera. 15 Sep 2026. Read. <a href="https://www.aljazeera.com/news/2026/9/15/houthis-report-air-strikes-in-yemen-after-saudi-arabia-vows-firm-response">aljazeera.com</a></li>
+      <li id="S19"><b>S19</b> Houthis say they attacked Riyadh and Aramco facilities in Yanbu (six ballistic missiles intercepted, aimed at Taif and the Yanbu area; no Saudi confirmation for Riyadh). Reuters via Internazionale; Al-Monitor 25 Sep. 24 Sep 2026. Read. <a href="https://www.internazionale.it/ultime-notizie-reuters/2026/09/24/houthis-say-they-attacked-riyadh-and-aramco-facilities-in-yanbu">internazionale.it</a></li>
+      <li id="S20"><b>S20</b> Saudi Arabia restarts East-West oil pipeline to resume exports from Yanbu. Reuters via US News. 22 Sep 2026. Brief. <a href="https://www.usnews.com/news/world/articles/2026-09-22/saudi-arabia-restarts-east-west-oil-pipeline-to-resume-exports-from-yanbu-sources-say">usnews.com</a></li>
+      <li id="S21"><b>S21</b> Saudi crude flows again from Yanbu as key pipeline restarts (2.65 mb/d per Kpler; 5.5 before the attack). Baird Maritime. 29 Sep 2026. Brief. <a href="https://www.bairdmaritime.com/shipping/ports/saudi-crude-flows-again-from-red-sea-port-of-yanbu-as-key-pipeline-restarts">bairdmaritime.com</a></li>
+      <li id="S22"><b>S22</b> Saudi Arabia raises East-West pipeline flows above 80% of capacity (near 6 mb/d per Bloomberg, secondary, unconfirmed). Egypt Oil &amp; Gas. 2 Oct 2026. Brief. <a href="https://egyptoil-gas.com/news/saudi-arabia-raises-east-west-pipeline-oil-flows-above-80-capacity/">egyptoil-gas.com</a></li>
+      <li id="S23"><b>S23</b> Arabian Gulf crude freight outlook (Yanbu cover about 3%, south Saudi up to 7%, Hormuz 6 to 9%; VLCC $1.29m/day on 24 Sep against $678k in Aug; Suez adds about 22 days; flow 3.5 on 28 Sep). Breakwave Advisors. 30 Sep 2026. Brief. <a href="https://www.breakwaveadvisors.com/insights/2026/9/30/arabian-gulf-crude-freight-outlook">breakwaveadvisors.com</a></li>
+      <li id="S24"><b>S24</b> How shipping insurance rates are rising as Hormuz and Bab al-Mandab shut down (western Saudi route 0.1%). Al Jazeera. 23 Jul 2026. Brief. <a href="https://www.aljazeera.com/economy/2026/7/23/how-shipping-insurance-rates-are-rising-as-hormuz-bab-al-mandab-shut-down">aljazeera.com</a></li>
+      <li id="S25"><b>S25</b> Red Sea brief, 1 October 2026 (Bab el-Mandeb 290 transits, week to 27 Sep; Saudi VLCC transits 19, week of 14 Sep). Lloyd's List Intelligence. 1 Oct 2026. Brief. <a href="https://www.lloydslistintelligence.com/resources/blog/red-sea-brief-1-october-2026">lloydslistintelligence.com</a></li>
+      <li id="S26"><b>S26</b> Strait of Hormuz brief, 1 Oct (801 US-facilitated transits in September, 26.7 a day). straits.live. 1 Oct 2026. Brief, lower reliability. <a href="https://straits.live/briefs/2026-10-01">straits.live</a></li>
+      <li id="S27"><b>S27</b> Brent oil crosses $100 as attacks in the Red Sea threaten critical alternative route (Rystad: Brent very likely past $150 if Bab el-Mandeb is unsafe). Yahoo Finance. Jul 2026. Brief. <a href="https://finance.yahoo.com/markets/article/brent-oil-crosses-100-as-attacks-in-the-red-sea-threaten-critical-alternative-route-for-persian-gulf-oil-131344657.html">finance.yahoo.com</a></li>
+      <li id="S28"><b>S28</b> Saudi Arabia caught between 2 chokepoints (Yanbu storage 5 to 7 days of cover). The Media Line. 14 Sep 2026. Brief. <a href="https://themedialine.org/top-stories/saudi-arabia-caught-between-2-chokepoints-as-houthi-advance-reshapes-red-sea-front/">themedialine.org</a></li>
+      <li id="S29"><b>S29</b> Saudi two-week ceasefire offer via Oman, no Houthi reply (18 Sep). Jerusalem Post, citing Al Akhbar. Brief, secondary. <a href="https://www.jpost.com/middle-east/article-909031">jpost.com</a></li>
+      <li id="S30"><b>S30</b> From Yanbu to Sohar: tracking Saudi Arabia's alternative oil routes (Fujairah and Sohar bypasses). Al Jazeera. 17 Sep 2026. Brief, secondary. <a href="https://www.aljazeera.com/news/2026/9/17/from-yanbu-to-sohar-tracking-saudi-arabias-alternative-oil-routes">aljazeera.com</a></li>
+    </ol>
+    <h3>Where the sources disagree, and what this deck does</h3>
+    <ul>
+      <li>Yanbu strikes: dated 18 to 19 September in the research brief; Reuters, AP and Al-Monitor all date the six intercepted missiles and the Houthi claims 24 September. The deck uses 24 September. The brief's airport fuel-tank fire did not appear in the Al-Monitor text and is left out.</li>
+      <li>Hormuz closure: the war began 28 February; the IRGC declared the strait closed on 2 March. The deck uses 2 March.</li>
+      <li>Hormuz traffic in September: 3.7 a day (PortWatch) against 26.7 (US-facilitated count, different definition). PortWatch used throughout.</li>
+      <li>Bab el-Mandeb, week to 27 September: 190 (PortWatch) against 290 (Lloyd's List). PortWatch used throughout.</li>
+      <li>Pipeline flow now: 2.0, 2.65 and 3.5 (three sources); near 6 (secondary, unconfirmed). The deck plots 2.65 (Kpler) and shows the range.</li>
+      <li>Pipeline capacity: 5 (EIA) against 7.0 (Aramco). Both shown on the dial.</li>
+      <li>Pipeline restart: 22 September (Reuters via US News) or 24 September (Baird Maritime). The deck uses 22 September.</li>
+      <li>Pump stations damaged on 10 September: two (BOE Report) or three (Shafaq). Two plotted as struck, one as unconfirmed.</li>
+      <li>Yanbu strike of 25 or 26 July: reported as 25 July (ABC) and 26 July (Al Jazeera). Shown as 26 Jul, the Al Jazeera report date.</li>
+      <li>Brent: FRED spot peaked at 138.21 on 7 April; other chronologies show lower intraday figures and futures differ. FRED spot used.</li>
+      <li>Left out as unverified: the Citi 30% odds of $150, Egypt's Suez Canal revenue figures, the Houthi attack count since July, and Houthi involvement in the 10 September attack (Saudi Arabia blamed Iraq).</li>
+    </ul>
+  </div>
+</div>
+
+<noscript>
+<style>html,body{overflow:auto!important;height:auto!important}#app{display:none!important}</style>
+<div class="reader">
+<h1>The bypass is under fire at both ends.</h1>
+<p>Saudi Arabia routed its oil around Hormuz through a 1,200 km pipe to the Red Sea. In 2026 both the strait and the detour came under attack. This deck needs JavaScript for its interactive plates; the plates in text follow.</p>
+<h2>Oil leaves by two coasts.</h2><p>Ras Tanura loads on the Gulf, behind the Strait of Hormuz. Yanbu loads on the Red Sea, behind Bab el-Mandeb. One pipe joins them. In February 78 ships a day crossed Hormuz and 37 crossed Bab el-Mandeb.</p>
+<h2>Hormuz went quiet in March.</h2><p>The IRGC declared the strait closed on 2 March. Transits fell from 78 a day in February to 3 in March. They reached 13 in June and 4 in September.</p>
+<h2>Seven million barrels, 1,200 km.</h2><p>Aramco ran the East-West pipeline at its 7.0 million barrels a day maximum by late March. About 2 stayed in Saudi refineries and about 5 left from Yanbu. Two pipes, 13 pump stations.</p>
+<h2>Yanbu went from under one to four.</h2><p>Yanbu loaded 0.75 to 0.97 million barrels a day in the second quarter of 2025. It reached 4.1 in June and 3.75 in July. Vortexa data put August near half of July.</p>
+<h2>The Houthis turned on Saudi Arabia.</h2><p>The truce broke on 13 July and a blockade of Saudi shipping followed on 20 July. The ledger counts 8 struck, 10 intercepted and 7 claimed but unconfirmed.</p>
+<h2>The Red Sea exit narrows.</h2><p>Bab el-Mandeb carried 256 ships a week in June. By the week of 14 September it carried 173. Tanker transits fell from 97 to 46.</p>
+<h2>Drones from Iraq cut the pipe.</h2><p>Drones hit pumping stations on 10 September and Saudi Arabia shut the line. It restarted on 22 September. On 29 September Kpler put flow at 2.65 million barrels a day, against 5.5 before.</p>
+<h2>Cargoes go dark and pay more.</h2><p>Yanbu hull cover costs about 3% and south Saudi ports up to 7%. A supertanker earned $1.29 million a day on 24 September, against $678,000 in August. The Suez route to Asia adds about 22 days.</p>
+<h2>Brent follows the map.</h2><p>Brent spot was $71 before the war and peaked at $138 on 7 April. It fell to $69 on 2 July, then climbed with the Saudi front: $105 after the tankers on 23 July, $131 on 15 September.</p>
+<h2>Two cuts at once is the risk.</h2><p>One cut is a bad month. Two at once is the risk: another pipeline hit while Bab el-Mandeb is unsafe. Rystad says Brent would very likely pass $150 if that strait is unsafe. Oil in the ground is not oil delivered. Watch: Kpler Yanbu loadings above 4, Bab el-Mandeb weekly transits near 180 to 200, a reply from Sanaa to the Oman offer, Bab el-Mandeb tanker transits under 40 a week, and Hormuz transits against 3.7 a day.</p>
+</div>
+</noscript>
+
+<script type="application/json" id="data">{"hormuz":{"2026-02":78.3,"2026-03":3.2,"2026-04":7.1,"2026-05":3.9,"2026-06":12.9,"2026-07":10.2,"2026-08":4.7,"2026-09":3.7},"bab":{"2026-02":36.8,"2026-03":35.5,"2026-04":36.7,"2026-05":36.1,"2026-06":36.6,"2026-07":33.6,"2026-08":27.4,"2026-09":26.2},"weeks":[["2026-06-01",263,101],["2026-06-08",254,96],["2026-06-15",260,105],["2026-06-22",248,86],["2026-06-29",241,83],["2026-07-06",229,86],["2026-07-13",284,106],["2026-07-20",198,59],["2026-07-27",215,63],["2026-08-03",178,61],["2026-08-10",206,62],["2026-08-17",206,68],["2026-08-24",184,56],["2026-08-31",178,49],["2026-09-07",191,57],["2026-09-14",173,46],["2026-09-21",190,66]],"brent":[["2026-02-20",72.75],["2026-02-23",71.9],["2026-02-24",71.21],["2026-02-25",70.69],["2026-02-26",71.66],["2026-02-27",71.32],["2026-03-02",77.24],["2026-03-03",83.28],["2026-03-04",81.56],["2026-03-05",88.59],["2026-03-06",95.74],["2026-03-09",94.35],["2026-03-10",89.84],["2026-03-11",90.98],["2026-03-12",102.38],["2026-03-13",103.23],["2026-03-16",101.04],["2026-03-17",108.39],["2026-03-18",118.09],["2026-03-19",111.05],["2026-03-20",118.42],["2026-03-23",103.79],["2026-03-24",108.42],["2026-03-25",109.14],["2026-03-26",113.39],["2026-03-27",121.47],["2026-03-30",121.88],["2026-03-31",126.69],["2026-04-01",119.56],["2026-04-02",127.61],["2026-04-07",138.21],["2026-04-08",122.11],["2026-04-09",119.03],["2026-04-10",119.07],["2026-04-13",123.28],["2026-04-14",118.69],["2026-04-15",114.93],["2026-04-16",116.63],["2026-04-17",98.63],["2026-04-20",103.4],["2026-04-21",106.14],["2026-04-22",113.44],["2026-04-23",113.25],["2026-04-24",111.86],["2026-04-27",113.89],["2026-04-28",117.62],["2026-04-29",124.16],["2026-04-30",124.24],["2026-05-01",118.26],["2026-05-05",114.51],["2026-05-06",103.7],["2026-05-07",101.82],["2026-05-08",103.48],["2026-05-11",106.11],["2026-05-12",111.37],["2026-05-13",110.28],["2026-05-14",110.91],["2026-05-15",113.96],["2026-05-18",116.73],["2026-05-19",114.64],["2026-05-20",108.93],["2026-05-21",105.84],["2026-05-22",106.9],["2026-05-26",102.75],["2026-05-27",97.11],["2026-05-28",95.47],["2026-05-29",92.88],["2026-06-01",98.29],["2026-06-02",98.49],["2026-06-03",101.69],["2026-06-04",98.98],["2026-06-05",97.29],["2026-06-08",97.46],["2026-06-09",94.15],["2026-06-10",95.73],["2026-06-11",92.84],["2026-06-12",88.64],["2026-06-15",84.36],["2026-06-16",80.5],["2026-06-17",80.33],["2026-06-18",79.35],["2026-06-19",80.46],["2026-06-22",76.49],["2026-06-23",75.69],["2026-06-24",72.09],["2026-06-25",73.74],["2026-06-26",70.16],["2026-06-29",71.59],["2026-06-30",70.46],["2026-07-01",69.24],["2026-07-02",68.53],["2026-07-03",68.68],["2026-07-06",69.56],["2026-07-07",71.78],["2026-07-08",76.5],["2026-07-09",74.46],["2026-07-10",74.34],["2026-07-13",81.62],["2026-07-14",83.69],["2026-07-15",83.08],["2026-07-16",81.23],["2026-07-17",85.01],["2026-07-20",86.99],["2026-07-21",93.85],["2026-07-22",94.12],["2026-07-23",105.32],["2026-07-24",100.31],["2026-07-27",91.82],["2026-07-28",85.51],["2026-07-29",91.95],["2026-07-30",91.91],["2026-07-31",96.95],["2026-08-03",88.9],["2026-08-04",86.47],["2026-08-05",86.65],["2026-08-06",89.65],["2026-08-07",87.62],["2026-08-10",92.74],["2026-08-11",93.26],["2026-08-12",92.52],["2026-08-13",92.03],["2026-08-14",92.02],["2026-08-17",92.43],["2026-08-18",95.29],["2026-08-19",92.37],["2026-08-20",94],["2026-08-21",96.92],["2026-08-24",92.71],["2026-08-25",88.24],["2026-08-26",87.77],["2026-08-27",90.18],["2026-08-28",89.75],["2026-09-01",96.02],["2026-09-02",97.59],["2026-09-03",100.52],["2026-09-04",102.24],["2026-09-07",104.47],["2026-09-08",106.12],["2026-09-09",109.51],["2026-09-10",120.98],["2026-09-11",118.06],["2026-09-14",121.25],["2026-09-15",130.8],["2026-09-16",127.84],["2026-09-17",121.18],["2026-09-18",119.66],["2026-09-21",116.15],["2026-09-22",114.89],["2026-09-23",117.45],["2026-09-24",120.92],["2026-09-25",116.01],["2026-09-28",119.97],["2026-09-29",113.96]]}</script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
