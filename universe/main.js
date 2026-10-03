@@ -361,7 +361,7 @@ function frame(time, deltaMs){
   applyLook(sample, sc);
   paintBackdrop(sample.i === 0 ? 1 - smooth((sample.f - 0.15)/0.7) : 0);
   focusShafts(sample);
-  hall.update({spin, time:clock, dt, camPos:camera.position, rackOn:sc > 0.02 && sc < 0.33 && frameN % 2 === 0, reflect:sc > 0.045 && !(sample.dwelling && stops[sample.i].world) && camera.position.distanceTo(sample.look) < 150});
+  hall.update({spin, time:clock, dt, camPos:camera.position, rackOn:sc > 0.02 && sc < 0.33 && frameN % 2 === 0, rackLive:sc > 0.02 && sc < 0.33, reflect:sc > 0.045 && !(sample.dwelling && stops[sample.i].world) && camera.position.distanceTo(sample.look) < 150});
   if (frameN % 20 === 0) chooseVideos(hall.portals, camera.position, 2, 230);
   // shadows: every frame inside the machine, every third once it is small
   if (key.intensity > 0.02 && sc < 0.3 && frameN % (sc < 0.05 ? shadowEvery/2 : shadowEvery) === 0) renderer.shadowMap.needsUpdate = true;

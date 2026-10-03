@@ -471,11 +471,11 @@ export function buildHall({scene, lite, perpetua}){
   }
 
   /* ---------- per-frame ---------- */
-  function update({spin, time, dt, reflect, rackOn = true, camPos = null}){
+  function update({spin, time, dt, reflect, rackOn = true, rackLive = true, camPos = null}){
     if (camPos) applyShafts(camPos);
     reflWant = !!reflect && mirrorOn;
     if (reflector) { reflFade += ((reflWant ? 1 : 0) - reflFade)*Math.min(1, dt*3); reflector.material.uniforms.uStrength.value = reflFade*0.4; }
-    rackActive = rackOn;
+    rackActive = rackOn; rack.setLive(rackLive);
     for (const d of drivers) d(spin);
     for (const p of portals) p.update(time, dt);
   }
