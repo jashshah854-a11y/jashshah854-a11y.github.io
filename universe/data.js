@@ -4,9 +4,9 @@
 
 export const WORLDS = [
   {id:'cyber', pin:'Cyberpunk City', title:['Cyberpunk','City'],
-   line:'A whole block at 2:14 AM, built in the browser.', status:'Still building',
-   actions:[{label:'See the renders', kind:'renders'}],
-   still:'media/diorama-district.jpg'},
+   line:'One block at 2:14 AM in the rain. Walk in, drag it around, summon the dragon.',
+   href:'corner-block/', actions:[{label:'See the renders', kind:'renders'}],
+   still:'media/cb-04-district.jpg'},
   {id:'launchboard', pin:'Launchboard', title:['Launchboard'],
    line:'Tells a marketing team what needs a decision today.', href:'launchboard/', still:'media/lb-today.jpg'},
   {id:'mgmtio', pin:'MGMTIO', title:['MGMTIO'],

@@ -97,15 +97,18 @@
 <dialog id="renders" aria-label="Cyberpunk City renders">
   <form method="dialog"><button class="pill ghost-dark" id="rendersClose">Close</button></form>
   <div class="gallery">
-    <img src="media/diorama-district.jpg" alt="The district: a rain-soaked block at night" loading="lazy">
-    <img src="media/diorama-cinema.jpg" alt="The cinema on the corner" loading="lazy">
-    <img src="media/diorama-junction.jpg" alt="The junction" loading="lazy">
+    <img src="media/cb-04-district.jpg" alt="The district: a rain-soaked block at night" loading="lazy">
+    <img src="media/cb-01-overview.jpg" alt="The whole block from above" loading="lazy">
+    <img src="media/cb-03-street.jpg" alt="The street level, wet and empty at 2 AM" loading="lazy">
+    <img src="media/cb-02-towers.jpg" alt="The towers" loading="lazy">
+    <img src="media/cb-05-lotus-crown.jpg" alt="The lotus crown on the tallest tower" loading="lazy">
+    <img src="media/cb-06-back.jpg" alt="The back of the block" loading="lazy">
   </div>
 </dialog>
 
 <div id="veil" role="status"><span>Assembling the machine</span></div>
 <nav id="plain" aria-label="Worlds (plain list)" hidden><p>The 3D view could not start here. The worlds are plain links:</p>
-<ul><li><a href="perpetua/">Perpetua</a></li><li><a href="launchboard/">Launchboard</a></li><li><a href="mgmtio/index.html">MGMTIO</a></li><li><a href="round-and-round/">Round &amp; Round</a></li><li><a href="fieldfold/">Fieldfold</a></li><li><a href="workbench/">Robot Workbench</a></li><li><a href="jev/">Jev in Motion</a></li><li><a href="https://www.linkedin.com/in/jashshah-analytics" rel="noopener noreferrer">LinkedIn</a></li></ul></nav>
+<ul><li><a href="perpetua/">Perpetua</a></li><li><a href="corner-block/">Cyberpunk City</a></li><li><a href="launchboard/">Launchboard</a></li><li><a href="mgmtio/index.html">MGMTIO</a></li><li><a href="round-and-round/">Round &amp; Round</a></li><li><a href="fieldfold/">Fieldfold</a></li><li><a href="workbench/">Robot Workbench</a></li><li><a href="jev/">Jev in Motion</a></li><li><a href="https://www.linkedin.com/in/jashshah-analytics" rel="noopener noreferrer">LinkedIn</a></li></ul></nav>
 <script>
 // If the module graph never boots (offline CDN, blocked WebGL): say so and show plain links.
 setTimeout(function(){ if (!window.__universe && !window.__booting) { document.getElementById('veil').classList.add('fail'); document.getElementById('plain').hidden = false; } }, 25000);
@@ -114,7 +117,7 @@ setTimeout(function(){ if (!window.__universe && !window.__booting) { document.g
 <div id="ink2" aria-hidden="true"></div>
 
 <noscript><div class="noscript"><p>This page is a 3D gallery and needs JavaScript. The worlds are also here as plain links.</p>
-<ul><li><a href="perpetua/">Perpetua</a></li><li><a href="launchboard/">Launchboard</a></li><li><a href="mgmtio/index.html">MGMTIO</a></li><li><a href="round-and-round/">Round &amp; Round</a></li><li><a href="fieldfold/">Fieldfold</a></li><li><a href="workbench/">Robot Workbench</a></li><li><a href="jev/">Jev in Motion</a></li></ul></div></noscript>
+<ul><li><a href="perpetua/">Perpetua</a></li><li><a href="corner-block/">Cyberpunk City</a></li><li><a href="launchboard/">Launchboard</a></li><li><a href="mgmtio/index.html">MGMTIO</a></li><li><a href="round-and-round/">Round &amp; Round</a></li><li><a href="fieldfold/">Fieldfold</a></li><li><a href="workbench/">Robot Workbench</a></li><li><a href="jev/">Jev in Motion</a></li></ul></div></noscript>
 
 <script>
 // The host runs vite build on this page; a module script tag would make vite try to bundle a public file and fail.

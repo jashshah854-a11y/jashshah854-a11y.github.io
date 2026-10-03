@@ -10,7 +10,7 @@ import { makeMaterials, glowTexture, washTexture, beamTexture, gearGeometry, mak
 import { buildRack } from './rack.js';
 
 const PORTALS = {
-  cyber:       {zoom:1.34, pan0:[-0.55,-0.6], images:['media/diorama-district.jpg', 'media/diorama-cinema.jpg', 'media/diorama-junction.jpg'], cycle:9, tint:'#d9953f', gain:1.05},
+  cyber:       {zoom:1.08, pan0:[0,0], images:['media/cb-04-district.jpg', 'media/cb-01-overview.jpg', 'media/cb-03-street.jpg', 'media/cb-02-towers.jpg', 'media/cb-05-lotus-crown.jpg', 'media/cb-06-back.jpg'], cycle:7, tint:'#d9953f', gain:1.05},
   launchboard: {images:['media/lb-today.jpg', 'media/lb-signals.jpg'], video:'media/loops/launchboard.mp4', cycle:10, tint:'#9bb08f'},
   mgmtio:      {images:['media/mgmtio-rows.jpg'], tint:'#8fa6b3'},
   round:       {images:['media/round.jpg'], video:'media/loops/round.mp4', tint:'#c9b88f'},
