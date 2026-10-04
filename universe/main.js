@@ -15,10 +15,17 @@ import { createUI } from './ui.js';
 import * as L from './layout.js';
 
 const $ = s => document.querySelector(s);
+const bootTimes = {module:performance.now()};   // ms since navigation: before this is download and parse
 const params = new URLSearchParams(location.search);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches || params.has('stills');
-const phone = params.has('phone') || matchMedia('(max-width: 700px)').matches;
-const lite = phone || params.has('lite');
+/* Device tier. A phone or tablet is any of: a touch-only pointer, a small viewport, or a mobile UA
+   (iPadOS reports as a Mac, so touch points count too). The GPU probe below can only lower it. */
+const mq = q => matchMedia(q).matches;
+const mobileUA = /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const phone = params.has('phone') || mq('(max-width: 700px)');
+let tier = params.get('tier') || ((phone || mobileUA || (mq('(pointer: coarse)') && !mq('(any-pointer: fine)'))) ? 'mobile' : 'desktop');
+const mobile = tier !== 'desktop';
+const lite = mobile || params.has('lite');
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
 const smooth = x => { x = clamp(x, 0, 1); return x*x*(3 - 2*x); };
 history.scrollRestoration = 'manual';
@@ -36,7 +43,18 @@ try {
   renderer = new THREE.WebGLRenderer({canvas, antialias:true, powerPreference:'high-performance', alpha:false});
 } catch (err) { console.warn('WebGL unavailable', err); mode = 'nogl'; }
 
-let dprCap = phone ? 1.25 : 1.5, pixelScale = 1, shadowEvery = 4;   // pixelScale is the quality ladder's second rung
+/* GPU probe: one read of the context the scene will use anyway. A software rasteriser, an older
+   Mali/Adreno/PowerVR, a small texture limit or a depth buffer under 24 bits drops a phone to mobile-low. */
+const gpuInfo = {renderer:'', maxTex:0, depthBits:0};
+if (renderer) {
+  const gl = renderer.getContext(), dbg = gl.getExtension('WEBGL_debug_renderer_info');
+  gpuInfo.renderer = dbg ? String(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)) : '';
+  gpuInfo.maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+  gpuInfo.depthBits = gl.getParameter(gl.DEPTH_BITS);
+  const weak = /SwiftShader|llvmpipe|Mali-(4|T|G[57]\d\b)|Adreno \(TM\) ([3-5]\d\d|6[0-1]\d)|PowerVR/i.test(gpuInfo.renderer) || gpuInfo.maxTex < 8192 || gpuInfo.depthBits < 24;
+  if (mobile && weak && !params.get('tier')) tier = 'mobile-low';
+}
+let dprCap = tier === 'mobile-low' ? 1 : mobile ? 1.25 : 1.5, pixelScale = 1, shadowEvery = 4;   // pixelScale is the quality ladder's second rung
 window.__booting = true;                           // tells the watchdog in index.html the module graph did start
 const camera = new THREE.PerspectiveCamera(32, innerWidth/innerHeight, 0.1, 1000);
 const scene = new THREE.Scene();
@@ -51,21 +69,24 @@ if (renderer) {
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, dprCap)*pixelScale);
   renderer.setSize(innerWidth, innerHeight, false);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.shadowMap.enabled = true;
+  // Phones: no shadow pass. It re-draws the whole machine and its map is one more depth surface to alias.
+  renderer.shadowMap.enabled = !mobile;
   renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.shadowMap.autoUpdate = false;
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0).texture;
   scene.fog = new THREE.FogExp2('#14120e', 0.003);
 
-  setRenderer(renderer);
+  setRenderer(renderer, mobile ? {maxSize:1024, aniso:2} : {});
   perpetua = buildPerpetua({lite});
-  hall = buildHall({scene, lite, perpetua});
+  hall = buildHall({scene, lite, perpetua, video:!mobile});
+  bootTimes.built = performance.now();
+  if (mobile) hall.rack.setDensity(2);
 
   key = new THREE.SpotLight('#fff0d4', 5, 0, 0.5, 0.92, 0);
   key.position.set(-6.5, L.PY + 17.5, 11);
   key.target.position.set(-0.4, L.PY + 2.2, 0.6);
-  key.castShadow = true;
+  key.castShadow = !mobile;
   key.shadow.mapSize.set(lite ? 1024 : 2048, lite ? 1024 : 2048);
   key.shadow.camera.near = 6; key.shadow.camera.far = 60;
   key.shadow.bias = -0.0004; key.shadow.normalBias = 0.025; key.shadow.radius = 3.5;
@@ -255,7 +276,7 @@ function buildRungs(){
   if (hall.hasMirror()) rungs.push(['mirror off', () => hall.setMirror(false)]);
   rungs.push(['pixel ratio x0.85', () => { pixelScale = 0.85; resize(); }]);
   rungs.push(['pixel ratio x0.7', () => { pixelScale = 0.7; resize(); }]);
-  rungs.push(['city density 1/2', () => hall.rack.setDensity(2)]);
+  if (!mobile) rungs.push(['city density 1/2', () => hall.rack.setDensity(2)]);   // phones start at 1/2
   rungs.push(['city density 1/3', () => hall.rack.setDensity(3)]);
   rungs.push(['shadow refresh 1/16', () => { shadowEvery = 16; }]);   // the shadow pass re-draws the whole machine
 }
@@ -272,12 +293,21 @@ function adaptQuality(ms){
 /* ---------------- the frame ---------------- */
 const _off = new THREE.Vector3(), _q = new THREE.Quaternion(), _q2 = new THREE.Quaternion(), _right = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0);
 let clock = 0, frameN = 0, stillSettle = 2, lastSc = -1;
+/* On desktop a world sits left of centre (shift) to leave the right-hand column for its card.
+   In portrait the card is at the bottom, so that offset only crops the vitrine: it is panned out,
+   blended between neighbouring keyframes so no beat jumps. */
+const panFix = journey.frames.map(f => f.world && f.target.at === 'slot' ? L.SLOT[f.world].right.clone().multiplyScalar(-(f.target.shift ?? 0)) : null);
+const _pan = new THREE.Vector3();
 function place(sample, sc){
   const aspect = camera.aspect;
   const portrait = aspect < 1.2;
   let fov = sample.fov, distScale = 1;
+  _pan.set(0, 0, 0);
   if (portrait) {
     const t = clamp((1.2 - aspect)/0.8, 0, 1);
+    const a = panFix[sample.i], b = sample.dwelling ? a : panFix[Math.min(sample.i + 1, panFix.length - 1)];
+    if (a) _pan.addScaledVector(a, (1 - (sample.dwelling ? 0 : sample.f))*t);
+    if (b && !sample.dwelling) _pan.addScaledVector(b, sample.f*t);
     fov = fov + (52 - fov)*t;
     const want = Math.tan(16*Math.PI/180)*1.6;
     distScale = clamp(want/(Math.tan(fov*Math.PI/360)*aspect), 1, sample.pscale);
@@ -293,13 +323,18 @@ function place(sample, sc){
     _q2.setFromAxisAngle(_right, orbit.pitch*w);
     _off.applyQuaternion(_q).applyQuaternion(_q2);
   }
-  camera.position.copy(sample.look).add(_off);
-  const target = sample.look.clone();
+  camera.position.copy(sample.look).add(_off).add(_pan);
+  const target = sample.look.clone().add(_pan);
   if (portrait && sample.dwelling) target.y -= (distScale - 1)*1.8;
   camera.lookAt(target);
+  /* Depth range. near follows the focus distance (a raycast sweep of every beat found no geometry
+     closer than 1.5x near). far stops where the fog is opaque (background = fog colour), but always
+     reaches past the far side of the rotunda, because the portal screens are not fogged. */
   const fd = _off.length();
   camera.near = clamp(fd*0.02, 0.05, 4);
-  camera.far = clamp(fd*30 + 400, 700, 2800);
+  const fogFar = 2.6/Math.max(sample.fogD, 1e-4);
+  const hallFar = camera.position.distanceTo(L.RC) + 200;
+  camera.far = clamp(Math.min(fd*30 + 400, Math.max(fogFar, hallFar)), 120, 2800);
   camera.updateProjectionMatrix();
   camera.updateMatrixWorld();
 }
@@ -417,14 +452,18 @@ document.addEventListener('visibilitychange', () => {
    culling off) so its shaders link now, not when the camera first arrives. */
 let lastWarm = 0, warming = false;
 function warmDraw(child){
-  const saved = [];
+  const saved = [], hidden = [];
   child.traverse(o => { saved.push([o, o.frustumCulled]); o.frustumCulled = false; });
+  // Phones have no mirror, so a piece's programs do not depend on what else is drawn: draw it alone.
+  // The cost of each warm draw is then that piece, not the whole 160k-triangle machine again.
+  if (mobile) for (const c of [hall.shell, ...hall.far.children]) if (c !== child && c.visible) { c.visible = false; hidden.push(c); }
   warming = true;
   hall.update({spin:0, time:0, dt:0.016, reflect:!lite});
   renderer.setViewport(0, 0, 8, 8);
   renderer.render(scene, camera);
   renderer.setViewport(0, 0, innerWidth, innerHeight);
   warming = false;
+  hidden.forEach(c => { c.visible = true; });
   saved.forEach(([o, f]) => { o.frustumCulled = f; });
 }
 function warmFirst(){
@@ -436,22 +475,43 @@ function warmFirst(){
   if (mode !== 'gl') { hall.startLoading(); while (hall.pending()) warmDraw(hall.revealNext()); }
 }
 /* The first drawing of each piece costs 100 to 2300 ms on ANGLE/D3D11 even after compileAsync
-   (the mirror alone is a second full render with its own program variants). So the whole gallery
-   is drawn once behind the veil, one piece per task so the browser stays responsive, and the visitor
-   never meets those stalls while scrolling. A cap keeps a very slow machine from waiting forever: the
-   rest then falls back to the staged reveal in frame(). */
+   (the mirror alone is a second full render with its own program variants). So the gallery is drawn
+   once behind the veil, one piece per task so the browser stays responsive. Every wait here has a
+   deadline: the veil lifts by VEIL_MS whatever the device, and pieces not yet drawn fall back to the
+   staged reveal in frame() while the visitor is still reading the first beat.
+   Phones never prewarm or play video: iOS gives a muted clip no data and no play() result without a
+   gesture (or at all in Low Power Mode), which is how this await used to hold the veil. */
+/* The deadline counts from navigation start (performance.now() origin), because on a slow link the
+   module and three.js downloads alone can take seconds; warm-up always gets at least 1.2 s. */
+const VEIL_MS = mobile ? 5000 : 9000;
+let veilAt = Infinity;
+const remaining = () => Math.max(0, veilAt - performance.now());
 async function warmHall(){
-  const t0 = performance.now(), nap = () => new Promise(r => setTimeout(r, 0));
-  while (hall.pending() && performance.now() - t0 < 14000) { warmDraw(hall.revealNext()); await nap(); }
-  if (hall.plainFloor) { hall.plainFloor.visible = true; warmDraw(hall.plainFloor); hall.plainFloor.visible = false; }
-  await Promise.race([hall.prewarmVideos(), new Promise(r => setTimeout(r, 7000))]);
+  const nap = () => new Promise(r => setTimeout(r, 0));
+  const total = hall.stageCount();
+  while (hall.pending() && remaining() > (mobile ? 0 : 1500)) { warmDraw(hall.revealNext()); veilProgress(1 - hall.pendingCount()/total); await nap(); }
+  if (hall.plainFloor && remaining() > 0) { hall.plainFloor.visible = true; warmDraw(hall.plainFloor); hall.plainFloor.visible = false; }
+  if (!mobile) await Promise.race([hall.prewarmVideos(), new Promise(r => setTimeout(r, remaining()))]);
   hall.startLoading();      // images are fetched after the blocking draws, so their staggered timers do not fire in one burst
 }
-const bootTimes = {};
+/* After 2 s the veil says how far along it is, so a slow phone never looks frozen. */
+let veilShown = 0;
+function veilProgress(f){
+  veilShown = Math.max(veilShown, f, 0.06);
+  const v = $('#veil'), bar = $('#veilBar');
+  if (!bar || performance.now() < 2000) return;
+  v.classList.add('slow');
+  bar.setAttribute('aria-valuenow', String(Math.round(veilShown*100)));
+  bar.firstElementChild.style.transform = `scaleX(${veilShown.toFixed(3)})`;
+}
 async function boot(){
   bootTimes.start = performance.now();
+  veilAt = Math.max(VEIL_MS, bootTimes.start + 1200);
+  const slowTimer = setInterval(() => veilProgress(veilShown), 250);
   // Compile every shader before the first frame, behind the loading veil: no hitch later.
-  if (renderer) { try { place(journey.sample(0), 0); applyLook(journey.sample(0), 0); await Promise.race([renderer.compileAsync(scene, camera), new Promise(r => setTimeout(r, 6000))]); bootTimes.compiled = performance.now(); warmFirst(); bootTimes.warmFirst = performance.now(); if (mode === 'gl') { await warmHall(); bootTimes.warmHall = performance.now(); } buildRungs(); } catch (e) { console.warn('compile', e); } }
+  if (renderer) { try { place(journey.sample(0), 0); applyLook(journey.sample(0), 0); await Promise.race([renderer.compileAsync(scene, camera), new Promise(r => setTimeout(r, Math.min(mobile ? 2500 : 6000, Math.max(600, remaining() - 600))))]); bootTimes.compiled = performance.now(); warmFirst(); bootTimes.warmFirst = performance.now(); veilProgress(0.15); if (mode === 'gl') { await warmHall(); bootTimes.warmHall = performance.now(); } buildRungs(); } catch (e) { console.warn('compile', e); } }
+  clearInterval(slowTimer);
+  bootTimes.tier = tier;
   if (mode === 'gl') {
     if (lenis) lenis.start();
     gsap.ticker.add(frame);
@@ -469,7 +529,7 @@ async function boot(){
   }
   window.__universe = {cpu:() => +cpuEma.toFixed(2), bootTimes, quality:() => ({rung:quality.rung, log:quality.log, mirror:hall.hasMirror() ? hall.mirrorIsOn() : null, pixelRatio:renderer.getPixelRatio(), teeth:hall.rack.count()}), key, rim, hemi, camLight, perpetua, camera, scene, proxy, journey, stops, state, get lenis(){ return lenis; }, goT, goStopIndex, stepBy, renderer,
     stats:() => ({calls:renderer.info.render.calls, tris:renderer.info.render.triangles, geos:renderer.info.memory.geometries, tex:renderer.info.memory.textures, dpr:renderer.getPixelRatio()}),
-    perpTris:() => perpetua.stats, hall, mode};
+    perpTris:() => perpetua.stats, hall, mode, tier:{tier, mobile, ...gpuInfo, dprCap}};
   const s0 = parseFloat(params.get('s'));
   if (!isNaN(s0) && mode === 'gl') goT(s0, true);
 }

@@ -52,6 +52,7 @@ export const LOOK = {
 
 const slot = (id, extra = {}) => ({
   id: 'world:' + id, world: id, look: 'world', hold: extra.hold ?? 3,
+  pscale: extra.pscale,
   pos: {at:'slot', id, d: extra.d ?? 38, up: extra.up ?? 5.0},
   target: {at:'slot', role:'look', id, shift: extra.shift ?? 6.2, up: extra.lookUp ?? -0.2},
   pins: id === 'decks' ? 'decks' : 'none'
@@ -98,7 +99,8 @@ export const JOURNEY = [
   slot('workbench'),
   link('workbench', 'jev'),
   slot('jev'),
-  slot('decks', {d:112, up:5.0, shift:14.0, lookUp:-2.5, hold:3.6}),
+  // pscale 1: this camera already stands across the rotunda; a portrait pull-back would put the far side's vitrines in front of it
+  slot('decks', {d:112, up:5.0, shift:14.0, lookUp:-2.5, hold:3.6, pscale:1.0}),
   slot('deadend'),
   slot('singular', {d:54, up:3.4, shift:8.5}),
   {id:'all',     look:'far', hold:1.2, copy:'hall2',

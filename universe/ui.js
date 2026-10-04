@@ -9,7 +9,7 @@ const v3 = new THREE.Vector3();
 export function createUI({worlds, decks, stops, anchors, actions}){
   const byId = Object.fromEntries(worlds.map(w => [w.id, w]));
   const cards = {el:$('#card'), title:$('#cardTitle'), line:$('#cardLine'), status:$('#cardStatus'), decks:$('#cardDecks'),
-    walk:$('#walkIn'), renders:$('#seeRenders'), next:$('#nextWorld')};
+    walk:$('#walkIn'), renders:$('#seeRenders'), next:$('#nextWorld'), deckToggle:$('#deckToggle')};
   const worldStops = stops.filter(s => s.world);
   let activeIdx = -2, mode = 'inside', pinMode = 'none', currentWorld = null;
 
@@ -116,6 +116,8 @@ export function createUI({worlds, decks, stops, anchors, actions}){
     cards.line.textContent = w.line;
     cards.status.hidden = !w.status;
     cards.decks.hidden = !w.deckList;
+    // Phones: the seven deck links stay folded until asked for, so the card does not cover the vitrines.
+    cards.deckToggle.hidden = !w.deckList; cards.el.classList.remove('decks-open'); cards.deckToggle.setAttribute('aria-expanded', 'false');
     cards.decks.innerHTML = w.deckList ? decks.map(d => `<li><a href="decks/${d.slug}/index.html" data-walk>${d.title}</a></li>`).join('') : '';
     cards.walk.hidden = !w.href;
     if (w.href) cards.walk.href = w.href;
@@ -127,6 +129,10 @@ export function createUI({worlds, decks, stops, anchors, actions}){
   cards.decks.addEventListener('click', e => { const a = e.target.closest('a'); if (a && actions.walkIn(a.getAttribute('href'), e)) e.preventDefault(); });
   cards.renders.addEventListener('click', () => actions.openRenders());
   cards.next.addEventListener('click', () => actions.nextWorld(currentWorld?.id));
+  cards.deckToggle.addEventListener('click', () => {
+    const open = cards.el.classList.toggle('decks-open');
+    cards.deckToggle.setAttribute('aria-expanded', String(open));
+  });
 
   /* ---- copy blocks and body mode ---- */
   const copies = Object.fromEntries($$('.copy').map(e => [e.dataset.copy, e]));

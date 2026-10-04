@@ -47,21 +47,34 @@ void main(){
 }`;
 
 const loader = new THREE.TextureLoader();
-let gpu = null;
-/* Textures are uploaded the moment they arrive, not when they first come into view. */
-export function setRenderer(r){ gpu = r; }
+let gpu = null, maxSize = 0, aniso = 4;
+/* Textures are uploaded the moment they arrive, not when they first come into view.
+   On phones every picture is capped at maxSize px wide (1024): 26 pictures at 1600 px with mipmaps are
+   about 190 MB of GPU memory, at 1024 about 80 MB, and a portal never covers more than ~1000 device px. */
+export function setRenderer(r, opts = {}){ gpu = r; maxSize = opts.maxSize || 0; aniso = opts.aniso || 4; }
+export const texAniso = () => aniso;
+export function capTexture(t){
+  const img = t.image;
+  if (!maxSize || !img || Math.max(img.width, img.height) <= maxSize) return t;
+  const k = maxSize/Math.max(img.width, img.height), c = document.createElement('canvas');
+  c.width = Math.round(img.width*k); c.height = Math.round(img.height*k);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  t.image = c; t.needsUpdate = true;
+  return t;
+}
 const texCache = new Map();
 const placeholder = new THREE.DataTexture(new Uint8Array([20, 19, 15, 255]), 1, 1);
 placeholder.needsUpdate = true;
 /* At most three images are in flight at once, so a simple static server is never hit with a burst. */
 const queue = []; let inFlight = 0;
 function pump(){ while (inFlight < 3 && queue.length) { inFlight++; queue.shift()(() => { inFlight--; pump(); }); } }
-export function loadTexture(url, maxAniso = 4){
+export function loadTexture(url){
   if (texCache.has(url)) return texCache.get(url);
   const entry = {tex:placeholder, aspect:16/9};
   texCache.set(url, entry);
   queue.push(done => loader.load(url, t => {
-    t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = maxAniso; t.generateMipmaps = true;
+    capTexture(t);
+    t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; t.generateMipmaps = true;
     entry.tex = t; entry.aspect = t.image.width / t.image.height; entry.onload?.();
     if (gpu) gpu.initTexture(t);
     done();
@@ -80,11 +93,13 @@ export class Portal {
     this.videoTex = null;
     this.material = new THREE.ShaderMaterial({
       vertexShader:VERT, fragmentShader:FRAG, toneMapped:false, fog:false,
+      // the screen sits 8 cm in front of its brass frame; the bias keeps it in front on a coarse depth buffer
+      polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-6,
       uniforms:{uA:{value:placeholder}, uB:{value:placeholder}, uV:{value:placeholder}, uMix:{value:0}, uVideo:{value:0},
         uTime:{value:0}, uPlane:{value:plane}, uAspA:{value:16/9}, uAspB:{value:16/9}, uAspV:{value:16/9},
         uPhase:{value:phase}, uGain:{value:gain}, uFlicker:{value:flicker}, uZoom0:{value:zoom}, uPan0:{value:new THREE.Vector2(pan0[0], pan0[1])}}
     });
-    this.reflectionMaterial = new THREE.ShaderMaterial({vertexShader:VERT, fragmentShader:FRAG, uniforms:this.material.uniforms, defines:{REFLECT:1}, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, toneMapped:false, fog:false});
+    this.reflectionMaterial = new THREE.ShaderMaterial({vertexShader:VERT, fragmentShader:FRAG, uniforms:this.material.uniforms, defines:{REFLECT:1}, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, toneMapped:false, fog:false, polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-4});
     this.playing = false; this.mixTarget = 0; this.t0 = Math.random()*10;
   }
   ensureLoaded(){

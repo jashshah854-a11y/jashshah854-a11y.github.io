@@ -78,6 +78,7 @@
   <div class="row">
     <a id="walkIn" class="pill solid" href="#">Walk in</a>
     <button id="seeRenders" class="pill solid" type="button" hidden>See the renders</button>
+    <button id="deckToggle" class="pill ghost" type="button" aria-expanded="false" aria-controls="cardDecks" hidden>Seven decks</button>
     <button id="nextWorld" class="pill ghost" type="button">Next world</button>
   </div>
 </aside>
@@ -106,11 +107,12 @@
   </div>
 </dialog>
 
-<div id="veil" role="status"><span>Assembling the machine</span></div>
+<div id="veil" role="status"><span>Assembling the machine</span><i id="veilBar" role="progressbar" aria-label="Loading the gallery" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><b></b></i></div>
 <nav id="plain" aria-label="Worlds (plain list)" hidden><p>The 3D view could not start here. The worlds are plain links:</p>
 <ul><li><a href="perpetua/">Perpetua</a></li><li><a href="cyberpunk/">Cyberpunk City</a></li><li><a href="launchboard/">Launchboard</a></li><li><a href="mgmtio/index.html">MGMTIO</a></li><li><a href="round-and-round/">Round &amp; Round</a></li><li><a href="fieldfold/">Fieldfold</a></li><li><a href="workbench/">Robot Workbench</a></li><li><a href="jev/">Jev in Motion</a></li><li><a href="https://www.linkedin.com/in/jashshah-analytics" rel="noopener noreferrer">LinkedIn</a></li></ul></nav>
 <script>
 // If the module graph never boots (offline CDN, blocked WebGL): say so and show plain links.
+setTimeout(function(){ var v = document.getElementById('veil'); if (!v.classList.contains('done')) v.classList.add('slow'); }, 2000);
 setTimeout(function(){ if (!window.__universe && !window.__booting) { document.getElementById('veil').classList.add('fail'); document.getElementById('plain').hidden = false; } }, 25000);
 </script>
 <div id="ink" aria-hidden="true"></div>

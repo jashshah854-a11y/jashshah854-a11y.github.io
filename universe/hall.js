@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import * as L from './layout.js';
 import { DECKS } from './data.js';
-import { Portal } from './portal.js';
+import { Portal, capTexture, texAniso } from './portal.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { makeMaterials, glowTexture, washTexture, beamTexture, gearGeometry, makeShaft, makeVitrine, roundedBox } from './parts.js';
@@ -20,14 +20,17 @@ const PORTALS = {
   deadend:     {images:['media/deadend-kf01.jpg', 'media/deadend-kf20.jpg', 'media/deadend-kf40.jpg'], cycle:7, flicker:1, tint:'#e0a45a', gain:1.05}
 };
 
-export function buildHall({scene, lite, perpetua}){
+export function buildHall({scene, lite, perpetua, video = true}){
   const M = makeMaterials(lite);
   const glow = glowTexture(), wash = washTexture();
   const root = new THREE.Group(); root.name = 'hall'; scene.add(root);
   const drivers = [];        // fns(spin)
   const portals = [];        // Portal objects
   const anchors = [];        // hotspot anchors
-  const additive = (map, color = '#ffffff', opacity = 1) => new THREE.MeshBasicMaterial({map, color, transparent:true, opacity, blending:THREE.AdditiveBlending, depthWrite:false});
+  /* Glows lie on or just in front of a surface (floor, deck, frame). A depth bias makes them win that
+     tie on a coarse (16-bit or far-range) depth buffer instead of trading pixels with it. */
+  const DECAL = {polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-4};
+  const additive = (map, color = '#ffffff', opacity = 1) => new THREE.MeshBasicMaterial({map, color, transparent:true, opacity, blending:THREE.AdditiveBlending, depthWrite:false, ...DECAL});
 
   /* ---------- floor ---------- */
   // Polished floor. On desktop it is a planar reflector (half resolution) so the
@@ -176,7 +179,7 @@ export function buildHall({scene, lite, perpetua}){
   wallBody.position.copy(L.LINE_P0).addScaledVector(L.LINE_DIR, WALL_END/2 - 30).addScaledVector(side, 60.5); wallBody.position.y = 45;
   wallBody.rotation.y = Math.atan2(-side.x, -side.z); root.add(wallBody);
   const wallWashGeo = new THREE.PlaneGeometry(wallLen, 50); wallWashGeo.translate(0, 25, 0);
-  const wallWashMat = new THREE.MeshBasicMaterial({map:wash, color:'#fff0d2', transparent:true, opacity:0.55, blending:THREE.AdditiveBlending, depthWrite:false});
+  const wallWashMat = new THREE.MeshBasicMaterial({map:wash, color:'#fff0d2', transparent:true, opacity:0.55, blending:THREE.AdditiveBlending, depthWrite:false, ...DECAL});
   wallWashMat.onBeforeCompile = sh => wallFade(sh, true); wallWashMat.customProgramCacheKey = () => 'wallwashfade';
   const wallWash = new THREE.Mesh(wallWashGeo, wallWashMat);
   wallWash.userData.keep = true;       // own material: stays out of the shared glow batch
@@ -222,8 +225,9 @@ export function buildHall({scene, lite, perpetua}){
     const g = new THREE.Group(); g.position.copy(slot.pos); g.rotation.y = slot.yaw; root.add(g);
     // deck
     const deck = roundedBox(L.DECK.w, L.DECK.h, L.DECK.d, 0.25, M.enamel); deck.position.y = -L.DECK.h/2; g.add(deck);
-    const trim = roundedBox(L.DECK.w + 0.5, 0.34, L.DECK.d + 0.5, 0.12, M.brass); trim.position.y = -0.17; g.add(trim);
-    const trim2 = roundedBox(L.DECK.w + 0.3, 0.26, L.DECK.d + 0.3, 0.1, M.brass); trim2.position.y = -L.DECK.h + 0.13; g.add(trim2);
+    // The brass trims sit 2 cm inside the deck's top and bottom faces: coplanar faces of two meshes z-fight on any depth buffer.
+    const trim = roundedBox(L.DECK.w + 0.5, 0.34, L.DECK.d + 0.5, 0.12, M.brass); trim.position.y = -0.19; g.add(trim);
+    const trim2 = roundedBox(L.DECK.w + 0.3, 0.26, L.DECK.d + 0.3, 0.1, M.brass); trim2.position.y = -L.DECK.h + 0.15; g.add(trim2);
     // pillar to the floor
     const ph = slot.pos.y - L.DECK.h;
     const pil = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.8, ph, 24), M.marble); pil.position.set(0, -L.DECK.h - ph/2, 0); g.add(pil);
@@ -236,12 +240,12 @@ export function buildHall({scene, lite, perpetua}){
     const cy = L.VIT.h/2 - 0.2;
     const pz = -L.VIT.d/2 + 0.9;
     if (cfg) {
-      const portal = new Portal({...cfg, plane:L.PORTAL.w/L.PORTAL.h, phase:i*1.7});
+      const portal = new Portal({...cfg, video:video ? cfg.video : undefined, plane:L.PORTAL.w/L.PORTAL.h, phase:i*1.7});
       const pm = new THREE.Mesh(new THREE.PlaneGeometry(L.PORTAL.w, L.PORTAL.h), portal.material);
       pm.position.set(0, cy, pz); g.add(pm);
       const frame = new THREE.Mesh(new THREE.BoxGeometry(L.PORTAL.w + 0.7, L.PORTAL.h + 0.7, 0.4), M.brassDk); frame.position.set(0, cy, pz - 0.28); g.add(frame);
       const halo = new THREE.Mesh(new THREE.PlaneGeometry(L.PORTAL.w*1.7, L.PORTAL.h*2.1), additive(glow, cfg.tint || '#ffd9a0', 0.32));
-      halo.position.set(0, cy, pz - 0.05); g.add(halo);
+      halo.position.set(0, cy, pz - 0.03); g.add(halo);
       const stage = new THREE.Mesh(new THREE.PlaneGeometry(L.VIT.w - 0.6, L.VIT.d - 0.6), additive(glow, cfg.tint || '#ffd9a0', 0.26));
       stage.rotation.x = -Math.PI/2; stage.position.set(0, 0.05, 0); g.add(stage);
       const rf = new THREE.Mesh(new THREE.PlaneGeometry(L.PORTAL.w, 4.2).rotateX(Math.PI/2), portal.reflectionMaterial);
@@ -288,7 +292,7 @@ export function buildHall({scene, lite, perpetua}){
     const g = new THREE.Group(); g.position.copy(slot.pos); g.rotation.y = slot.yaw; root.add(g);
     const W = 30;
     const deck = roundedBox(W, L.DECK.h, 8, 0.25, M.enamel); deck.position.y = -L.DECK.h/2; g.add(deck);
-    const trim = roundedBox(W + 0.5, 0.34, 8.5, 0.12, M.brass); trim.position.y = -0.17; g.add(trim);
+    const trim = roundedBox(W + 0.5, 0.34, 8.5, 0.12, M.brass); trim.position.y = -0.19; g.add(trim);
     const ph = slot.pos.y - L.DECK.h;
     for (const x of [-9, 9]) { const pil = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.8, ph, 24), M.marble); pil.position.set(x, -L.DECK.h - ph/2, 0); g.add(pil); }
     const wallH = 15.5;
@@ -302,13 +306,14 @@ export function buildHall({scene, lite, perpetua}){
     // compiles it and the real photo swapping in later never triggers a compile mid-scroll.
     const blank = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1); blank.colorSpace = THREE.SRGBColorSpace; blank.needsUpdate = true;
     for (let k = 0; k < 6; k++) {
-      const m = new THREE.MeshBasicMaterial({color:'#ffffff', toneMapped:false, map:blank});
+      const m = new THREE.MeshBasicMaterial({color:'#ffffff', toneMapped:false, map:blank, polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-4});
       variants.push({mesh:new THREE.InstancedMesh(picGeo, m, 4), n:0, mat:m});
       g.add(variants[k].mesh);
     }
     singularLoad = () => ['media/sing-cabinet.jpg', 'media/sing-museum.jpg', 'media/sing-weather.jpg'].forEach((u, j) => {
       texLoader.load(u, t => {
-        t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+        capTexture(t);
+        t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = texAniso();
         for (const k of [j, j + 3]) {
           const c = t.clone(); c.needsUpdate = true;
           c.repeat.set(0.62, 0.9); c.offset.set(k < 3 ? 0.02 : 0.36, 0.05);
@@ -326,7 +331,7 @@ export function buildHall({scene, lite, perpetua}){
       e.set(0, 0, rot); qq.setFromEuler(e);
       mtx.compose(new THREE.Vector3(x, y, -2.2), qq, new THREE.Vector3(fw + 0.28, fh + 0.28, 1)); frames.setMatrixAt(idx, mtx);
       const v = variants[idx % 6];
-      mtx.compose(new THREE.Vector3(x, y, -2.09), qq, new THREE.Vector3(fw, fh, 1)); v.mesh.setMatrixAt(v.n, mtx);
+      mtx.compose(new THREE.Vector3(x, y, -2.05), qq, new THREE.Vector3(fw, fh, 1)); v.mesh.setMatrixAt(v.n, mtx);
       v.mesh.setColorAt(v.n, new THREE.Color().setHSL(0.08 + ((idx*37)%11)/110, 0.2 + ((idx*13)%7)/30, 0.78 + ((idx*5)%5)/22)); v.n++;
       idx++;
     }
@@ -354,14 +359,14 @@ export function buildHall({scene, lite, perpetua}){
       const yaw = Math.atan2(inward.x, inward.z);
       const g = new THREE.Group(); g.position.copy(pos); g.rotation.y = yaw; wing.add(g);
       const d = roundedBox(smallDeck.w, smallDeck.h, smallDeck.d, 0.18, M.enamel); d.position.y = -smallDeck.h/2; g.add(d);
-      const tr = roundedBox(smallDeck.w + 0.3, 0.24, smallDeck.d + 0.3, 0.08, M.brass); tr.position.y = -0.12; g.add(tr);
+      const tr = roundedBox(smallDeck.w + 0.3, 0.24, smallDeck.d + 0.3, 0.08, M.brass); tr.position.y = -0.14; g.add(tr);
       const ph = pos.y - smallDeck.h;
       const pil = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.1, ph, 18), M.marble); pil.position.y = -smallDeck.h - ph/2; g.add(pil);
       const vit = makeVitrine(V.w, V.h, V.d, M, {back:false, t:0.2}); g.add(vit);
       const portal = new Portal({images:[deck.cover], plane:PW/PH, phase:k*0.9, tint:'#ffffff'});
       const pm = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), portal.material); pm.position.set(0, 2.3, -V.d/2 + 0.6); g.add(pm);
-      const fr = new THREE.Mesh(new THREE.BoxGeometry(PW + 0.4, PH + 0.4, 0.24), M.brassDk); fr.position.set(0, 2.3, -V.d/2 + 0.36); g.add(fr);
-      const hl = new THREE.Mesh(new THREE.PlaneGeometry(PW*1.8, PH*2.1), additive(glow, '#ffd9a0', 0.22)); hl.position.set(0, 2.3, -V.d/2 + 0.5); g.add(hl);
+      const fr = new THREE.Mesh(new THREE.BoxGeometry(PW + 0.4, PH + 0.4, 0.24), M.brassDk); fr.position.set(0, 2.3, -V.d/2 + 0.3); g.add(fr);
+      const hl = new THREE.Mesh(new THREE.PlaneGeometry(PW*1.8, PH*2.1), additive(glow, '#ffd9a0', 0.22)); hl.position.set(0, 2.3, -V.d/2 + 0.52); g.add(hl);
       const dir = k % 2 ? -1 : 1;
       addGear(gearGeometry(20, 0.12, 0.34, false), k % 2 ? M.brassHi : M.brass, g, [0, -smallDeck.h/2, smallDeck.d/2 + 0.3], s => dir*s*1.5 + k);
       portal.slot = 'deck-' + deck.slug; portal.worldPos = pos.clone().add(new THREE.Vector3(0, 2.3, 0)); portals.push(portal);
@@ -462,7 +467,7 @@ export function buildHall({scene, lite, perpetua}){
       const merged = mergeGeometries(geos);
       geos.forEach(geo => geo.dispose());
       let mat = g.mat;
-      if (g.glow) { mat = new THREE.MeshBasicMaterial({map:g.mat.map, vertexColors:true, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, side:g.mat.side}); }
+      if (g.glow) { mat = new THREE.MeshBasicMaterial({map:g.mat.map, vertexColors:true, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, side:g.mat.side, ...DECAL}); }
       const mesh = new THREE.Mesh(merged, mat); mesh.renderOrder = g.order;
       mesh.castShadow = false; mesh.receiveShadow = false;
       g.list.forEach(o => o.parent && o.parent.remove(o));
@@ -527,5 +532,5 @@ export function buildHall({scene, lite, perpetua}){
   }
   /* One clip at a time, behind the loading veil: starting a decoder costs a 50 to 150 ms stall. */
   const prewarmVideos = async () => { for (const p of portals) await p.prewarmVideo(); };
-  return {root, update, portals, prewarmVideos, axles, gearMeshes, linkShafts, anchors, M, shell, rack, SLOT_INDEX, pending, revealNext, revealAll, startLoading, setBackdrop, focusWorld, setMirror, plainFloor, hasMirror:() => !!reflector, mirrorIsOn:() => mirrorOn};
+  return {root, far, stageCount:() => stages.length, pendingCount:() => stages.length - stageIdx, update, portals, prewarmVideos, axles, gearMeshes, linkShafts, anchors, M, shell, rack, SLOT_INDEX, pending, revealNext, revealAll, startLoading, setBackdrop, focusWorld, setMirror, plainFloor, hasMirror:() => !!reflector, mirrorIsOn:() => mirrorOn};
 }
