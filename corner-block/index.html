@@ -6,14 +6,16 @@
 <title>Corner Block — a live cyberpunk intersection</title>
 <script>
 // Phones run out of memory on the full city (iOS Safari kills the tab), so send them to the
-// lightweight Cyberpunk page before anything heavy starts. ?force=1 still opens the live city.
+// lightweight Cyberpunk page before anything heavy starts. iOS always goes, even with ?force=1;
+// ?force=1 still opens the live city on every other device.
 (function () {
   try {
-    if (new URLSearchParams(location.search).get('force') === '1') return;
     var ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (ios) { location.replace('../cyberpunk/'); return; }
+    if (new URLSearchParams(location.search).get('force') === '1') return;
     var coarse = window.matchMedia('(pointer: coarse)').matches;
     var small = Math.min(screen.width, screen.height) < 820;
-    if (ios || (coarse && small)) location.replace('../cyberpunk/');
+    if (coarse && small) location.replace('../cyberpunk/');
   } catch (e) { /* fall through to the live city */ }
 })();
 </script>

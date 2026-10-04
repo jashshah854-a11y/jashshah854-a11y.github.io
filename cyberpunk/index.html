@@ -150,6 +150,8 @@ main { padding-bottom: 64px; }
   .stage { aspect-ratio: 4 / 3; }
   .btn { width: 100%; justify-content: center; }
 }
+/* touch screens never see the link to the live city (it crashes phone browsers); the script below sets the note */
+@media (pointer: coarse) { .go .btn, .go .keys { display: none; } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
@@ -385,14 +387,16 @@ main { padding-bottom: 64px; }
 
   // Tell the visitor honestly how the live city will go on their machine.
   var note = document.getElementById('note');
-  var touch = window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(max-width: 760px)').matches;
+  var touch = window.matchMedia('(pointer: coarse)').matches || /iPhone|iPad|iPod/.test(navigator.userAgent);
   if (touch) {
     // The live city needs more memory than a phone browser allows; it crashes iOS Safari.
+    // Phones and touch screens get no link to it: the spinner above is the phone city.
     var live = document.querySelector('.go .btn');
-    live.setAttribute('href', '../corner-block/?force=1');
-    live.firstChild.textContent = 'Try the live city anyway ';
-    note.textContent = 'The live city is built for a desktop graphics card and crashes most phones. The spinner and the renders are the same city.';
-    note.classList.add('warn');
+    if (live) live.style.display = 'none';
+    var keys = document.querySelector('.go .keys');
+    if (keys) keys.style.display = 'none';
+    note.textContent = 'The live, explorable version runs on a desktop.';
+    note.style.marginTop = '0';
     return;
   }
   try {

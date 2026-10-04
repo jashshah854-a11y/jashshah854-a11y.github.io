@@ -529,6 +529,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
     focused = key; shaftHide.clear();
     for (const id of [a, b]) {
       if (!id) continue;
+      for (const p of portals) if (p.slot === id || (id === 'decks' && p.slot.startsWith('deck-'))) p.prioritize();
       const k = SLOT_INDEX[id];
       shaftHide.add(k); shaftHide.add(k - 1);
     }
@@ -559,7 +560,9 @@ export function buildHall({scene, lite, perpetua, video = true}){
   function startLoading(){
     if (loadingStarted) return; loadingStarted = true;
     singularLoad();
-    portals.forEach((p, i) => setTimeout(() => p.ensureLoaded(), 60 + i*140));
+    // every vitrine's lead picture first, then the second and later pictures of the ones that cycle
+    portals.forEach((p, i) => setTimeout(() => p.ensureLoaded(false), 60 + i*140));
+    portals.forEach((p, i) => setTimeout(() => p.ensureLoaded(true), 60 + (portals.length + i)*140));
   }
   /* One clip at a time, behind the loading veil: starting a decoder costs a 50 to 150 ms stall. */
   const prewarmVideos = async () => { for (const p of portals) await p.prewarmVideo(); };

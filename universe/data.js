@@ -3,6 +3,8 @@
    world coordinates; path.js turns the keyframes into one continuous take. */
 
 export const WORLDS = [
+  {id:'decks', pin:'The decks wing', title:['The decks','wing'],
+   line:'Seven decks. Each one is its own small machine.', still:'assets/d4.jpg', deckList:true},
   {id:'cyber', pin:'Cyberpunk City', title:['Cyberpunk','City'],
    line:'One block at 2:14 AM in the rain. Walk in, drag it around, summon the dragon.',
    href:'cyberpunk/', actions:[{label:'See the renders', kind:'renders'}],
@@ -19,8 +21,6 @@ export const WORLDS = [
    line:'A small arm that picks, lifts and places, one clear job at a time.', href:'workbench/', still:'media/workbench.jpg'},
   {id:'jev', pin:'Jev in Motion', title:['Jev in','Motion'],
    line:'Jev suggests. Your app acts. Follow one message and see who does what.', href:'jev/', still:'media/jev.jpg'},
-  {id:'decks', pin:'The decks wing', title:['The decks','wing'],
-   line:'Seven decks. Each one is its own small machine.', still:'assets/d4.jpg', deckList:true},
   {id:'deadend', pin:'Dead End Shop', title:['Dead End','Shop'],
    line:'Music video. My song.', still:'media/deadend-kf20.jpg'},
   {id:'singular', pin:'Singular', title:['Singular'],
@@ -97,7 +97,9 @@ export const JOURNEY = [
    pos:{at:'hall', p:[30, 20, 188]}, target:{at:'hall', p:[0, 10, 30]}, pscale:1.4,
    portrait:{pos:{at:'hall', p:[3, 22, 188]}, target:{at:'hall', p:[0, 9, 30]}}},
   {id:'hall',    copy:'hall', look:'hall', hold:3.4, label:'The hall of worlds', pins:'hall',
-   pos:{at:'hall', p:[-30, 25, 108]}, target:{at:'hall', p:[14, 15, 6]}, pscale:1.3},
+   pos:{at:'hall', p:[-30, 25, 108]}, target:{at:'hall', p:[30, 15, 6]}, pscale:1.3},
+  // pscale 1: this camera already stands across the rotunda; a portrait pull-back would put the far side's vitrines in front of it
+  slot('decks', {d:112, up:5.0, shift:14.0, lookUp:-2.5, hold:3.6, pscale:1.0}),
   slot('cyber'),
   link('cyber', 'launchboard'),
   slot('launchboard'),
@@ -111,8 +113,7 @@ export const JOURNEY = [
   slot('workbench'),
   link('workbench', 'jev'),
   slot('jev'),
-  // pscale 1: this camera already stands across the rotunda; a portrait pull-back would put the far side's vitrines in front of it
-  slot('decks', {d:112, up:5.0, shift:14.0, lookUp:-2.5, hold:3.6, pscale:1.0}),
+  link('jev', 'deadend'),
   slot('deadend'),
   slot('singular', {d:54, up:3.4, shift:8.5}),
   {id:'all',     look:'far', hold:1.2, copy:'hall2',

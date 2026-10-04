@@ -26,6 +26,7 @@ export const PORTAL = {w:15.2, h:8.55};         // 16:9
 /* Slots round the rotunda, in visiting order. ext = angular footprint (deg),
    deck = height of the deck top, dr = radial offset (depth). */
 export const SLOTS = [
+  {id:'decks',       ext:48, deck:10, dr:0},
   {id:'cyber',       ext:26, deck:14, dr:0},
   {id:'launchboard', ext:26, deck:26, dr:-6},
   {id:'mgmtio',      ext:26, deck:9,  dr:5},
@@ -33,7 +34,6 @@ export const SLOTS = [
   {id:'fieldfold',   ext:26, deck:30, dr:4},
   {id:'workbench',   ext:26, deck:12, dr:-5},
   {id:'jev',         ext:26, deck:24, dr:3},
-  {id:'decks',       ext:48, deck:10, dr:0},
   {id:'deadend',     ext:28, deck:22, dr:-3},
   {id:'singular',    ext:28, deck:15, dr:2}
 ];

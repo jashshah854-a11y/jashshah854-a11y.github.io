@@ -65,20 +65,26 @@ export function capTexture(t){
 const texCache = new Map();
 const placeholder = new THREE.DataTexture(new Uint8Array([20, 19, 15, 255]), 1, 1);
 placeholder.needsUpdate = true;
-/* At most three images are in flight at once, so a simple static server is never hit with a burst. */
+/* At most three images are in flight at once, so a simple static server is never hit with a burst.
+   Jobs still waiting can be moved to the front (bump), so the world the visitor is at never waits behind
+   the rest of the gallery on a slow phone connection. */
 const queue = []; let inFlight = 0;
-function pump(){ while (inFlight < 3 && queue.length) { inFlight++; queue.shift()(() => { inFlight--; pump(); }); } }
+function pump(){ while (inFlight < 3 && queue.length) { inFlight++; queue.shift().run(() => { inFlight--; pump(); }); } }
+export function bump(url){
+  const i = queue.findIndex(j => j.url === url);
+  if (i > 0) queue.unshift(queue.splice(i, 1)[0]);
+}
 export function loadTexture(url){
   if (texCache.has(url)) return texCache.get(url);
-  const entry = {tex:placeholder, aspect:16/9};
+  const entry = {tex:placeholder, aspect:16/9, ready:false};
   texCache.set(url, entry);
-  queue.push(done => loader.load(url, t => {
+  queue.push({url, run:done => loader.load(url, t => {
     capTexture(t);
     t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; t.generateMipmaps = true;
-    entry.tex = t; entry.aspect = t.image.width / t.image.height; entry.onload?.();
+    entry.tex = t; entry.aspect = t.image.width / t.image.height; entry.ready = true; entry.onload?.();
     if (gpu) gpu.initTexture(t);
     done();
-  }, undefined, () => { entry.failed = true; done(); }));
+  }, undefined, () => { entry.failed = true; done(); })});
   pump();
   return entry;
 }
@@ -88,7 +94,7 @@ export class Portal {
   constructor({images, video, plane = 16/9, phase = 0, gain = 1, flicker = 0, cycle = 6.5, zoom = 1.1, pan0 = [0, 0]}){
     this.urls = images;
     this.entries = images.map(() => ({tex:placeholder, aspect:16/9}));   // real textures load lazily, see ensureLoaded()
-    this.loaded = false;
+    this.loadedN = 0;
     this.video = null; this.videoUrl = video; this.cycle = cycle;
     this.videoTex = null;
     this.material = new THREE.ShaderMaterial({
@@ -102,10 +108,19 @@ export class Portal {
     this.reflectionMaterial = new THREE.ShaderMaterial({vertexShader:VERT, fragmentShader:FRAG, uniforms:this.material.uniforms, defines:{REFLECT:1}, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, toneMapped:false, fog:false, polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-4});
     this.playing = false; this.mixTarget = 0; this.t0 = Math.random()*10;
   }
-  ensureLoaded(){
-    if (this.loaded) return;
-    this.loaded = true;
-    this.entries = this.urls.map(u => loadTexture(u));
+  /* The lead picture first (all = false), the rest of a crossfade later: every vitrine gets a picture
+     before any vitrine gets its second one. */
+  ensureLoaded(all = true){
+    const n = all ? this.urls.length : 1;
+    for (let i = this.loadedN; i < n; i++) this.entries[i] = loadTexture(this.urls[i]);
+    this.loadedN = Math.max(this.loadedN, n);
+  }
+  /* The camera is at (or flying between) this world: its lead picture goes to the front of the queue,
+     the rest of its pictures queue behind whatever is already waiting. */
+  prioritize(){
+    this.ensureLoaded(false);
+    bump(this.urls[0]);
+    this.ensureLoaded(true);
   }
   /* The element, its decoder and its GPU texture are created the first time a video is wanted.
      Doing that mid-scroll cost a 50 to 90 ms frame, so prewarmVideo() does it behind the loading veil: the
@@ -147,16 +162,18 @@ export class Portal {
     if (!on && this.playing) { this.video.pause(); this.playing = false; }
   }
   update(time, dt){
-    const u = this.material.uniforms, n = this.entries.length;
+    const u = this.material.uniforms;
     u.uTime.value = time + this.t0;
-    const a = this.entries[0], b = this.entries[Math.min(1, n - 1)];
-    if (n === 1) { u.uA.value = a.tex; u.uB.value = a.tex; u.uAspA.value = u.uAspB.value = a.aspect; u.uMix.value = 0; }
+    /* Only pictures that have arrived take part. Cycling through a still that is not here yet (slow phone
+       connection) would fade the screen to the dark placeholder, so the vitrine looked empty. */
+    const have = this.entries.filter(e => e.ready), n = have.length;
+    if (n <= 1) { const a = have[0] || this.entries[0]; u.uA.value = a.tex; u.uB.value = a.tex; u.uAspA.value = u.uAspB.value = a.aspect; u.uMix.value = 0; }
     else {
       // cycle through the images: hold, then a 1.4 s crossfade
       const phase = ((time + this.t0)/this.cycle);
       const idx = Math.floor(phase) % n, nxt = (idx + 1) % n, k = phase - Math.floor(phase);
       const x = Math.min(1, Math.max(0, (k - (1 - 1.4/this.cycle)) / (1.4/this.cycle)));
-      const e1 = this.entries[idx], e2 = this.entries[nxt];
+      const e1 = have[idx], e2 = have[nxt];
       u.uA.value = e1.tex; u.uB.value = e2.tex; u.uAspA.value = e1.aspect; u.uAspB.value = e2.aspect;
       u.uMix.value = x*x*(3 - 2*x);
     }
