@@ -154,12 +154,12 @@ export function buildCarpet({count = 380} = {}){
   for (const b of bands) {
     const n = Math.round(count*b.w/total);
     for (let i = 0, tries = 0; i < n && tries < n*6; tries++) {
-      const ia = Math.round((26 + rand()*176)/AL), il = Math.round((b.a + rand()*(b.b - b.a))/LA);
+      const ia = Math.round((26 + rand()*120)/AL), il = Math.round((b.a + rand()*(b.b - b.a))/LA);
       const key = ia*997 + il;
       if (taken.has(key)) continue; taken.add(key); i++;
       const along = ia*AL, lat = il*LA;
       const far = Math.min(1, Math.abs(lat)/30);
-      const ramp = sm(26, 62, along)*(1 - sm(176, 202, along));
+      const ramp = sm(26, 62, along)*(1 - sm(96, 142, along));
       const h = (0.4 + Math.pow(rand(), 1.5)*(b.hmax - 0.4))*(1 - 0.4*far)*ramp;
       if (h < 0.25) continue;
       cells.push({along:along + (rand() - 0.5)*0.4, lat:lat + (rand() - 0.5)*0.3, h, w:AL*(0.55 + rand()*0.3), d:LA*(0.55 + rand()*0.3), yaw:0, tone:rand()});
@@ -186,11 +186,17 @@ export function buildCarpet({count = 380} = {}){
         vec2 cF = fract(cUV);
         float cMask = step(0.2, cF.x)*step(cF.x, 0.8)*step(0.22, cF.y)*step(cF.y, 0.78);
         float cFw = max(fwidth(cUV.x), fwidth(cUV.y));
-        float cLit = mix(step(0.8, h21(cId))*cMask, 0.06, smoothstep(0.3, 0.75, cFw))*cWall;`)
+        float cLit = mix(step(0.74, h21(cId))*cMask, 0.06, smoothstep(0.3, 0.75, cFw))*cWall;
+        float cTop = step(0.7, vNW.y);
+        vec2 rUV = vLoc.xz/0.9;
+        vec2 rId = floor(rUV) + vSd*57.0;
+        float rDot = (1.0 - smoothstep(0.05, 0.12, length(fract(rUV) - 0.5)))*step(0.82, h21(rId + 3.7))*cTop;
+        rDot = max(rDot, step(0.5, vSd)*cTop*(1.0 - smoothstep(0.08, 0.15, length(fract(rUV + 0.31) - 0.5)))*step(0.5, h21(rId + 9.1)));
+        rDot *= 1.0 - smoothstep(0.3, 0.9, cFw);`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-        totalEmissiveRadiance += vec3(1.0, 0.7, 0.36)*cLit*0.9 + diffuseColor.rgb*vec3(0.9, 0.55, 0.26)*0.06;`);
+        totalEmissiveRadiance += vec3(1.0, 0.7, 0.36)*cLit*0.9 + vec3(1.0, 0.8, 0.5)*rDot*1.1 + diffuseColor.rgb*vec3(0.9, 0.55, 0.26)*0.06;`);
   };
-  mat.customProgramCacheKey = () => 'carpet1';
+  mat.customProgramCacheKey = () => 'carpet2';
   const mesh = new THREE.InstancedMesh(geo, mat, cells.length);
   const pal = ['#4a3c2b', '#34322e', '#5e5244', '#3c3226', '#6e5836', '#262422'].map(c => new THREE.Color(c));
   const basis = new THREE.Matrix4(), scl = new THREE.Matrix4(), rot = new THREE.Matrix4(), m = new THREE.Matrix4(), c = new THREE.Color();
@@ -212,14 +218,15 @@ export function buildCarpet({count = 380} = {}){
   const lamps = [];
   const lr = rng(909);
   for (const lat of [2.4, 5.0, -3.9, -5.5, 13, 20, -16.5, -24]) {
-    for (let along = 40 + lr()*5; along < 196; along += 6.5 + lr()*1.5) {
+    for (let along = 40 + lr()*5; along < 150; along += 6.5 + lr()*1.5) {
+      if (lr() < sm(96, 146, along)) continue;
       const p = L.LINE_P0.clone().addScaledVector(L.LINE_DIR, along).addScaledVector(SIDE, lat + (lr() - 0.5)*0.6);
       lamps.push(p.x, 0.9 + lr()*0.5, p.z);
     }
   }
   const lg = new THREE.BufferGeometry();
   lg.setAttribute('position', new THREE.Float32BufferAttribute(lamps, 3));
-  lg.boundingSphere = new THREE.Sphere(L.LINE_P0.clone().addScaledVector(L.LINE_DIR, 110), 140);
+  lg.boundingSphere = new THREE.Sphere(L.LINE_P0.clone().addScaledVector(L.LINE_DIR, 95), 80);
   const lm = new THREE.ShaderMaterial({
     transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
     uniforms:{uRes:{value:900}},

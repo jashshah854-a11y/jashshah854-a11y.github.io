@@ -205,8 +205,8 @@ function snapNow(){
 }
 const onInput = () => { cancelGlide(); armSnap(); };
 addEventListener('wheel', onInput, {passive:true});
-addEventListener('touchstart', () => { touching = true; cancelGlide(); clearTimeout(idleT); }, {passive:true});
-addEventListener('touchend', () => { touching = false; armSnap(); }, {passive:true});
+addEventListener('touchstart', e => { if (e.target.closest?.('#stopbar')) return; touching = true; cancelGlide(); clearTimeout(idleT); }, {passive:true});
+addEventListener('touchend', e => { if (e.target.closest?.('#stopbar')) return; touching = false; armSnap(); }, {passive:true});
 addEventListener('touchcancel', () => { touching = false; armSnap(); }, {passive:true});
 
 /* ---------------- ink-mask transition and scroll memory ---------------- */
@@ -373,6 +373,10 @@ let clock = 0, frameN = 0, stillSettle = 2, lastSc = -1;
    blended between neighbouring keyframes so no beat jumps. */
 const panFix = journey.frames.map(f => f.world && f.target.at === 'slot' ? L.SLOT[f.world].right.clone().multiplyScalar(-(f.target.shift ?? 0)) : null);
 const _pan = new THREE.Vector3();
+/* Per-beat portrait framing: a keyframe may carry portrait:{pos, target} (same specs as pos/target). The
+   difference to its landscape camera is blended in on portrait, between neighbouring keyframes like the pan above. */
+const pFix = journey.frames.map(f => f.portrait ? {p:L.resolve(f.portrait.pos).sub(f.P), t:L.resolve(f.portrait.target).sub(f.T)} : null);
+const _ps = new THREE.Vector3(), _lk = new THREE.Vector3();
 function place(sample, sc){
   const aspect = camera.aspect;
   const portrait = aspect < 1.2;
@@ -387,8 +391,16 @@ function place(sample, sc){
     const want = Math.tan(16*Math.PI/180)*1.6;
     distScale = clamp(want/(Math.tan(fov*Math.PI/360)*aspect), 1, sample.pscale);
   }
+  _ps.copy(sample.pos); _lk.copy(sample.look);
+  if (portrait) {
+    const t = clamp((1.2 - aspect)/0.8, 0, 1);
+    const a = pFix[sample.i], b = sample.dwelling ? a : pFix[Math.min(sample.i + 1, pFix.length - 1)];
+    const wa = (1 - (sample.dwelling ? 0 : sample.f))*t, wb = sample.f*t;
+    if (a) { _ps.addScaledVector(a.p, wa); _lk.addScaledVector(a.t, wa); }
+    if (b && !sample.dwelling) { _ps.addScaledVector(b.p, wb); _lk.addScaledVector(b.t, wb); }
+  }
   camera.fov = fov;
-  _off.subVectors(sample.pos, sample.look).multiplyScalar(distScale);
+  _off.subVectors(_ps, _lk).multiplyScalar(distScale);
   const w = 1 - smooth(sc/0.03);
   orbit.yaw += (orbit.ty - orbit.yaw)*0.12; orbit.pitch += (orbit.tp - orbit.pitch)*0.12;
   if (sc > 0.03) { orbit.ty *= 0.96; orbit.tp *= 0.96; }
@@ -398,8 +410,8 @@ function place(sample, sc){
     _q2.setFromAxisAngle(_right, orbit.pitch*w);
     _off.applyQuaternion(_q).applyQuaternion(_q2);
   }
-  camera.position.copy(sample.look).add(_off).add(_pan);
-  const target = sample.look.clone().add(_pan);
+  camera.position.copy(_lk).add(_off).add(_pan);
+  const target = _lk.clone().add(_pan);
   if (portrait && sample.dwelling) target.y -= (distScale - 1)*1.8;
   camera.lookAt(target);
   /* Depth range. near follows the focus distance (a raycast sweep of every beat found no geometry

@@ -44,7 +44,7 @@ export function createUI({worlds, decks, stops, anchors, actions, contact}){
   fetch(contact.resume, {method:'HEAD', cache:'no-cache'}).then(res => { if (res.ok) resumeEls.forEach(el => { el.hidden = false; }); }).catch(() => {});
 
   /* ---- sheets: Worlds and Contact. One open at a time; the page behind stops scrolling. ---- */
-  const nav = $('#worlds'), btn = $('#worldsBtn'), cNav = $('#contact'), cBtn = $('#contactBtn'), barLabel = $('#stopLabel');
+  const nav = $('#worlds'), btn = $('#worldsBtn'), cNav = $('#contact'), cBtn = $('#contactBtn');
   const sheetEls = [[nav, btn], [cNav, cBtn]];
   function openSheet(el, trigger, open){
     for (const [e, t] of sheetEls) { const on = open && e === el; e.hidden = !on; t.setAttribute('aria-expanded', String(on)); }
@@ -58,13 +58,12 @@ export function createUI({worlds, decks, stops, anchors, actions, contact}){
   const closeSheets = () => { if (anySheet()) openSheet(nav, btn, false); };
   btn.addEventListener('click', () => openNav(nav.hidden));
   cBtn.addEventListener('click', () => openContact(cNav.hidden));
-  barLabel.addEventListener('click', () => openNav(nav.hidden));
   $('#worldsClose').addEventListener('click', () => { openNav(false); btn.focus(); });
   $('#contactClose').addEventListener('click', () => { openContact(false); cBtn.focus(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && anySheet()) { const t = !nav.hidden ? btn : cBtn; closeSheets(); t.focus(); } });
   document.addEventListener('pointerdown', e => {
     if (!anySheet()) return;
-    if (nav.contains(e.target) || cNav.contains(e.target) || e.target.closest('#worldsBtn, #contactBtn, #stopLabel')) return;
+    if (nav.contains(e.target) || cNav.contains(e.target) || e.target.closest('#worldsBtn, #contactBtn')) return;
     closeSheets();
   });
   nav.addEventListener('click', e => {

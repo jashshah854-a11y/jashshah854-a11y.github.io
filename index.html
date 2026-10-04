@@ -23,7 +23,7 @@
 <body data-mode="inside">
 <a class="skip" href="#worlds">Skip to the Worlds list</a>
 
-<canvas id="gl" aria-label="A live 3D machine. Drag to turn it. Scroll to step back through the gallery." role="img"></canvas>
+<canvas id="gl" aria-label="A live 3D machine. Drag to turn it. Scroll or use the arrows to step back through the gallery." role="img"></canvas>
 <img id="still" alt="" hidden>
 <div id="scroller" aria-hidden="true"></div>
 
@@ -47,7 +47,7 @@
 
 <section class="copy" data-copy="inside" aria-label="Introduction">
   <h1>You are inside<br><em>a machine.</em></h1>
-  <p>Drag to turn it. Scroll to step back.</p>
+  <p><span class="t-scroll">Drag to turn it. Scroll to step back.</span><span class="t-arrows">Drag to turn it. Use the arrows or swipe to step back.</span></p>
 </section>
 <button id="stepback" class="pill ghost" type="button">
   <svg width="14" height="18" viewBox="0 0 14 18" aria-hidden="true"><path d="M7 1v15M1 10l6 6 6-6"/></svg>Step back
@@ -60,7 +60,7 @@
 
 <section class="copy" data-copy="hall">
   <h2>One machine.<br><em>Many worlds inside it.</em></h2>
-  <p>Tap a world to fly in. Keep scrolling to visit them in order.</p>
+  <p><span class="t-scroll">Tap a world to fly in. Keep scrolling to visit them in order.</span><span class="t-arrows">Tap a world to fly in, or use the arrows to visit them in order.</span></p>
 </section>
 
 <section class="copy" data-copy="end">
@@ -99,7 +99,7 @@
 
 <nav id="stopbar" aria-label="Stops" hidden>
   <button id="prevStop" class="arrow" type="button" aria-label="Previous stop"><svg width="12" height="20" viewBox="0 0 12 20" aria-hidden="true"><path d="M10 2L2 10l8 8"/></svg></button>
-  <button id="stopLabel" type="button" aria-haspopup="true" aria-controls="worlds" aria-live="polite"><span id="stopName"></span><span id="stopCount"></span></button>
+  <span id="stopStatus" class="sr" role="status" aria-live="polite"><span id="stopName"></span> <span id="stopCount"></span></span>
   <button id="nextStop" class="arrow" type="button" aria-label="Next stop"><svg width="12" height="20" viewBox="0 0 12 20" aria-hidden="true"><path d="M2 2l8 8-8 8"/></svg></button>
 </nav>
 

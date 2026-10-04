@@ -10,7 +10,8 @@ html.lenis,html.lenis body{height:auto}
 .lenis.lenis-smooth{scroll-behavior:auto!important}
 body{margin:0;background:var(--night);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:var(--text);text-decoration:none}
-a:hover{color:#fff}
+a,button{-webkit-tap-highlight-color:transparent}
+@media (hover:hover) and (pointer:fine){a:hover{color:#fff}}
 :focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px}
 .pill:focus-visible,.pin:focus-visible{border-radius:999px}
 .skip{position:fixed;left:16px;top:-80px;z-index:300;background:var(--paper);color:var(--ink);padding:12px 18px;border-radius:999px;font-weight:600;transition:top .2s var(--ease-out)}
@@ -38,12 +39,17 @@ body[data-mode=inside] #shade-bottom{background:linear-gradient(to top,rgba(20,3
 .pill{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid transparent;background:none;color:var(--text);font:500 15px/1 var(--sans);cursor:pointer;white-space:nowrap;transition:background .2s var(--ease-out),border-color .2s var(--ease-out),transform .15s var(--ease-out)}
 .pill svg{fill:none;stroke:currentColor;stroke-width:1.6;flex:none}
 .pill:active{transform:scale(.97)}
+.pill.ghost:active{background:rgba(239,238,232,.12)}
+.pill.ghost-dark:active{background:rgba(12,11,10,.8)}
+.pill.solid:active{background:#d8b36b}
+.pin:active{background:rgba(15,14,11,.86)}
+.decks a:active{color:#fff;border-color:rgba(201,163,91,.7)}
 .pill.ghost{border-color:rgba(239,238,232,.5);backdrop-filter:blur(2px);min-height:48px;padding:0 22px}
-.pill.ghost:hover{background:rgba(239,238,232,.08)}
+@media (hover:hover) and (pointer:fine){.pill.ghost:hover{background:rgba(239,238,232,.08)}}
 .pill.ghost-dark{background:rgba(12,11,10,.55);border-color:rgba(239,238,232,.35)}
-.pill.ghost-dark:hover{background:rgba(12,11,10,.8)}
+@media (hover:hover) and (pointer:fine){.pill.ghost-dark:hover{background:rgba(12,11,10,.8)}}
 .pill.solid{background:var(--gold);color:var(--night);font-weight:600;min-height:48px;padding:0 22px}
-.pill.solid:hover{background:#d8b36b;color:var(--night)}
+@media (hover:hover) and (pointer:fine){.pill.solid:hover{background:#d8b36b;color:var(--night)}}
 
 /* header */
 #top{position:fixed;left:0;right:0;top:0;z-index:20;pointer-events:none;height:96px}
@@ -89,7 +95,7 @@ body[data-mode=world] .brand{opacity:0;pointer-events:none}
 .chip .dot{width:8px;height:8px;border-radius:50%;background:var(--gold)}
 .decks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
 .decks a{display:flex;align-items:center;min-height:36px;padding:2px 0;font-size:16px;color:#ddd5c6;border-bottom:1px solid rgba(239,238,232,.14)}
-.decks a:hover{color:#fff;border-color:rgba(201,163,91,.7)}
+@media (hover:hover) and (pointer:fine){.decks a:hover{color:#fff;border-color:rgba(201,163,91,.7)}}
 #card .row{display:flex;gap:10px;flex-wrap:wrap}
 #card[hidden]{display:none}
 #deckToggle{display:none}
@@ -99,7 +105,7 @@ body[data-mode=world] .brand{opacity:0;pointer-events:none}
 #pins{position:fixed;inset:0;z-index:12;pointer-events:none;overflow:hidden}
 .pin{position:absolute;left:0;top:0;display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 16px 0 12px;border-radius:999px;background:rgba(15,14,11,.62);border:1px solid rgba(201,163,91,.6);font-size:15px;color:var(--text);white-space:nowrap;opacity:0;visibility:hidden;pointer-events:none;will-change:transform;transition:opacity .35s var(--ease-out),background .2s,visibility 0s .35s}
 .pin.show{opacity:1;visibility:visible;pointer-events:auto;transition-delay:0s}
-.pin:hover{background:rgba(15,14,11,.86);color:#fff}
+@media (hover:hover) and (pointer:fine){.pin:hover{background:rgba(15,14,11,.86);color:#fff}}
 .pin .d{width:9px;height:9px;border-radius:50%;background:var(--gold);flex:none}
 .pin.perp .d{background:none;border:1.5px solid var(--gold)}
 .pin.deck{font-size:13px;min-height:36px}
@@ -109,40 +115,46 @@ body[data-mode=world] .brand{opacity:0;pointer-events:none}
 #contact{width:min(320px,calc(100vw - 32px))}
 #worlds ul{list-style:none;margin:0;padding:0}
 #worlds a{display:flex;align-items:center;min-height:44px;padding:0 14px;border-radius:12px;font-size:16px}
-#worlds a:hover,#worlds a:focus-visible{background:rgba(239,238,232,.08)}
+#worlds a:focus-visible{background:rgba(239,238,232,.08)}
+@media (hover:hover) and (pointer:fine){#worlds a:hover{background:rgba(239,238,232,.08)}}
+#worlds a:active,.clink:active{background:rgba(239,238,232,.12)}
 #worlds ul ul{margin:0 0 6px 14px;padding-left:10px;border-left:1px solid rgba(239,238,232,.16)}
 #worlds ul ul a{font-size:14px;color:var(--muted);min-height:40px}
 .sheethead{display:none}
 .contactblock{margin-top:8px;padding:12px 4px 4px;border-top:1px solid rgba(239,238,232,.16)}
 .contactblock h3{margin:0 10px 6px;font:400 24px/1.1 var(--serif);color:#f4efe4}
 .clink{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:56px;padding:6px 14px;border-radius:12px;font-size:17px}
-.clink:hover,.clink:focus-visible{background:rgba(239,238,232,.08)}
+.clink:focus-visible{background:rgba(239,238,232,.08)}
+@media (hover:hover) and (pointer:fine){.clink:hover{background:rgba(239,238,232,.08)}}
 .clink small{font-size:13px;color:var(--muted)}
 #worlds .clink,#contact .clink{align-items:flex-start;font-size:17px;min-height:56px}
 .contact-links{display:contents}
 
-/* bottom bar: previous, where you are, next. Phones and touch, and the reduced-motion stops. */
-#stopbar{position:fixed;left:0;right:0;bottom:0;z-index:25;display:flex;align-items:center;gap:6px;padding:8px max(12px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));background:linear-gradient(to top,rgba(12,11,10,.9),rgba(12,11,10,.72));backdrop-filter:blur(10px);border-top:1px solid rgba(239,238,232,.14)}
+/* Stop arrows: two quiet floating buttons, previous and next. No strip, no label (the Worlds sheet lists every stop).
+   Phones and touch, and the reduced-motion stops. The button is a 48px hit area around a 38px circle. */
+#stopbar{position:fixed;left:0;right:0;bottom:0;height:0;z-index:25;pointer-events:none}
 #stopbar[hidden]{display:none}
-#stopbar button{font:500 16px/1.2 var(--sans);color:var(--text);background:none;border:0;cursor:pointer;min-height:48px;border-radius:14px}
-#stopbar .arrow{flex:none;width:56px;display:flex;align-items:center;justify-content:center}
-#stopbar .arrow svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-#stopbar .arrow:hover:not(:disabled){background:rgba(239,238,232,.08)}
-#stopbar .arrow:active:not(:disabled){background:rgba(239,238,232,.16)}
-#stopbar button:disabled{opacity:.3;cursor:default}
-#stopLabel{flex:1;min-width:0;display:flex;align-items:baseline;justify-content:center;gap:8px;padding:0 8px;white-space:nowrap}
-#stopLabel:hover{background:rgba(239,238,232,.06)}
-#stopName{overflow:hidden;text-overflow:ellipsis;min-width:0}
-#stopCount{flex:none;font-size:14px;color:var(--muted)}
-#stopCount::before{content:"\00b7";margin-right:8px}
+#stopbar .arrow{position:absolute;bottom:max(4px,calc(env(safe-area-inset-bottom) - 6px));width:48px;height:48px;padding:0;margin:0;border:0;background:none;color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:opacity .3s var(--ease-out),visibility 0s}
+#prevStop{left:max(10px,calc(env(safe-area-inset-left) + 4px))}
+#nextStop{right:max(10px,calc(env(safe-area-inset-right) + 4px))}
+#stopbar .arrow::before{content:"";position:absolute;width:38px;height:38px;border-radius:50%;background:rgba(12,11,10,.16);border:1px solid rgba(239,238,232,.24);transition:background .15s var(--ease-out),transform .15s var(--ease-out)}
+#stopbar .arrow svg{position:relative;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#stopbar .arrow:active::before{background:rgba(239,238,232,.16);transform:scale(.94)}
+#stopbar .arrow:disabled{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s var(--ease-out),visibility 0s .3s}
+#stopbar .arrow:focus-visible{outline:none}
+#stopbar .arrow:focus-visible::before{outline:2px solid var(--gold);outline-offset:2px}
+@media (hover:hover) and (pointer:fine){#stopbar .arrow:hover:not(:disabled)::before{background:rgba(239,238,232,.1)}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+/* Copy that names the input: scroll wording by default, arrow wording when the arrows are shown. */
+.t-arrows{display:none}
+body.hasbar .t-scroll{display:none}
+body.hasbar .t-arrows{display:inline}
 body.hasbar #stepback{display:none}
-body.hasbar #toast{bottom:calc(84px + env(safe-area-inset-bottom))}
+body.hasbar #toast{bottom:calc(64px + env(safe-area-inset-bottom))}
 @media (min-width:701px){
-  #stopbar{left:50%;right:auto;bottom:20px;transform:translateX(-50%);width:min(420px,calc(100vw - 32px));padding:6px;border:1px solid rgba(239,238,232,.22);border-radius:999px;background:rgba(12,11,10,.72)}
-  #stopbar button{border-radius:999px}
-  body.hasbar .copy[data-copy=inside],body.hasbar .copy[data-copy=end],body.hasbar .copy[data-copy=hall]{bottom:104px}
-  body.hasbar #card{bottom:104px}
-  body.hasbar #toast{bottom:84px}
+  #stopbar .arrow{bottom:16px}
+  #prevStop{left:16px}
+  #nextStop{right:16px}
 }
 
 #toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,10px);z-index:40;padding:10px 18px;border-radius:999px;background:rgba(12,11,10,.7);border:1px solid rgba(239,238,232,.25);font-size:14px;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s}
@@ -206,9 +218,9 @@ dialog#renders img{width:100%;height:auto;border-radius:12px;display:block}
   .sheettitle{font:400 30px/1 var(--serif);color:#f4efe4}
   #worlds a{min-height:52px;font-size:18px}
   .clink{min-height:60px}
-  body.hasbar #card{bottom:calc(76px + env(safe-area-inset-bottom))}
-  body.hasbar .copy[data-copy=inside]{bottom:calc(92px + env(safe-area-inset-bottom))}
-  body.hasbar .copy[data-copy=vitrine],body.hasbar .copy[data-copy=hall],body.hasbar .copy[data-copy=end]{bottom:calc(88px + env(safe-area-inset-bottom))}
+  body.hasbar #card{bottom:calc(60px + env(safe-area-inset-bottom))}
+  body.hasbar .copy[data-copy=inside]{bottom:calc(64px + env(safe-area-inset-bottom))}
+  body.hasbar .copy[data-copy=vitrine],body.hasbar .copy[data-copy=hall],body.hasbar .copy[data-copy=end]{bottom:calc(60px + env(safe-area-inset-bottom))}
   #shade-right,body[data-world=decks] #shade-right{background:linear-gradient(to top,rgba(12,11,10,.8) 0%,rgba(12,11,10,0) 55%)}
 }
 @media (max-width:1100px) and (min-width:701px){
