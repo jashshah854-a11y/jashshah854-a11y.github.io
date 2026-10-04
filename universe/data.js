@@ -38,6 +38,13 @@ export const DECKS = [
 ];
 
 export const LINKEDIN = 'https://www.linkedin.com/in/jashshah-analytics';
+export const EMAIL = 'jashshah854@gmail.com';
+/* resume.pdf is a placeholder path next to index.html: drop the approved PDF in as resume.pdf.
+   ui.js sends a HEAD request and only shows the Resume links when the file exists (no dead link meanwhile). */
+export const RESUME = 'resume.pdf';
+
+/* Short name of a stop for the bottom bar (worlds use their own pin name). */
+export const STOP_NAMES = {inside:'Start', vitrine:'The vitrine', hall:'The hall', end:'Built by Jash'};
 
 /* Look presets. Every keyframe names one; the path blends them with the move,
    so light, fog and exposure change in-camera, never as a cut. */

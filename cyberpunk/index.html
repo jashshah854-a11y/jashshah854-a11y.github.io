@@ -6,6 +6,7 @@
 <title>Cyberpunk City</title>
 <meta name="description" content="One block in Sector 09 at 2:14 AM, in the rain. Six renders of the city, and a live version you can orbit.">
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preload" as="image" href="spin/poster.jpg" fetchpriority="high" media="(pointer: coarse), (max-width: 760px)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
@@ -48,7 +49,7 @@ header.top {
   white-space: nowrap;
 }
 .back:hover { border-color: var(--gold); }
-a:focus-visible, button:focus-visible, .stage:focus-visible {
+a:focus-visible, button:focus-visible, .stage:focus-visible, .spin:focus-visible {
   outline: 3px solid var(--gold); outline-offset: 3px;
 }
 
@@ -85,6 +86,31 @@ a:focus-visible, button:focus-visible, .stage:focus-visible {
 .bar > * { pointer-events: auto; }
 .count { padding: 6px 14px; border-radius: 999px; background: rgba(12, 11, 10, .55); font-size: 14px; color: var(--muted); }
 .bar .ctrl { position: static; padding: 0 16px; }
+
+/* phone spinner: 36 pre-rendered frames of the live city, shown on phones and touch screens */
+.spin {
+  display: none; position: relative; margin: 18px auto 0;
+  width: 100%; max-width: 480px; aspect-ratio: 2 / 3;
+  background: var(--green);
+  border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+  touch-action: pan-y; cursor: grab;
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+}
+.spin.drag { cursor: grabbing; }
+.spin img, .spin canvas {
+  position: absolute; inset: 0; display: block; width: 100%; height: 100%;
+  object-fit: cover; pointer-events: none; -webkit-user-drag: none;
+}
+.spin canvas { opacity: 0; }
+.spin canvas.on { opacity: 1; }
+.spin-hint {
+  position: absolute; z-index: 2; left: 50%; bottom: 14px; transform: translateX(-50%);
+  padding: 6px 14px; border-radius: 999px; background: rgba(12, 11, 10, .55);
+  font-size: 14px; color: var(--muted); white-space: nowrap; pointer-events: none;
+  transition: opacity .6s ease;
+}
+.spin-hint.gone { opacity: 0; }
+@media (pointer: coarse), (max-width: 760px) { .spin { display: block; } }
 
 /* copy */
 .cols { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px 56px; margin-top: clamp(28px, 5vw, 48px); }
@@ -128,7 +154,7 @@ main { padding-bottom: 64px; }
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
 </style>
-</head>
+<!--hall-pill-css--><link rel="stylesheet" href="../universe/hallpill.css"><!--/hall-pill-css--></head>
 <body>
 <div class="wrap">
   <header class="top">
@@ -136,12 +162,17 @@ main { padding-bottom: 64px; }
       <svg width="38" height="26" viewBox="0 0 38 26" fill="none" stroke="#efeee8" stroke-width="1.8" aria-hidden="true"><path d="M19 13C14 3 4 3 4 13s10 10 15 0S34 3 34 13s-10 10-15 0Z"/></svg>
       <span>Jash Shah</span>
     </a>
-    <a class="back" href="../index.html">
+    <a class="back" href="../index.html#cyber">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 8H3M7 4L3 8l4 4"/></svg>
       Back to the hall
     </a>
   </header>
   <main>
+    <div class="spin" id="spin" role="group" aria-label="Spinnable view of the block. Drag, swipe or use the left and right arrow keys to turn it." tabindex="0" data-decoded="0">
+      <img src="spin/poster.jpg" width="720" height="1080" loading="lazy" decoding="async" alt="The Corner Block seen from above as a small isometric model on a dark plinth, lit with neon, with a koi-shaped dragon over its tallest tower.">
+      <canvas width="720" height="1080" aria-hidden="true"></canvas>
+      <span class="spin-hint" id="spin-hint" aria-hidden="true">Drag to spin the block</span>
+    </div>
     <div class="stage" id="stage" role="group" aria-roledescription="carousel" aria-label="Renders of the city" tabindex="0">
       <figure class="slide on"><img src="../media/cb-04-district.jpg" width="1600" height="900" alt="Close on the district: stacked towers covered in neon signs and billboards, with lit windows and a glowing ring on a rooftop." fetchpriority="high"></figure>
       <figure class="slide"><img src="../media/cb-01-overview.jpg" width="1600" height="900" loading="lazy" alt="The whole block seen from above as a small isometric model on a dark plinth, glowing against a black sky with a dragon circling over it."></figure>
@@ -181,6 +212,140 @@ main { padding-bottom: 64px; }
     </div>
   </main>
 </div>
+<script>
+(function () {
+  // Spins 36 pre-rendered frames. Only a window of frames around the current angle is decoded.
+  var stage = document.getElementById('spin');
+  if (!stage || getComputedStyle(stage).display === 'none' || !window.createImageBitmap || !window.fetch) return;
+  var N = 36, HALF = 5, MAX = 12, PX_TURN = 18, AUTO = 1.2, FETCHERS = 3;
+  var canvas = stage.querySelector('canvas');
+  var ctx = canvas.getContext('2d', { alpha: false });
+  var hint = document.getElementById('spin-hint');
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var blobs = [], bad = {}, asked = {}, bitmaps = {}, pending = {}, nBit = 0, nPend = 0;
+  var pos = 0, vel = 0, auto = !reduced, dragging = false, cur = 0, drawn = -1;
+  var lastX = 0, lastT = 0, startX = 0, pxPerFrame = 20, moved = false;
+  var visible = true, raf = 0, last = 0, inFlight = 0;
+
+  function mod(n) { return ((n % N) + N) % N; }
+  function dist(a, b) { var d = Math.abs(a - b); return Math.min(d, N - d); }
+  function want() { var w = {}; for (var d = -HALF; d <= HALF; d++) w[mod(cur + d)] = 1; return w; }
+  function url(i) { return 'spin/f' + (i < 10 ? '0' : '') + i + '.webp'; }
+
+  // Fetch the frame nearest the current angle that is not loaded yet. Starts at f00 and moves outward.
+  function fetchNext() {
+    if (inFlight >= FETCHERS) return;
+    var best = -1, bd = N;
+    for (var i = 0; i < N; i++) {
+      if (asked[i]) continue;
+      var d = dist(i, cur);
+      if (d < bd) { bd = d; best = i; }
+    }
+    if (best < 0) return;
+    asked[best] = 1; inFlight++;
+    fetch(url(best)).then(function (r) { if (!r.ok) throw 0; return r.blob(); }).then(function (b) {
+      blobs[best] = b;
+    }, function () { bad[best] = 1; }).then(function () {
+      inFlight--; ensure(); paint(); fetchNext(); fetchNext();
+    });
+  }
+
+  // Keep at most MAX frames decoded, all near the current angle. Release the rest.
+  function ensure() {
+    var w = want(), k, i, d, s;
+    for (k in bitmaps) if (!w[k]) { bitmaps[k].close(); delete bitmaps[k]; nBit--; }
+    for (d = 0; d <= HALF; d++) for (s = 1; s >= -1; s -= 2) {
+      i = mod(cur + s * d);
+      if (blobs[i] && !bitmaps[i] && !pending[i] && !bad['d' + i] && nBit + nPend < MAX) decode(i);
+    }
+    stage.dataset.decoded = nBit + nPend;
+  }
+  function decode(i) {
+    pending[i] = 1; nPend++;
+    createImageBitmap(blobs[i]).then(function (bm) {
+      delete pending[i]; nPend--;
+      if (want()[i]) { bitmaps[i] = bm; nBit++; } else bm.close();
+      ensure(); paint();
+    }, function () { delete pending[i]; nPend--; bad['d' + i] = 1; ensure(); });
+  }
+
+  // Show the current frame, or the nearest decoded one while the right frame is still arriving.
+  function paint() {
+    var best = -1, bd = N + 1, k;
+    for (k in bitmaps) { var d = dist(+k, cur); if (d < bd) { bd = d; best = +k; } }
+    if (best < 0 || best === drawn) return;
+    ctx.drawImage(bitmaps[best], 0, 0, canvas.width, canvas.height);
+    drawn = best;
+    canvas.classList.add('on');
+  }
+
+  function tick(t) {
+    raf = 0;
+    var dt = Math.min(.05, (t - last) / 1000); last = t;
+    if (!dragging) {
+      if (Math.abs(vel) > .4) { pos += vel * dt; vel *= Math.exp(-3 * dt); }
+      else { vel = 0; if (auto) pos += AUTO * dt; }
+    }
+    pos = mod(pos);
+    var f = mod(Math.round(pos));
+    if (f !== cur) { cur = f; ensure(); fetchNext(); }
+    paint();
+    schedule();
+  }
+  function schedule() {
+    if (raf || !visible || document.hidden) return;
+    if (dragging || vel !== 0 || auto) raf = requestAnimationFrame(tick);
+  }
+  function wake() { last = performance.now(); schedule(); }
+
+  function stopAuto() { auto = false; }
+  function dismissHint() { hint.classList.add('gone'); }
+
+  stage.addEventListener('pointerdown', function (e) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    dragging = true; moved = false; vel = 0; stopAuto();
+    pxPerFrame = Math.max(8, stage.clientWidth / PX_TURN);
+    startX = lastX = e.clientX; lastT = e.timeStamp;
+    try { stage.setPointerCapture(e.pointerId); } catch (x) {}
+    stage.classList.add('drag');
+    wake();
+  });
+  stage.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    var dx = e.clientX - lastX, dt = Math.max(1, e.timeStamp - lastT);
+    if (!moved && Math.abs(e.clientX - startX) > 6) { moved = true; dismissHint(); }
+    pos = mod(pos - dx / pxPerFrame);
+    var v = (-dx / pxPerFrame) / (dt / 1000);
+    vel = vel * .6 + v * .4;
+    lastX = e.clientX; lastT = e.timeStamp;
+  });
+  function release(e) {
+    if (!dragging) return;
+    dragging = false; stage.classList.remove('drag');
+    if (e.timeStamp - lastT > 90) vel = 0;
+    vel = Math.max(-40, Math.min(40, vel));
+    wake();
+  }
+  stage.addEventListener('pointerup', release);
+  stage.addEventListener('pointercancel', release);
+  stage.addEventListener('keydown', function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    var d = e.key === 'ArrowLeft' ? 1 : e.key === 'ArrowRight' ? -1 : 0;
+    if (!d) return;
+    e.preventDefault(); e.stopPropagation(); // keep the slideshow's own arrow keys out of this
+    stopAuto(); dismissHint(); vel = 0; pos = mod(Math.round(pos) + d);
+    cur = mod(Math.round(pos)); ensure(); paint(); fetchNext();
+  });
+
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (en) { visible = en[0].isIntersecting; wake(); }).observe(stage);
+  }
+  document.addEventListener('visibilitychange', wake);
+
+  fetchNext(); fetchNext(); fetchNext();
+  wake();
+})();
+</script>
 <script>
 (function () {
   var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
@@ -226,7 +391,7 @@ main { padding-bottom: 64px; }
     var live = document.querySelector('.go .btn');
     live.setAttribute('href', '../corner-block/?force=1');
     live.firstChild.textContent = 'Try the live city anyway ';
-    note.textContent = 'The live city is built for a desktop graphics card and crashes most phones. The renders above are the same city.';
+    note.textContent = 'The live city is built for a desktop graphics card and crashes most phones. The spinner and the renders are the same city.';
     note.classList.add('warn');
     return;
   }
@@ -249,5 +414,5 @@ main { padding-bottom: 64px; }
   } catch (e) { /* keep the generic line */ }
 })();
 </script>
-</body>
+<!--hall-pill--><a class="hall-pill" href="../index.html#cyber" data-at="bl" data-late style="--hp-b:12px;--hp-bw:12px"><svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true"><path d="M15 6H2M6 1L1 6l5 5"/></svg>Back to the hall</a><script src="../universe/hallpill.js"></script><!--/hall-pill--></body>
 </html>

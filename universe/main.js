@@ -5,7 +5,8 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { gsap } from 'gsap';
 import Lenis from 'lenis';
-import { WORLDS, DECKS, JOURNEY, JOURNEY_VH } from './data.js';
+import { WORLDS, DECKS, JOURNEY, JOURNEY_VH, EMAIL, LINKEDIN, RESUME, STOP_NAMES } from './data.js';
+import { slugOf, landingT, writeHash, writeSnapshot } from './nav.js';
 import { Mechanics } from './mechanics.js';
 import { buildPerpetua } from './perpetua.js';
 import { buildHall } from './hall.js';
@@ -34,7 +35,11 @@ const journey = buildJourney(JOURNEY);
 const stops = journey.stops;
 const dwellStops = stops.filter(s => s.hold > 0);
 const stillStops = stops.filter(s => s.hold > 0 && s.id !== 'all');
-document.documentElement.style.setProperty('--journey', JOURNEY_VH);
+const navStops = stillStops;                  // the stops the arrows, the bar and the keyboard step through
+const snapStops = dwellStops;                 // every dwell beat is a legal place to rest (including the whole-hall beat)
+/* Phones: about half the scroll distance between stops, so one flick moves about one chapter.
+   The camera is f(fraction of the scroll), so nothing else depends on the height. */
+document.documentElement.style.setProperty('--journey', mobile ? Math.round(JOURNEY_VH*0.5) : JOURNEY_VH);
 
 /* ---------------- renderer, or the still fallback ---------------- */
 const canvas = $('#gl');
@@ -109,7 +114,7 @@ gsap.ticker.lagSmoothing(0);
 if (mode === 'gl') {
   lenis = new Lenis({lerp:0.12, wheelMultiplier:0.9, touchMultiplier:1.2, smoothWheel:true});
   lenis.stop();                                // scroll is held behind the loading veil until the gallery is warm (see boot)
-  lenis.on('scroll', e => { targetT = e.limit > 0 ? clamp(e.scroll/e.limit, 0, 1) : 0; chase(targetT); });
+  lenis.on('scroll', e => { targetT = e.limit > 0 ? clamp(e.scroll/e.limit, 0, 1) : 0; chase(targetT); if (!isGliding()) armSnap(); scheduleSave(); });
   gsap.ticker.add(time => lenis.raf(time*1000));
 } else {
   document.body.classList.add('stills');
@@ -118,42 +123,108 @@ const scrollLimit = () => Math.max(1, document.documentElement.scrollHeight - in
 
 /* ---------------- navigation between stops ---------------- */
 let stillIdx = 0;
+const easeIO = x => x < 0.5 ? 4*x*x*x : 1 - Math.pow(-2*x + 2, 3)/2;
+/* A glide is a programmatic Lenis scroll. While one runs, its own scroll events must not re-arm the
+   idle snap, and any new input (touch, wheel) cancels it on the spot. */
+let glideUntil = 0, glideTarget = null;
+const isGliding = () => performance.now() < glideUntil;
+let anchor = 0;                               // index in snapStops of the stop the visitor last rested on
+function glide(sc, dur){
+  sc = clamp(sc, 0, 1);
+  const k = snapStops.findIndex(s => Math.abs(s.sc - sc) < 1e-9); if (k >= 0) anchor = k;
+  glideUntil = performance.now() + dur*1000 + 80; glideTarget = sc;
+  lenis.scrollTo(sc*scrollLimit(), {duration:dur, easing:easeIO, force:true});
+}
+function cancelGlide(){
+  if (!isGliding()) return;
+  glideUntil = 0; glideTarget = null;
+  lenis.scrollTo(lenis.scroll, {immediate:true, force:true});
+}
 function goT(sc, instant = false){
   sc = clamp(sc, 0, 1);
-  if (mode === 'gl') {
-    const dist = Math.abs(sc - targetT);
-    lenis.scrollTo(sc*scrollLimit(), instant ? {immediate:true, force:true} : {duration:clamp(1.3 + dist*14, 1.3, 4.4), easing:x => x < 0.5 ? 4*x*x*x : 1 - Math.pow(-2*x + 2, 3)/2, force:true});
-    if (instant) { targetT = sc; gsap.set(proxy, {t:sc}); chase(sc); }
-  }
+  if (mode !== 'gl') return;
+  if (instant) {
+    glideUntil = 0; glideTarget = null; noSnapUntil = performance.now() + 400;
+    lenis.scrollTo(sc*scrollLimit(), {immediate:true, force:true});
+    targetT = sc; gsap.set(proxy, {t:sc}); chase(sc);
+    anchor = snapStops.reduce((best, s, i) => Math.abs(s.sc - sc) < Math.abs(snapStops[best].sc - sc) ? i : best, 0);
+  } else glide(sc, clamp(1.3 + Math.abs(sc - targetT)*14, 1.3, 4.4));
 }
 function goStopIndex(i){
   const s = stops[i]; if (!s) return;
   if (mode === 'gl') goT(s.sc);
-  else showStill(dwellStops.indexOf(s));
+  else showStill(navStops.includes(s) ? navStops.indexOf(s) : nearestNav(s.sc));
 }
 const stopIdxById = id => stops.findIndex(s => s.id === id);
-function currentDwellIdx(){
-  const sc = proxy.t; let best = 0, bd = 9;
-  dwellStops.forEach((s, i) => { const d = Math.abs(s.sc - sc); if (d < bd) { bd = d; best = i; } });
+function nearestNav(sc){
+  let best = 0, bd = 9;
+  navStops.forEach((s, i) => { const d = Math.abs(s.sc - sc); if (d < bd) { bd = d; best = i; } });
   return best;
 }
+/* One step: from inside a stop's dwell it goes to the neighbouring stop; from between stops it goes to
+   the next one in that direction. Pressing again while a glide runs continues from the glide's target. */
 function stepBy(n){
-  if (mode !== 'gl') { showStill(clamp(stillIdx + n, 0, stillStops.length - 1)); return; }
-  const cur = proxy.t; let idx = currentDwellIdx();
-  if (n > 0) { while (idx < dwellStops.length - 1 && dwellStops[idx].sc <= cur + 0.003) idx++; }
-  else { while (idx > 0 && dwellStops[idx].sc >= cur - 0.003) idx--; }
-  goT(dwellStops[clamp(idx, 0, dwellStops.length - 1)].sc);
+  if (mode !== 'gl') { showStill(clamp(stillIdx + n, 0, navStops.length - 1)); return; }
+  const cur = isGliding() && glideTarget != null ? glideTarget : targetT, last = navStops.length - 1;
+  const at = navStops.findIndex(s => cur >= s.s0 - 0.003 && cur <= s.s1 + 0.003);
+  let idx;
+  if (at >= 0) idx = at + n;
+  else if (n > 0) { idx = navStops.findIndex(s => s.sc > cur); if (idx < 0) idx = last; }
+  else { idx = -1; navStops.forEach((s, i) => { if (s.sc < cur) idx = i; }); if (idx < 0) idx = 0; }
+  goT(navStops[clamp(idx, 0, last)].sc);
 }
 
-/* ---------------- ink-mask transition and scroll memory ---------------- */
-const KEY = 'universe.scroll.v1';
-function remember(){
-  try { sessionStorage.setItem(KEY, JSON.stringify({y:window.scrollY, t:proxy.t, stop:stillIdx, mode, ts:Date.now()})); } catch (e) {}
+/* Chapter snap (Igloo pattern): about 1.4 s after the last input, glide to the nearest stop over 1.6 to 2.4 s.
+   The camera is never left parked between stops. Resting anywhere inside a dwell beat counts as on a stop,
+   because the camera is already still there. */
+const IDLE_MS = 1400;
+let idleT = 0, touching = false;
+let noSnapUntil = 0;                          // a cold seek (Back, reload, deep link) must stay exactly where it landed
+const armSnap = () => { clearTimeout(idleT); if (performance.now() < noSnapUntil) return; idleT = setTimeout(snapNow, IDLE_MS); };
+function snapNow(){
+  if (mode !== 'gl' || !lenis || isGliding()) return;
+  if (touching || document.hidden) { armSnap(); return; }
+  if (ui.sheetOpen() || $('#renders').open) return;       // re-armed when the sheet closes
+  const t = targetT; let prev = -1, next = -1;
+  for (let i = 0; i < snapStops.length; i++) {
+    const s = snapStops[i];
+    if (t >= s.s0 - 1e-4 && t <= s.s1 + 1e-4) { anchor = i; return; }
+    if (s.sc < t) prev = i; else if (next < 0) next = i;
+  }
+  let pick;
+  if (prev < 0) pick = next; else if (next < 0) pick = prev;
+  else {
+    const A = snapStops[prev], B = snapStops[next], gap = B.s0 - A.s1;
+    // One flick = one chapter: once the page has been pulled past a fifth of the way toward the next stop it commits there.
+    if (anchor === prev) pick = t - A.s1 > 0.2*gap ? next : prev;
+    else if (anchor === next) pick = B.s0 - t > 0.2*gap ? prev : next;
+    else pick = t - A.sc < B.sc - t ? prev : next;
+  }
+  const dist = Math.abs(snapStops[pick].sc - t);
+  glide(snapStops[pick].sc, clamp(1.6 + dist*8, 1.6, 2.4));
 }
+const onInput = () => { cancelGlide(); armSnap(); };
+addEventListener('wheel', onInput, {passive:true});
+addEventListener('touchstart', () => { touching = true; cancelGlide(); clearTimeout(idleT); }, {passive:true});
+addEventListener('touchend', () => { touching = false; armSnap(); }, {passive:true});
+addEventListener('touchcancel', () => { touching = false; armSnap(); }, {passive:true});
+
+/* ---------------- ink-mask transition and scroll memory ---------------- */
+/* The address (#fieldfold) and sessionStorage follow the camera, throttled. Nothing is written until the
+   landing position has been restored, or a deep link would be overwritten with the opening beat. */
+let ready = false, saveT = 0;
+const currentT = () => mode === 'gl' ? targetT : (navStops[stillIdx] || navStops[0]).sc;
+function saveNow(){
+  clearTimeout(saveT); saveT = 0;
+  if (!ready) return;
+  const t = currentT(), s = navStops[nearestNav(t)];
+  writeSnapshot(s, t); writeHash(s);
+}
+function scheduleSave(){ if (ready && !saveT) saveT = setTimeout(saveNow, 250); }
 function walkIn(href, ev){
   if (!href || href.startsWith('#')) return false;
   if (ev && (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button > 0)) return false;
-  remember();
+  saveNow();
   const x = ev && ev.clientX ? ev.clientX : innerWidth*0.5, y = ev && ev.clientY ? ev.clientY : innerHeight*0.62;
   if (reduced) { location.href = href; return true; }
   const ink = $('#ink'), ink2 = $('#ink2'), o = {a:0, b:0};
@@ -177,16 +248,15 @@ function reveal(){
   gsap.to(o, {b:0, duration:0.7, ease:'power3.out', onUpdate:set});
   gsap.to(o, {a:0, duration:0.7, delay:0.14, ease:'power3.out', onUpdate:set, onComplete:() => { ink.style.visibility = ink2.style.visibility = 'hidden'; }});
 }
-addEventListener('pagehide', remember);
+addEventListener('pagehide', saveNow);
+document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); });
 addEventListener('pageshow', e => { if (e.persisted) reveal(); });
 let restoredFromWorld = false;
 function restore(){
-  let saved = null;
-  try { saved = JSON.parse(sessionStorage.getItem(KEY) || 'null'); } catch (e) {}
-  const nav = performance.getEntriesByType('navigation')[0];
-  const type = nav ? nav.type : 'navigate';
-  if (!saved || Date.now() - saved.ts > 3600e3 || (type !== 'back_forward' && type !== 'reload')) return false;
-  if (mode === 'gl') { goT(saved.t, true); } else { stillIdx = clamp(saved.stop || 0, 0, stillStops.length - 1); }
+  const t = landingT(stops);
+  if (t == null) return false;
+  if (mode === 'gl') goT(t, true);           // cold seek: immediate, no Lenis smoothing, no intro
+  else stillIdx = nearestNav(t);
   if (!reduced) { coverInk(); restoredFromWorld = true; }   // the ink that closed over the hall now draws back
   return true;
 }
@@ -196,6 +266,11 @@ const actions = {
   walkIn,
   goWorld: id => goStopIndex(stopIdxById('world:' + id)),
   next: () => stepBy(1),
+  step: n => stepBy(n),
+  sheet: open => {
+    if (!lenis) return;
+    if (open) { clearTimeout(idleT); cancelGlide(); lenis.stop(); } else { lenis.start(); armSnap(); }
+  },
   toHall: () => goStopIndex(stopIdxById('hall')),
   toStart: () => (mode === 'gl' ? goT(0) : showStill(0)),
   openRenders: () => ui.openRenders(),
@@ -204,12 +279,12 @@ const actions = {
     goStopIndex(nxt ? stops.indexOf(nxt) : stops.length - 1);
   }
 };
-const ui = createUI({worlds:WORLDS, decks:DECKS, stops, anchors:hall ? hall.anchors : [], actions});
+const ui = createUI({worlds:WORLDS, decks:DECKS, stops, anchors:hall ? hall.anchors : [], actions, contact:{email:EMAIL, linkedin:LINKEDIN, resume:RESUME}});
 
 addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const t = e.target;
-  if (t.closest && t.closest('dialog, #worlds, input, textarea')) return;
+  if (t.closest && t.closest('dialog, #worlds, #contact, input, textarea')) return;
   const onControl = t.matches && t.matches('a, button, [tabindex]');
   if (e.key === 'ArrowDown' || e.key === 'PageDown' || (e.key === ' ' && !onControl)) { e.preventDefault(); stepBy(1); }
   else if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); stepBy(-1); }
@@ -391,7 +466,7 @@ function focusShafts(sample){
   for (let k = sample.i + 1; k < fr.length && !b; k++) b = fr[k].world || null;
   hall.focusWorld(a, b);
 }
-let firstFrames = 0;
+let firstFrames = 0, barIdx = -1;
 let cpuEma = 0;
 function frame(time, deltaMs){
   if (document.hidden || !renderer) return;
@@ -422,6 +497,8 @@ function frame(time, deltaMs){
   if (key.intensity > 0.02 && sc < 0.3 && frameN % (sc < 0.05 ? shadowEvery/2 : shadowEvery) === 0) renderer.shadowMap.needsUpdate = true;
   const ai = activeStop(sc);
   ui.setActive(ai);
+  const bi = nearestNav(sc);
+  if (bi !== barIdx) { barIdx = bi; ui.setBar(bi, navStops.length, stopName(navStops[bi])); }
   ui.updatePins(camera, innerWidth, innerHeight, ai >= 0);
   renderer.render(scene, camera);
   cpuEma = cpuEma*0.9 + (performance.now() - cpu0)*0.1;
@@ -429,13 +506,14 @@ function frame(time, deltaMs){
 }
 
 /* reduced motion: still stops, rendered on demand */
+const stopName = s => s.world ? ui.byId[s.world].pin : (STOP_NAMES[s.id] || s.label || s.id);
 function showStill(i){
   stillIdx = clamp(i, 0, stillStops.length - 1);
   const s = stillStops[stillIdx];
   stillSettle = 2;
   stillSample = journey.sample(s.sc); stillSc = s.sc;
-  $('#stopCount').textContent = `${stillIdx + 1} of ${stillStops.length}`;
-  $('#prevStop').disabled = stillIdx === 0; $('#nextStop').disabled = stillIdx === stillStops.length - 1;
+  ui.setBar(stillIdx, navStops.length, stopName(s));
+  scheduleSave();
   ui.setActive(stops.indexOf(s));
   const w = s.world && ui.byId[s.world];
   if (mode === 'nogl') {
@@ -535,15 +613,16 @@ async function boot(){
   if (mode === 'gl') {
     if (lenis) lenis.start();
     gsap.ticker.add(frame);
-    restore();
+    ui.showBar(mobile);                        // the bottom bar is for phones and touch; desktop keeps scroll, keys and the card
+    const restored = restore();
+    ready = true;
+    if (restored) saveNow();
   } else {
-    $('#stills').hidden = false;
-    $('#prevStop').addEventListener('click', () => stepBy(-1));
-    $('#nextStop').addEventListener('click', () => stepBy(1));
-    $('#stepback').addEventListener('click', () => stepBy(1));
+    ui.showBar(true);
     if (mode === 'nogl') { $('#veil').classList.add('done', 'fail'); $('#gl').hidden = true; $('#veil').classList.remove('done'); setTimeout(() => $('#veil').classList.add('done'), 1800); }
     gsap.ticker.add(stillsFrame);
     restore();
+    ready = true;
     showStill(stillIdx);
     if (mode === 'stills') document.fonts?.ready?.then(() => { stillSettle = 2; });
   }

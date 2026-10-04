@@ -53,7 +53,8 @@ body[data-mode=inside] #shade-bottom{background:linear-gradient(to top,rgba(20,3
 .brand{position:absolute;left:44px;top:40px;display:flex;align-items:center;gap:14px;min-height:44px;padding:0 16px 0 12px;border-radius:999px;font-size:16px;font-weight:600;letter-spacing:.01em;background:rgba(12,11,10,calc(var(--paper,0)*.6));border:1px solid rgba(239,238,232,calc(var(--paper,0)*.3));transition:opacity .4s var(--ease-out)}
 .brand svg{fill:none;stroke:var(--text);stroke-width:1.8}
 #back{position:absolute;left:56px;top:40px;opacity:0;visibility:hidden;transition:opacity .4s var(--ease-out),visibility 0s .4s}
-#worldsBtn{position:absolute;right:56px;top:40px}
+#topbtns{position:absolute;right:56px;top:40px;display:flex;gap:8px}
+#back .sm{display:none}
 body[data-mode=world] #back{opacity:1;visibility:visible;transition-delay:0s}
 body[data-mode=world] .brand{opacity:0;pointer-events:none}
 
@@ -104,17 +105,45 @@ body[data-mode=world] .brand{opacity:0;pointer-events:none}
 .pin.deck{font-size:13px;min-height:36px}
 
 /* worlds list */
-#worlds{position:fixed;right:56px;top:92px;z-index:30;width:min(340px,calc(100vw - 32px));max-height:calc(100dvh - 120px);overflow:auto;padding:10px;border-radius:18px;background:rgba(12,11,10,.9);border:1px solid rgba(239,238,232,.22);backdrop-filter:blur(10px)}
+#worlds,#contact{position:fixed;right:56px;top:92px;z-index:30;width:min(340px,calc(100vw - 32px));max-height:calc(100dvh - 120px);overflow:auto;overscroll-behavior:contain;padding:10px;border-radius:18px;background:rgba(12,11,10,.9);border:1px solid rgba(239,238,232,.22);backdrop-filter:blur(10px)}
+#contact{width:min(320px,calc(100vw - 32px))}
 #worlds ul{list-style:none;margin:0;padding:0}
 #worlds a{display:flex;align-items:center;min-height:44px;padding:0 14px;border-radius:12px;font-size:16px}
 #worlds a:hover,#worlds a:focus-visible{background:rgba(239,238,232,.08)}
 #worlds ul ul{margin:0 0 6px 14px;padding-left:10px;border-left:1px solid rgba(239,238,232,.16)}
 #worlds ul ul a{font-size:14px;color:var(--muted);min-height:40px}
+.sheethead{display:none}
+.contactblock{margin-top:8px;padding:12px 4px 4px;border-top:1px solid rgba(239,238,232,.16)}
+.contactblock h3{margin:0 10px 6px;font:400 24px/1.1 var(--serif);color:#f4efe4}
+.clink{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:56px;padding:6px 14px;border-radius:12px;font-size:17px}
+.clink:hover,.clink:focus-visible{background:rgba(239,238,232,.08)}
+.clink small{font-size:13px;color:var(--muted)}
+#worlds .clink,#contact .clink{align-items:flex-start;font-size:17px;min-height:56px}
+.contact-links{display:contents}
 
-/* reduced-motion / no-WebGL stops */
-#stills{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:25;display:flex;align-items:center;gap:14px;padding:6px;border-radius:999px;background:rgba(12,11,10,.55)}
-#stills[hidden]{display:none}
-#stopCount{font-size:14px;color:var(--muted);min-width:5ch;text-align:center}
+/* bottom bar: previous, where you are, next. Phones and touch, and the reduced-motion stops. */
+#stopbar{position:fixed;left:0;right:0;bottom:0;z-index:25;display:flex;align-items:center;gap:6px;padding:8px max(12px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));background:linear-gradient(to top,rgba(12,11,10,.9),rgba(12,11,10,.72));backdrop-filter:blur(10px);border-top:1px solid rgba(239,238,232,.14)}
+#stopbar[hidden]{display:none}
+#stopbar button{font:500 16px/1.2 var(--sans);color:var(--text);background:none;border:0;cursor:pointer;min-height:48px;border-radius:14px}
+#stopbar .arrow{flex:none;width:56px;display:flex;align-items:center;justify-content:center}
+#stopbar .arrow svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#stopbar .arrow:hover:not(:disabled){background:rgba(239,238,232,.08)}
+#stopbar .arrow:active:not(:disabled){background:rgba(239,238,232,.16)}
+#stopbar button:disabled{opacity:.3;cursor:default}
+#stopLabel{flex:1;min-width:0;display:flex;align-items:baseline;justify-content:center;gap:8px;padding:0 8px;white-space:nowrap}
+#stopLabel:hover{background:rgba(239,238,232,.06)}
+#stopName{overflow:hidden;text-overflow:ellipsis;min-width:0}
+#stopCount{flex:none;font-size:14px;color:var(--muted)}
+#stopCount::before{content:"\00b7";margin-right:8px}
+body.hasbar #stepback{display:none}
+body.hasbar #toast{bottom:calc(84px + env(safe-area-inset-bottom))}
+@media (min-width:701px){
+  #stopbar{left:50%;right:auto;bottom:20px;transform:translateX(-50%);width:min(420px,calc(100vw - 32px));padding:6px;border:1px solid rgba(239,238,232,.22);border-radius:999px;background:rgba(12,11,10,.72)}
+  #stopbar button{border-radius:999px}
+  body.hasbar .copy[data-copy=inside],body.hasbar .copy[data-copy=end],body.hasbar .copy[data-copy=hall]{bottom:104px}
+  body.hasbar #card{bottom:104px}
+  body.hasbar #toast{bottom:84px}
+}
 
 #toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,10px);z-index:40;padding:10px 18px;border-radius:999px;background:rgba(12,11,10,.7);border:1px solid rgba(239,238,232,.25);font-size:14px;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s}
 #toast.show{opacity:1;transform:translate(-50%,0)}
@@ -147,14 +176,16 @@ dialog#renders img{width:100%;height:auto;border-radius:12px;display:block}
 /* phone */
 @media (max-width:700px){
   .brand{left:max(8px,env(safe-area-inset-left));top:calc(20px + env(safe-area-inset-top))}
-  #back{left:max(20px,env(safe-area-inset-left));top:calc(20px + env(safe-area-inset-top))}
-  #worldsBtn{right:max(20px,env(safe-area-inset-right));top:calc(20px + env(safe-area-inset-top))}
+  #back{left:max(16px,env(safe-area-inset-left));top:calc(20px + env(safe-area-inset-top))}
+  #topbtns{right:max(16px,env(safe-area-inset-right));top:calc(20px + env(safe-area-inset-top))}
+  #top .pill{padding:0 14px;font-size:14px}
+  #back .lg{display:none}
+  #back .sm{display:inline}
   #deckToggle{display:inline-flex}
   #card:not(.decks-open) #cardDecks{display:none}
   .decks a{min-height:44px}
   #worlds ul ul a{min-height:44px}
   #toast{bottom:calc(28px + env(safe-area-inset-bottom))}
-  #stills{bottom:calc(20px + env(safe-area-inset-bottom))}
   .copy[data-copy=inside]{left:20px;right:20px;bottom:calc(112px + env(safe-area-inset-bottom))}
   .copy[data-copy=inside] p{font-size:17px}
   #stepback{right:20px;bottom:calc(36px + env(safe-area-inset-bottom))}
@@ -168,15 +199,23 @@ dialog#renders img{width:100%;height:auto;border-radius:12px;display:block}
   #cardTitle em{display:inline}
   #cardLine{font-size:16px}
   .pin{display:none}
-  #worlds{left:0;right:0;top:auto;bottom:0;width:auto;max-height:72dvh;border-radius:22px 22px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom));z-index:60}
-  #worlds a{min-height:48px;font-size:17px}
+  /* Worlds: a full-screen list. Contact: a bottom sheet. */
+  #worlds{inset:0;width:auto;max-height:none;border-radius:0;border:0;background:rgba(12,11,10,.97);padding:0 14px calc(24px + env(safe-area-inset-bottom));z-index:60}
+  #contact{left:0;right:0;top:auto;bottom:0;width:auto;max-height:80dvh;border-radius:22px 22px 0 0;padding:0 14px calc(18px + env(safe-area-inset-bottom));z-index:60}
+  .sheethead{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:2;min-height:68px;padding:calc(8px + env(safe-area-inset-top)) 4px 8px;background:#0c0b0a}
+  .sheettitle{font:400 30px/1 var(--serif);color:#f4efe4}
+  #worlds a{min-height:52px;font-size:18px}
+  .clink{min-height:60px}
+  body.hasbar #card{bottom:calc(76px + env(safe-area-inset-bottom))}
+  body.hasbar .copy[data-copy=inside]{bottom:calc(92px + env(safe-area-inset-bottom))}
+  body.hasbar .copy[data-copy=vitrine],body.hasbar .copy[data-copy=hall],body.hasbar .copy[data-copy=end]{bottom:calc(88px + env(safe-area-inset-bottom))}
   #shade-right,body[data-world=decks] #shade-right{background:linear-gradient(to top,rgba(12,11,10,.8) 0%,rgba(12,11,10,0) 55%)}
 }
 @media (max-width:1100px) and (min-width:701px){
   #card{width:380px;right:40px}
   .brand{left:24px}
   #back{left:36px}
-  #worldsBtn{right:36px}
+  #topbtns{right:36px}
   .copy[data-copy=inside],.copy[data-copy=end]{left:36px}
   .copy[data-copy=hall]{left:36px;right:36px}
   .copy[data-copy=vitrine]{right:40px}

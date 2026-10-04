@@ -37,9 +37,12 @@
     <span>Jash Shah</span>
   </a>
   <button id="back" class="pill ghost-dark" type="button" tabindex="-1">
-    <svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true"><path d="M15 6H2M6 1L1 6l5 5"/></svg>Back to the hall
+    <svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true"><path d="M15 6H2M6 1L1 6l5 5"/></svg><span class="lg">Back to the hall</span><span class="sm">Hall</span>
   </button>
-  <button id="worldsBtn" class="pill ghost-dark" type="button" aria-expanded="false" aria-controls="worlds">Worlds</button>
+  <div id="topbtns">
+    <button id="contactBtn" class="pill ghost-dark" type="button" aria-expanded="false" aria-controls="contact">Contact</button>
+    <button id="worldsBtn" class="pill ghost-dark" type="button" aria-expanded="false" aria-controls="worlds">Worlds</button>
+  </div>
 </header>
 
 <section class="copy" data-copy="inside" aria-label="Introduction">
@@ -63,7 +66,7 @@
 <section class="copy" data-copy="end">
   <h2>Built by<br><em>Jash Shah</em></h2>
   <p class="links">
-    <a class="pill solid" href="https://www.linkedin.com/in/jashshah-analytics" rel="noopener noreferrer" target="_blank">LinkedIn</a>
+    <span class="contact-links" data-contact></span>
     <button id="toStart" class="pill ghost" type="button">Back to the start</button>
   </p>
 </section>
@@ -84,13 +87,20 @@
 </aside>
 
 <nav id="worlds" aria-label="Worlds" hidden>
+  <div class="sheethead"><span class="sheettitle">Worlds</span><button id="worldsClose" class="pill ghost-dark" type="button">Close</button></div>
   <ul id="worldsList"></ul>
+  <div class="contactblock"><h3>Contact</h3><div data-contact></div></div>
 </nav>
 
-<nav id="stills" aria-label="Stops" hidden>
-  <button id="prevStop" class="pill ghost-dark" type="button">Previous</button>
-  <span id="stopCount" aria-live="polite"></span>
-  <button id="nextStop" class="pill solid" type="button">Next</button>
+<div id="contact" role="region" aria-label="Contact" hidden>
+  <div class="sheethead"><span class="sheettitle">Contact</span><button id="contactClose" class="pill ghost-dark" type="button">Close</button></div>
+  <div data-contact></div>
+</div>
+
+<nav id="stopbar" aria-label="Stops" hidden>
+  <button id="prevStop" class="arrow" type="button" aria-label="Previous stop"><svg width="12" height="20" viewBox="0 0 12 20" aria-hidden="true"><path d="M10 2L2 10l8 8"/></svg></button>
+  <button id="stopLabel" type="button" aria-haspopup="true" aria-controls="worlds" aria-live="polite"><span id="stopName"></span><span id="stopCount"></span></button>
+  <button id="nextStop" class="arrow" type="button" aria-label="Next stop"><svg width="12" height="20" viewBox="0 0 12 20" aria-hidden="true"><path d="M2 2l8 8-8 8"/></svg></button>
 </nav>
 
 <div id="toast" role="status" aria-live="polite"></div>
