@@ -6,6 +6,7 @@
    change as it moves. Seven shared silhouettes are drawn as seven InstancedMeshes, and the
    windows are drawn in the shader (no textures, no extra downloads). */
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { LINE_DIR, LINE_P0, LINE_LEN, PY } from './layout.js';
 
 const PITCH = 0.95;
@@ -274,6 +275,84 @@ function makeCars(U, lite, start, length){
   return pts;
 }
 
+
+/* Phone tier only: a cheap stand-in for the mirror floor. The city is drawn again, flipped below the floor,
+   as ONE instanced draw: the seven silhouettes are merged into a single geometry (a per-vertex variant id)
+   and each instance collapses every silhouette but its own in the vertex shader. It shares nothing with the
+   lit city material: it has no lighting, only a dark facade tone, a faint window pattern, and a fade with
+   depth and distance, because the floor above it is only partly opaque (see ground.js). */
+function makeMirror(geoms, capacity){
+  const parts = geoms.map((g, v) => {
+    const q = new THREE.BufferGeometry();
+    q.setAttribute('position', g.attributes.position);
+    q.setAttribute('normal', g.attributes.normal);
+    q.setAttribute('aRoof', g.attributes.aRoof);
+    q.setAttribute('aV', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count).fill(v), 1));
+    q.setIndex(g.index);
+    return q;
+  });
+  const geo = mergeGeometries(parts);
+  const morph = new THREE.InstancedBufferAttribute(new Float32Array(capacity), 1).setUsage(THREE.DynamicDrawUsage);
+  const vari = new THREE.InstancedBufferAttribute(new Float32Array(capacity), 1).setUsage(THREE.DynamicDrawUsage);
+  geo.setAttribute('aMorph', morph); geo.setAttribute('aVar', vari);
+  const mat = new THREE.ShaderMaterial({
+    fog:true,
+    uniforms:{...THREE.UniformsUtils.clone(THREE.UniformsLib.fog), uP0:{value:LINE_P0.clone()}, uDir:{value:LINE_DIR.clone()}},
+    vertexShader:`attribute float aMorph; attribute float aVar; attribute float aV; attribute vec4 aRoof;
+      varying vec3 vCol; varying vec3 vWP; varying vec3 vN; varying vec2 vUH; varying float vSd;
+      #include <fog_pars_vertex>
+      void main(){
+        if (abs(aV - aVar) > 0.5) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+        vec3 isc = vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz));
+        vec3 lp = position;
+        if (aRoof.x > 0.5) {
+          vec3 o = (position - vec3(aRoof.y, aRoof.w, aRoof.z))*smoothstep(0.6, 1.0, aMorph);
+          lp = vec3(aRoof.y + o.x/isc.x, aRoof.w + o.y/isc.y, aRoof.z + o.z/isc.z);
+        }
+        vec3 loc = lp*isc;
+        vUH = vec2(abs(normal.x) > 0.5 ? loc.z : loc.x, loc.y);
+        vN = normal;
+        vSd = aMorph;
+        vCol = instanceColor;
+        vec4 wp = modelMatrix*instanceMatrix*vec4(lp, 1.0);
+        vWP = wp.xyz;
+        vec4 mvPosition = viewMatrix*wp;
+        gl_Position = projectionMatrix*mvPosition;
+        #include <fog_vertex>
+      }`,
+    fragmentShader:`uniform vec3 uP0; uniform vec3 uDir; varying vec3 vCol; varying vec3 vWP; varying vec3 vN; varying vec2 vUH; varying float vSd;
+      #include <common>
+      #include <fog_pars_fragment>
+      float h21(vec2 p){ p = fract(p*vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x*p.y); }
+      void main(){
+        float wall = step(abs(vN.y), 0.3);
+        vec2 uv = vec2(vUH.x/0.34, vUH.y/0.5);
+        vec2 id = floor(uv) + floor(vWP.x*0.37 + vWP.z*0.53)*7.0;
+        vec2 f = fract(uv);
+        float mask = step(0.15, f.x)*step(f.x, 0.85)*step(0.2, f.y)*step(f.y, 0.8);
+        float fw = max(fwidth(uv.x), fwidth(uv.y));
+        float win = mix(step(0.55, h21(id))*mask, 0.22, smoothstep(0.3, 0.8, fw))*wall*step(0.5, vSd);
+        float depth = max(0.0, -vWP.y);
+        float dist = length(vWP - cameraPosition);
+        float hz = 1.0 - exp(-pow(dist/120.0, 1.35));
+        hz = clamp(hz + 0.5*smoothstep(70.0, 205.0, dot(vWP - uP0, uDir)), 0.0, 1.0);
+        vec3 col = vCol*0.5 + vec3(1.0, 0.64, 0.3)*win*1.5;
+        col *= exp(-depth/17.0)*(1.0 - 0.85*hz);
+        gl_FragColor = vec4(col, 1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+        #include <fog_fragment>
+      }`
+  });
+  const mesh = new THREE.InstancedMesh(geo, mat, capacity);
+  mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  mesh.setColorAt(0, new THREE.Color()); mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
+  mesh.scale.y = -1; mesh.name = 'cityMirror'; mesh.count = 0;
+  // instances move every frame, so a fixed sphere over the whole run (culled when the camera is elsewhere)
+  mesh.boundingSphere = new THREE.Sphere(LINE_P0.clone().addScaledVector(LINE_DIR, LINE_LEN*0.5), LINE_LEN*0.62);
+  return {mesh, morph, vari};
+}
+
 export function buildRack({lite = false} = {}){
   const pts = [
     new THREE.Vector3(5.2, PY + 0.55, 1.9),
@@ -347,6 +426,7 @@ export function buildRack({lite = false} = {}){
     meshes.push(inst); geos.push(geo);
   }
 
+  const mir = lite ? makeMirror(geos, B) : null;
   const cars = makeCars(U, lite, 34, 150);
   const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const group = new THREE.Group(); group.add(spine, ...meshes, cars);
@@ -367,6 +447,7 @@ export function buildRack({lite = false} = {}){
     lastNow = now;
     const D = spin*6*PITCH/(2*Math.PI);
     cnt.fill(0);
+    let mc = 0;
     for (let i = 0; i < B; i++) {
       const r = row[i];
       if (stride > 1 && jr[i] % stride) continue;
@@ -403,6 +484,16 @@ export function buildRack({lite = false} = {}){
       }
       geos[v].attributes.aMorph.array[slot] = m;
       geos[v].attributes.aSeed.array[slot] = seeds[i];
+      if (mir) {
+        mir.mesh.setMatrixAt(mc, mtx);
+        const mca = mir.mesh.instanceColor.array, mk = mc*3;
+        mca[mk] = ca[k]; mca[mk + 1] = ca[k + 1]; mca[mk + 2] = ca[k + 2];
+        mir.morph.array[mc] = m; mir.vari.array[mc] = v; mc++;
+      }
+    }
+    if (mir) {
+      mir.mesh.count = mc; mir.mesh.instanceMatrix.needsUpdate = true; mir.mesh.instanceColor.needsUpdate = true;
+      mir.morph.needsUpdate = true; mir.vari.needsUpdate = true;
     }
     for (let v = 0; v < NV; v++) {
       const inst = meshes[v];
@@ -412,5 +503,5 @@ export function buildRack({lite = false} = {}){
     }
   }
   update(0);
-  return {group, update, curve, total, setDensity, setLive, count:() => meshes.reduce((s, m) => s + m.count, 0)};
+  return {group, update, curve, total, setDensity, setLive, cityMirror:mir ? mir.mesh : null, count:() => meshes.reduce((s, m) => s + m.count, 0)};
 }

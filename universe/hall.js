@@ -8,6 +8,8 @@ import { Reflector } from 'three/addons/objects/Reflector.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { makeMaterials, glowTexture, washTexture, beamTexture, gearGeometry, makeShaft, makeVitrine, roundedBox } from './parts.js';
 import { buildRack } from './rack.js';
+import { buildOverhead } from './overhead.js';
+import { floorUniforms, dressFloorMaterial, dressFloorShader, buildVitrineMirror, buildCarpet } from './ground.js';
 
 const PORTALS = {
   cyber:       {zoom:1.08, pan0:[0,0], images:['media/cb-04-district.jpg', 'media/cb-01-overview.jpg', 'media/cb-03-street.jpg', 'media/cb-02-towers.jpg', 'media/cb-05-lotus-crown.jpg', 'media/cb-06-back.jpg'], cycle:7, tint:'#d9953f', gain:1.05},
@@ -31,6 +33,10 @@ export function buildHall({scene, lite, perpetua, video = true}){
      tie on a coarse (16-bit or far-range) depth buffer instead of trading pixels with it. */
   const DECAL = {polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-4};
   const additive = (map, color = '#ffffff', opacity = 1) => new THREE.MeshBasicMaterial({map, color, transparent:true, opacity, blending:THREE.AdditiveBlending, depthWrite:false, ...DECAL});
+  /* The deck trims: their top lies 2 cm under the whole deck top. From the rotunda overviews (100+ units)
+     that gap is under one step of a 16-bit depth buffer, so the trims are biased back a few steps:
+     the deck wins at any depth precision and no visible face moves. */
+  const trimMat = M.brass.clone(); Object.assign(trimMat, {polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:4});
 
   /* ---------- floor ---------- */
   // Polished floor. On desktop it is a planar reflector (half resolution) so the
@@ -38,6 +44,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
   let floor, reflector = null, reflFade = 0, reflWant = false;
   const proxy = new THREE.Group(); proxy.visible = false; root.add(proxy);
   const FLOOR_BASE = '#25231e';
+  const FU = floorUniforms();       // the brass inlay and light pools live in the floor's own shader (ground.js)
   if (!lite) {
     const FloorShader = {
       name:'FloorReflector',
@@ -64,6 +71,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
           #include <fog_fragment>
         }`
     };
+    dressFloorShader(FloorShader, FU);
     reflector = new Reflector(new THREE.PlaneGeometry(3000, 3000), {shader:FloorShader, textureWidth:Math.round(innerWidth*0.42), textureHeight:Math.round(innerHeight*0.42), clipBias:0.003, color:new THREE.Color(FLOOR_BASE)});
     reflector.material.fog = true; reflector.material.transparent = false;
     reflector.rotation.x = -Math.PI/2; root.add(reflector);
@@ -80,6 +88,11 @@ export function buildHall({scene, lite, perpetua, video = true}){
     floor = reflector;
   } else {
     floor = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.MeshStandardMaterial({color:FLOOR_BASE, metalness:0, roughness:0.5}));
+    dressFloorMaterial(floor.material, FU);
+    /* No planar mirror on this tier. The floor is a little see-through instead, and the stand-in
+       reflection (the city's flipped copy and the vitrine mirror, built below) shows through it. It is
+       drawn first among the transparent things so the glows and glass still land on top of it. */
+    floor.material.transparent = true; floor.material.opacity = 0.72; floor.renderOrder = -100;
     floor.rotation.x = -Math.PI/2; root.add(floor);
   }
   // Quality fallback for weak GPUs/CPUs: a plain glossy floor that replaces the planar mirror.
@@ -87,6 +100,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
   let plainFloor = null, mirrorOn = !!reflector;
   if (reflector) {
     plainFloor = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.MeshStandardMaterial({color:FLOOR_BASE, metalness:0, roughness:0.3}));
+    dressFloorMaterial(plainFloor.material, FU);
     plainFloor.rotation.x = -Math.PI/2; plainFloor.visible = false; plainFloor.userData.keep = true; root.add(plainFloor);
   }
   function setMirror(on){
@@ -98,7 +112,10 @@ export function buildHall({scene, lite, perpetua, video = true}){
   /* ---------- Perpetua: plinth, vitrine, lamps ---------- */
   const shell = new THREE.Group(); root.add(shell);
   perpetua.root.position.y = L.PY; shell.add(perpetua.root);
-  {
+  /* The mirror's stand-in shares Perpetua's exact planes (its discs are the pitch circles at the gear
+     thickness, its bed the bed's footprint), so it must only ever be drawn in the mirror pass, while
+     the real machine is hidden. It stays out of the staged reveal below, and phones (no mirror) skip it. */
+  if (reflector) {
     const bed = new THREE.Mesh(new THREE.BoxGeometry(9.5, 0.5, 3.75), M.enamel); bed.position.set(-0.05, L.PY + 0.3, 0.62); proxy.add(bed);
     const gA = new THREE.Mesh(new THREE.CylinderGeometry(1.68, 1.68, 0.25, 24), M.enamel); gA.rotation.x = Math.PI/2; gA.position.set(-2.3, L.PY + 2.75, 0); proxy.add(gA);
     const gB = new THREE.Mesh(new THREE.CylinderGeometry(0.84, 0.84, 0.25, 16), M.enamel); gB.rotation.x = Math.PI/2; gB.position.set(0.22, L.PY + 2.75, 0); proxy.add(gB);
@@ -109,6 +126,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
   const plinthBase = roundedBox(14.9, 0.7, 11.3, 0.12, M.dark); plinthBase.position.set(-0.05, 0.35, 0.62); shell.add(plinthBase);
   const pv = makeVitrine(13.6, 14, 10, M, {back:true, t:0.1, edge:true});
   pv.position.set(-0.05, L.PY - 0.02, 0.62); shell.add(pv);
+  const vitrineBox = new THREE.Box3().setFromObject(pv);     // world box of glass and frame, for the camera's depth range
   // Frame 1 is a studio shot: a paper cyclorama just inside the glass, faded out as the camera leaves.
   const paperMat = new THREE.MeshStandardMaterial({color:'#ebe8dd', roughness:0.95, metalness:0, emissive:'#cdc6b0', emissiveIntensity:0.3, transparent:true, side:THREE.DoubleSide});
   const backdrop = new THREE.Group();
@@ -219,6 +237,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
       s => phi + Math.PI - Math.PI/smallN - (speedFn(s) - phi)*bigN/smallN);
   }
 
+  const reflect = [];        // what the phone tier's stand-in mirror draws below the floor (ground.js)
   const shaftRatios = [1, -1.5, 2, -1, 1.5, -2, 1, -1.5, 1, -2];
   const axles = [];     // {L:Vector3, R:Vector3} world, per standard station in order
   function standardStation(slot, i){
@@ -226,8 +245,8 @@ export function buildHall({scene, lite, perpetua, video = true}){
     // deck
     const deck = roundedBox(L.DECK.w, L.DECK.h, L.DECK.d, 0.25, M.enamel); deck.position.y = -L.DECK.h/2; g.add(deck);
     // The brass trims sit 2 cm inside the deck's top and bottom faces: coplanar faces of two meshes z-fight on any depth buffer.
-    const trim = roundedBox(L.DECK.w + 0.5, 0.34, L.DECK.d + 0.5, 0.12, M.brass); trim.position.y = -0.19; g.add(trim);
-    const trim2 = roundedBox(L.DECK.w + 0.3, 0.26, L.DECK.d + 0.3, 0.1, M.brass); trim2.position.y = -L.DECK.h + 0.15; g.add(trim2);
+    const trim = roundedBox(L.DECK.w + 0.5, 0.34, L.DECK.d + 0.5, 0.12, trimMat); trim.position.y = -0.19; g.add(trim);
+    const trim2 = roundedBox(L.DECK.w + 0.3, 0.26, L.DECK.d + 0.3, 0.1, trimMat); trim2.position.y = -L.DECK.h + 0.15; g.add(trim2);
     // pillar to the floor
     const ph = slot.pos.y - L.DECK.h;
     const pil = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.8, ph, 24), M.marble); pil.position.set(0, -L.DECK.h - ph/2, 0); g.add(pil);
@@ -251,6 +270,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
       const rf = new THREE.Mesh(new THREE.PlaneGeometry(L.PORTAL.w, 4.2).rotateX(Math.PI/2), portal.reflectionMaterial);
       rf.position.set(0, 0.07, pz + 2.1); g.add(rf);
       portal.worldPos = slot.portal.clone(); portal.slot = slot.id; portals.push(portal);
+      reflect.push({kind:'std', pos:slot.pos.clone(), yaw:slot.yaw, deckH:L.DECK.h, pw:L.PORTAL.w, ph:L.PORTAL.h, cy, cz:pz, tint:new THREE.Color(cfg.tint || '#ffd9a0').lerp(new THREE.Color('#fff4e0'), 0.55)});
     }
     // gear trains on the deck face
     const zf = L.DECK.d/2 + 0.45;
@@ -292,7 +312,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
     const g = new THREE.Group(); g.position.copy(slot.pos); g.rotation.y = slot.yaw; root.add(g);
     const W = 30;
     const deck = roundedBox(W, L.DECK.h, 8, 0.25, M.enamel); deck.position.y = -L.DECK.h/2; g.add(deck);
-    const trim = roundedBox(W + 0.5, 0.34, 8.5, 0.12, M.brass); trim.position.y = -0.19; g.add(trim);
+    const trim = roundedBox(W + 0.5, 0.34, 8.5, 0.12, trimMat); trim.position.y = -0.19; g.add(trim);
     const ph = slot.pos.y - L.DECK.h;
     for (const x of [-9, 9]) { const pil = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.8, ph, 24), M.marble); pil.position.set(x, -L.DECK.h - ph/2, 0); g.add(pil); }
     const wallH = 15.5;
@@ -336,6 +356,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
       idx++;
     }
     variants.forEach(v => { v.mesh.count = v.n; v.mesh.instanceMatrix.needsUpdate = true; if (v.mesh.instanceColor) v.mesh.instanceColor.needsUpdate = true; });
+    reflect.push({kind:'wall', pos:slot.pos.clone(), yaw:slot.yaw, deckH:L.DECK.h});
     const zf = 4 + 0.45;
     addTrain(g, -11.2, -1.7, zf, 32, 18, -38, s => s*(i === 0 ? 1 : shaftRatios[i-1]));
     addTrain(g, 11.2, -1.7, zf, 32, 20, -142, s => s*shaftRatios[i]);
@@ -359,7 +380,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
       const yaw = Math.atan2(inward.x, inward.z);
       const g = new THREE.Group(); g.position.copy(pos); g.rotation.y = yaw; wing.add(g);
       const d = roundedBox(smallDeck.w, smallDeck.h, smallDeck.d, 0.18, M.enamel); d.position.y = -smallDeck.h/2; g.add(d);
-      const tr = roundedBox(smallDeck.w + 0.3, 0.24, smallDeck.d + 0.3, 0.08, M.brass); tr.position.y = -0.14; g.add(tr);
+      const tr = roundedBox(smallDeck.w + 0.3, 0.24, smallDeck.d + 0.3, 0.08, trimMat); tr.position.y = -0.14; g.add(tr);
       const ph = pos.y - smallDeck.h;
       const pil = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.1, ph, 18), M.marble); pil.position.y = -smallDeck.h - ph/2; g.add(pil);
       const vit = makeVitrine(V.w, V.h, V.d, M, {back:false, t:0.2}); g.add(vit);
@@ -369,6 +390,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
       const hl = new THREE.Mesh(new THREE.PlaneGeometry(PW*1.8, PH*2.1), additive(glow, '#ffd9a0', 0.22)); hl.position.set(0, 2.3, -V.d/2 + 0.52); g.add(hl);
       const dir = k % 2 ? -1 : 1;
       addGear(gearGeometry(20, 0.12, 0.34, false), k % 2 ? M.brassHi : M.brass, g, [0, -smallDeck.h/2, smallDeck.d/2 + 0.3], s => dir*s*1.5 + k);
+      reflect.push({kind:'small', pos:pos.clone(), yaw, deckH:smallDeck.h, pw:PW, ph:PH, cy:2.3, cz:-V.d/2 + 0.6, tint:new THREE.Color('#e8dcc0')});
       portal.slot = 'deck-' + deck.slug; portal.worldPos = pos.clone().add(new THREE.Vector3(0, 2.3, 0)); portals.push(portal);
       centres.push({pos, inward, yaw, g});
       anchors.push({id:'deck-' + deck.slug, kind:'deck', deck, pos:pos.clone().add(new THREE.Vector3(0, V.h + 0.8, 0)), normal:inward.clone()});
@@ -412,6 +434,14 @@ export function buildHall({scene, lite, perpetua, video = true}){
   const pools = new THREE.InstancedMesh(poolGeo, additive(glow, '#ffc27a', 0.3), L.SLOTS.length);
   L.SLOTS.forEach((s, i) => { const sl = L.SLOT[s.id]; dm.compose(new THREE.Vector3(sl.pos.x, 0.06, sl.pos.z), new THREE.Quaternion(), new THREE.Vector3(34, 1, 34)); pools.setMatrixAt(i, dm); });
   root.add(pools);
+
+  /* ---------- the clockwork overhead, and what fills the floor and the city ---------- */
+  const overhead = buildOverhead(); root.add(overhead.group);
+  if (lite) {
+    root.add(buildVitrineMirror(reflect));
+    if (rack.cityMirror) root.add(rack.cityMirror);
+    const carpet = buildCarpet({count:380}); root.add(carpet.mesh, carpet.lights);
+  }
 
   /* ---------- instanced gears ---------- */
   root.updateMatrixWorld(true);
@@ -482,6 +512,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
     if (reflector) { reflFade += ((reflWant ? 1 : 0) - reflFade)*Math.min(1, dt*3); reflector.material.uniforms.uStrength.value = reflFade*0.4; }
     rackActive = rackOn; rack.setLive(rackLive);
     for (const d of drivers) d(spin);
+    overhead.update(spin, time);
     for (const p of portals) p.update(time, dt);
   }
   /* The drive shafts that reach the world the camera rests on, or the two worlds it is travelling
@@ -513,7 +544,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
   /* Everything except Perpetua's own vitrine lives in `far`, so the first frame
      can be shown before the rest of the gallery's shaders are linked. */
   const far = new THREE.Group(); far.name = 'far';
-  for (const c of [...root.children]) if (c !== shell && c !== pad && c !== plainFloor) far.add(c);
+  for (const c of [...root.children]) if (c !== shell && c !== pad && c !== plainFloor && c !== proxy) far.add(c);
   root.add(far);
   // Staged reveal: each child is hidden until revealNext() draws it for the first
   // time, so shader links are spread over many frames instead of one long freeze.
@@ -532,5 +563,5 @@ export function buildHall({scene, lite, perpetua, video = true}){
   }
   /* One clip at a time, behind the loading veil: starting a decoder costs a 50 to 150 ms stall. */
   const prewarmVideos = async () => { for (const p of portals) await p.prewarmVideo(); };
-  return {root, far, stageCount:() => stages.length, pendingCount:() => stages.length - stageIdx, update, portals, prewarmVideos, axles, gearMeshes, linkShafts, anchors, M, shell, rack, SLOT_INDEX, pending, revealNext, revealAll, startLoading, setBackdrop, focusWorld, setMirror, plainFloor, hasMirror:() => !!reflector, mirrorIsOn:() => mirrorOn};
+  return {root, far, vitrineBox, stageCount:() => stages.length, pendingCount:() => stages.length - stageIdx, update, portals, prewarmVideos, axles, gearMeshes, linkShafts, anchors, M, shell, rack, SLOT_INDEX, pending, revealNext, revealAll, startLoading, setBackdrop, focusWorld, setMirror, plainFloor, hasMirror:() => !!reflector, mirrorIsOn:() => mirrorOn};
 }

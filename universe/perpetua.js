@@ -2,7 +2,10 @@
    The original is a dependency-free WebGL2 studio renderer; its procedural
    geometry (roundedBox, ring, extrudedRing, sphere, gearOutline) and the
    buildMachine assembly are kept as written. Only the output changes: each
-   rigid part becomes one THREE.Group whose meshes are merged per material. */
+   rigid part becomes one THREE.Group whose meshes are merged per material.
+   Depth hygiene: where the original stacked one part flush on another (a shared plane), the
+   lower face is now buried a few thousandths inside the part it rests on, so no two visible
+   faces share a depth. Each such change is marked "buried" and moves no visible face. */
 import * as THREE from 'three';
 import { Mechanics } from './mechanics.js';
 
@@ -179,7 +182,7 @@ export function buildPerpetua({lite=false} = {}){
     cyl(fixed,.30,0,.045,MAT.steel,[x,.125,z],[Math.PI/2,0,0]);
   }
   box(fixed,9.5,.34,3.75,MAT.green,[-.05,.30,.62],.11);
-  box(fixed,9.36,.045,3.60,MAT.ceramic,[-.05,.4925,.62],.025);
+  box(fixed,9.36,.049,3.60,MAT.ceramic,[-.05,.4905,.62],.025);   // buried: was flush on the bed top at y .47
   box(fixed,9.32,.045,3.57,MAT.brass,[-.05,.159,.62],.018);
   for (const x of [-4.44,4.32]) for (const z of [-.94,2.19]) bolt(fixed,[x,.525,z],'y',.057);
   // Nameplate and the engraved-looking index.
@@ -188,11 +191,11 @@ export function buildPerpetua({lite=false} = {}){
   const glyphs = {P:[[0,0,0,1],[0,1,1,1],[1,1,1,.5],[1,.5,0,.5]],E:[[0,0,0,1],[0,1,1,1],[0,.5,.85,.5],[0,0,1,0]],R:[[0,0,0,1],[0,1,1,1],[1,1,1,.5],[1,.5,0,.5],[.45,.5,1,0]],T:[[0,1,1,1],[.5,1,.5,0]],U:[[0,1,0,0],[0,0,1,0],[1,0,1,1]],A:[[0,0,0,1],[0,1,1,1],[1,1,1,0],[0,.5,1,.5]]};
   Array.from('PERPETUA').forEach((ch,i)=>{ for (const [x1,y1,x2,y2] of glyphs[ch]) {
     const ax=2.515+i*.101+x1*.058, bx=2.515+i*.101+x2*.058, ay=.272+y1*.094, by=.272+y2*.094;
-    box(fixed,Math.hypot(bx-ax,by-ay)+.006,.008,.004,MAT.charcoal,[(ax+bx)/2,(ay+by)/2,2.514],.002,[0,0,Math.atan2(by-ay,bx-ax)]);
+    box(fixed,Math.hypot(bx-ax,by-ay)+.006,.008,.008,MAT.charcoal,[(ax+bx)/2,(ay+by)/2,2.512],.002,[0,0,Math.atan2(by-ay,bx-ax)]);
   }});
-  for (let i=0;i<12;i++) box(fixed,.019,.007,i%3===0?.21:.10,MAT.charcoal,[1.36+i*.158,.519,2.02],.002);
+  for (let i=0;i<12;i++) box(fixed,.019,.011,i%3===0?.21:.10,MAT.charcoal,[1.36+i*.158,.517,2.02],.002);   // buried: sat .0005 above the deck
   function stand(x,z,r=.335,shaft=.15){
-    box(fixed,.82,.15,.62,MAT.green,[x,.59,z],.045);
+    box(fixed,.82,.154,.62,MAT.green,[x,.588,z],.045);   // buried: was flush on the deck at y .515
     const top=C.cy-r*.54, bottom=.66;
     box(fixed,.35,top-bottom,.29,MAT.green,[x,(top+bottom)/2,z],.045);
     box(fixed,.49,.44,.35,MAT.green,[x,.84,z],.07);
@@ -211,7 +214,7 @@ export function buildPerpetua({lite=false} = {}){
   function wheel(part,n,inner,spokes){
     const rp = n*C.module/2;
     part.add(extrudedRing(Mechanics.gearOutline(n),inner,.25,.008),MAT.brass);
-    cyl(part,rp-.105,inner+.014,.022,MAT.green,[0,0,.136]);
+    cyl(part,rp-.105,inner+.014,.026,MAT.green,[0,0,.134]);      // buried: back cap .004 inside the tooth ring (was flush at z .125)
     cyl(part,rp-.102,rp-.127,.023,MAT.brightBrass,[0,0,.150]);
     const hub = n===56?.36:.25, shaft = n===56?.15:.108;
     cyl(part,hub,shaft,.34,MAT.brass,[0,0,0]);
@@ -229,7 +232,7 @@ export function buildPerpetua({lite=false} = {}){
   // Crank keyed to the main axle; its pin and the linkage share a bore.
   box(crank,1.42,.27,.16,MAT.brass,[.235,0,1.72],.12);
   cyl(crank,.29,0,.18,MAT.charcoal,[-.39,0,1.72]);
-  cyl(crank,.245,.150,.16,MAT.brass,[0,0,1.72]);
+  cyl(crank,.245,.150,.172,MAT.brass,[0,0,1.72]);             // boss caps .006 proud of the arm faces (were flush at z 1.64 and 1.80)
   cyl(crank,.190,0,.035,MAT.steel,[0,0,1.827]);
   cyl(crank,.066,0,.032,MAT.charcoal,[0,0,1.848],[],6);
   cyl(crank,.087,0,.42,MAT.steel,[C.crank,0,1.99]);
@@ -237,11 +240,11 @@ export function buildPerpetua({lite=false} = {}){
   cyl(crank,.112,0,.06,MAT.charcoal,[C.crank,0,2.137],[],6);
   // Connecting rod: two bored eyes exactly 4.60 units apart.
   box(rod,C.rod-.28,.15,.115,MAT.steel,[C.rod/2,0,0],.045);
-  box(rod,C.rod-.64,.043,.009,MAT.charcoal,[C.rod/2,0,.062],.011);
-  for (const x of [0,C.rod]) { cyl(rod,.180,.09,.16,MAT.steel,[x,0,0]); cyl(rod,.135,.091,.018,MAT.brass,[x,0,.089]); }
+  box(rod,C.rod-.64,.043,.011,MAT.charcoal,[C.rod/2,0,.061],.011);   // buried: was flush on the rod face at z .0575
+  for (const x of [0,C.rod]) { cyl(rod,.180,.09,.16,MAT.steel,[x,0,0]); cyl(rod,.135,.091,.022,MAT.brass,[x,0,.087]); }   // buried: was flush on the eye cap at z .08
   // Guide frame, two supported rails and a bored sliding yoke.
   for (const x of [.80,3.80]) {
-    box(fixed,.51,.125,1.18,MAT.green,[x,.5775,1.35],.035);
+    box(fixed,.51,.129,1.18,MAT.green,[x,.5755,1.35],.035);   // buried: was flush on the deck at y .515
     for (const z of [1.0,1.70]) {
       box(fixed,.18,1.99,.20,MAT.green,[x,1.625,z],.03);
       cyl(fixed,.161,.077,.23,MAT.green,[x,C.cy,z],[0,Math.PI/2,0]);

@@ -329,14 +329,34 @@ function place(sample, sc){
   camera.lookAt(target);
   /* Depth range. near follows the focus distance (a raycast sweep of every beat found no geometry
      closer than 1.5x near). far stops where the fog is opaque (background = fog colour), but always
-     reaches past the far side of the rotunda, because the portal screens are not fogged. */
+     reaches past the far side of the rotunda, because the portal screens are not fogged.
+     Perpetua's beats (inside, draw, through) are close-ups of millimetre-scale parts, so there near
+     also follows the clearance to the vitrine and the machine (the only geometry near the lens there):
+     half of it, at most a tenth of the focus distance. While the paper cyclorama still closes the
+     first frame nothing past it can show, so far is 120 until the paper starts to fade. */
   const fd = _off.length();
-  camera.near = clamp(fd*0.02, 0.05, 4);
+  let near = fd*0.02;
+  if (sample.i <= 2) near = Math.max(near, Math.min(0.5*perpClearance(camera.position), fd*0.1));
+  camera.near = clamp(near, 0.05, 4);
   const fogFar = 2.6/Math.max(sample.fogD, 1e-4);
   const hallFar = camera.position.distanceTo(L.RC) + 200;
-  camera.far = clamp(Math.min(fd*30 + 400, Math.max(fogFar, hallFar)), 120, 2800);
+  const far = clamp(Math.min(fd*30 + 400, Math.max(fogFar, hallFar)), 120, 2800);
+  const paper = sample.i === 0 ? 1 - smooth((sample.f - 0.15)/0.7) : 0;
+  camera.far = 120 + (far - 120)*(1 - paper);
   camera.updateProjectionMatrix();
   camera.updateMatrixWorld();
+}
+/* Distance from p to the nearest surface of Perpetua's vitrine (from inside: to its walls, less the
+   paper that hangs just inside them) or of the machine's moving envelope, whichever is closer. */
+let machineBox = null;
+function perpClearance(p){
+  if (!machineBox) {
+    const b = perpetua.bounds;
+    machineBox = new THREE.Box3(new THREE.Vector3(b.min[0], b.min[1] + L.PY, b.min[2]), new THREE.Vector3(b.max[0], b.max[1] + L.PY, b.max[2])).expandByScalar(0.1);
+  }
+  const v = hall.vitrineBox;
+  const dv = v.containsPoint(p) ? Math.min(p.x - v.min.x, v.max.x - p.x, p.y - v.min.y, v.max.y - p.y, p.z - v.min.z, v.max.z - p.z) - 0.4 : v.distanceToPoint(p);
+  return Math.max(0, Math.min(dv, machineBox.distanceToPoint(p)));
 }
 function applyLook(s, sc){
   scene.environmentIntensity = s.env;
