@@ -2,8 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Corner Block — a live cyberpunk intersection</title>
+<script>
+// Phones run out of memory on the full city (iOS Safari kills the tab), so send them to the
+// lightweight Cyberpunk page before anything heavy starts. ?force=1 still opens the live city.
+(function () {
+  try {
+    if (new URLSearchParams(location.search).get('force') === '1') return;
+    var ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    var coarse = window.matchMedia('(pointer: coarse)').matches;
+    var small = Math.min(screen.width, screen.height) < 820;
+    if (ios || (coarse && small)) location.replace('../cyberpunk/');
+  } catch (e) { /* fall through to the live city */ }
+})();
+</script>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -63,6 +76,27 @@
     #signals { left:8px; right:8px; bottom:50px; justify-content:center; gap:10px; padding:5px 7px; font-size:10px; }
     #hint { left:8px; right:8px; bottom:8px; padding:3px 6px; text-align:center; font-size:10px; line-height:1.25; }
   }
+  /* Phone controls: the seven buttons fold into two menus so the city keeps the screen. */
+  .mbar { display:none; }
+  @media (max-width: 600px) {
+    #title { top:calc(8px + env(safe-area-inset-top)); display:grid; grid-template-columns:1fr auto; align-items:center; column-gap:8px; padding:7px 8px 7px 11px; }
+    #title .eyebrow { grid-column:1; }
+    #title h1 { grid-column:1; margin:0; font-size:14px; }
+    .mbar { display:flex; gap:6px; grid-column:2; grid-row:1 / span 2; }
+    .mbar button { pointer-events:auto; font:inherit; font-size:11px; color:#bfeef7; background:#121b29; border:1px solid #3c5269;
+      border-radius:6px; min-height:44px; padding:0 12px; cursor:pointer; }
+    .mbar button[aria-expanded="true"] { color:#ffd19a; border-color:#be784e; }
+    .mbar .more { min-width:44px; padding:0; font-size:16px; letter-spacing:.1em; }
+    #title .actions { display:none; grid-column:1 / -1; grid-template-columns:1fr; gap:4px; margin-top:8px; }
+    #title.open-views .actions, #title.open-settings .actions { display:grid; }
+    #title.open-views .actions button:not([data-group="views"]),
+    #title.open-settings .actions button:not([data-group="settings"]) { display:none; }
+    .actions button { min-height:44px; font-size:12px; text-align:left; padding:0 12px; }
+    .actions button.current { color:#ffd19a; border-color:#be784e; }
+    #hint { display:none; }
+    #signals { left:auto; right:8px; bottom:calc(8px + env(safe-area-inset-bottom)); gap:8px; padding:6px 8px; }
+    #signals span { display:none; }
+  }
 </style>
 </head>
 <body>
@@ -81,6 +115,10 @@
   <span class="eyebrow">SECTOR 09 · 02:14 AM</span>
   <h1>Corner Block</h1>
   <p>A living intersection after rain. Drag to orbit; scroll to inspect.</p>
+  <div class="mbar">
+    <button id="m-views" type="button" aria-expanded="false" aria-controls="title">View: Overview</button>
+    <button id="m-more" class="more" type="button" aria-expanded="false" aria-label="Settings">&middot;&middot;&middot;</button>
+  </div>
   <div class="actions" aria-label="Scene controls">
     <button id="view-overview" type="button" title="Fit city (F)">Overview</button>
     <button id="view-district" type="button" title="Focus inner northwest district (D)">District</button>
@@ -99,6 +137,42 @@
 
 <div id="hint" class="panel">traffic obeys the signals · pedestrians wait for theirs</div>
 <div id="err"></div>
+<script>
+// Phone menus. The original buttons keep their ids and handlers; this only groups and shows them.
+(function () {
+  var title = document.getElementById('title');
+  var views = { 'view-overview': 'Overview', 'view-district': 'District', 'view-cinema': 'Cinema', 'focus-junction': 'Junction' };
+  var viewBtn = document.getElementById('m-views');
+  var moreBtn = document.getElementById('m-more');
+  title.querySelectorAll('.actions button').forEach(function (b) {
+    b.setAttribute('data-group', views[b.id] ? 'views' : 'settings');
+  });
+  function close() {
+    title.classList.remove('open-views', 'open-settings');
+    viewBtn.setAttribute('aria-expanded', 'false');
+    moreBtn.setAttribute('aria-expanded', 'false');
+  }
+  function toggle(cls, btn) {
+    var opening = !title.classList.contains(cls);
+    close();
+    if (opening) { title.classList.add(cls); btn.setAttribute('aria-expanded', 'true'); }
+  }
+  viewBtn.addEventListener('click', function () { toggle('open-views', viewBtn); });
+  moreBtn.addEventListener('click', function () { toggle('open-settings', moreBtn); });
+  Object.keys(views).forEach(function (id) {
+    var b = document.getElementById(id);
+    if (!b) return;
+    b.addEventListener('click', function () {
+      viewBtn.textContent = 'View: ' + views[id];
+      Object.keys(views).forEach(function (k) { var o = document.getElementById(k); if (o) o.classList.toggle('current', k === id); });
+      close();
+    });
+  });
+  var first = document.getElementById('view-overview');
+  if (first) first.classList.add('current');
+  document.addEventListener('pointerdown', function (e) { if (!title.contains(e.target)) close(); });
+})();
+</script>
 
 <script type="importmap">
 {

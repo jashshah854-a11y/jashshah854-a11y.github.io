@@ -222,7 +222,12 @@ main { padding-bottom: 64px; }
   var note = document.getElementById('note');
   var touch = window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(max-width: 760px)').matches;
   if (touch) {
-    note.textContent = 'Built for desktop. On a phone it may not load.';
+    // The live city needs more memory than a phone browser allows; it crashes iOS Safari.
+    var live = document.querySelector('.go .btn');
+    live.setAttribute('href', '../corner-block/?force=1');
+    live.firstChild.textContent = 'Try the live city anyway ';
+    note.textContent = 'The live city is built for a desktop graphics card and crashes most phones. The renders above are the same city.';
+    note.classList.add('warn');
     return;
   }
   try {
