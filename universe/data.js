@@ -6,7 +6,7 @@ export const WORLDS = [
   {id:'decks', pin:'The decks wing', title:['The decks','wing'],
    line:'Seven decks. Each one is its own small machine.', still:'assets/d4.jpg', deckList:true},
   {id:'cyber', pin:'Cyberpunk City', title:['Cyberpunk','City'],
-   line:'One block at 2:14 AM in the rain. Walk in, drag it around, summon the dragon.',
+   line:'One block at 2:14 AM in the rain. Walk in, drag it around, watch the dragon circle.',
    href:'cyberpunk/', actions:[{label:'See the renders', kind:'renders'}],
    still:'media/cb-04-district.jpg'},
   {id:'launchboard', pin:'Launchboard', title:['Launchboard'],

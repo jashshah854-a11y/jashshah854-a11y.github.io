@@ -11870,6 +11870,7 @@ if(!CFG.useGLB) { try { window.__DRAGON218__=await run218Dragon(); } catch(e) { 
   const rings = () => { const dOn = !!window.__DRAGON_ON__; if (ringPts && ringPts.dOn === dOn) return ringPts; const pts = []; let d = null; if (dOn) scene.traverse(o => { if (o.name === 'dragon160-hologram') d = o; });
     if (d) { if (window.__DRAGON330PTS) { for (const q of window.__DRAGON330PTS) pts.push(q); } else { const U = d.material.uniforms; for (let a = 0; a < 32; a++) { const g = a / 32 * Math.PI * 2; for (const dy of [-U.uRise.value - 6, U.uRise.value + 7]) pts.push(new THREE.Vector3(U.uC.value.x + Math.cos(g) * (U.uR.value + 7), U.uY0.value + dy, U.uC.value.z + Math.sin(g) * (U.uR.value + 7))); } } }
     for (let a = 0; a < 24; a++) { const g = a / 24 * Math.PI * 2; for (const y of [50, 58.5]) pts.push(new THREE.Vector3(-15.5 + Math.cos(g) * 17.5, y, -16.5 + Math.sin(g) * 17.5)); }
+    for (let a = 0; a < 12; a++) { const g = a / 12 * Math.PI * 2; for (const y of [37.9, 66.4]) pts.push(new THREE.Vector3(22.5 + Math.cos(g) * 8.4, y, -21.7 + Math.sin(g) * 8.4)); }   /* RUN350S: the NOVA hologram figure (Run340H, swept radius 7.5 m plus glitch) is an envelope too: it stays in frame and out from under the title panel */
     pts.dOn = dOn; return ringPts = pts; };
   fitCityView = function () { fit0(); try {
       const w = innerWidth, h = innerHeight; camera.updateMatrixWorld(true); const inv = camera.matrixWorldInverse, p = new THREE.Vector3();
@@ -11886,13 +11887,24 @@ if(!CFG.useGLB) { try { window.__DRAGON218__=await run218Dragon(); } catch(e) { 
       const desk = w >= 900 && tr; const L = nx(16), RC = nx(w - 16), RH = desk ? nx(tr.left - 14) : RC;
       const TOP = ny(desk ? 12 : (tr ? tr.bottom + 10 : 12)), BOT = ny(bottomPx);
       let z = camera.zoom;
-      z = Math.min(z, R * (RC - L) / (ux1 - ux0), R * (RH - L) / Math.max(1e-6, hx1 - ux0), Tt * (TOP - BOT) / (uy1 - uy0));
-      if (z < camera.zoom) z *= .985;
-      const oxLo = Math.max(hx1 - RH * R / z, ux1 - RC * R / z), oxHi = ux0 - L * R / z; const ox = oxLo > oxHi ? (oxLo + oxHi) / 2 : Math.min(Math.max(0, oxLo), oxHi);
-      const oyLo = uy1 - TOP * Tt / z, oyHi = uy0 - BOT * Tt / z; const oy = oyLo > oyHi ? (oyLo + oyHi) / 2 : Math.min(Math.max(0, oyLo), oyHi);
+      /* RUN350S: balanced Overview. The old solve kept EVERY hologram envelope point left of the title panel, so the dragon ring (about 62 m radius around the city)
+         pushed the whole composition into the left 70 percent of a desktop frame. The panel only covers the top-right corner, so the envelope now only has to stay out of
+         that rectangle (x > pxl and y > pyb in NDC). Largest zoom first: start from the centred position (city centre on the screen centre, as fitCityView leaves it), shift
+         the scene left only as far as the panel test needs, and take the first zoom whose city centre ends within 6 percent of the width of the centre (else the first
+         feasible one). Phone / no panel: pxl is off screen, so this reduces to the old result (centred, zoom limited by the union of city and envelopes). */
+      const pxl = desk ? nx(tr.left - 14) : 9, pyb = desk ? ny(tr.bottom + 10) : 9, hp = rings().map(q => p.copy(q).applyMatrix4(inv).clone());
+      const zl = Math.min(R * (RC - L) / (ux1 - ux0), Tt * (TOP - BOT) / (uy1 - uy0)), zTop = z > zl ? zl * .985 : z;
+      let sel = null, fb = null;
+      for (let k = 0; k <= 200 && !sel; k++) { const zz = zTop * (1 - .004 * k), oxLo = ux1 - RC * R / zz, oxHi = ux0 - L * R / zz, oyLo = uy1 - TOP * Tt / zz, oyHi = uy0 - BOT * Tt / zz; if (oxLo > oxHi || oyLo > oyHi) continue;
+        const tg = Math.min(Math.max(0, oxLo), oxHi), oy_ = Math.min(Math.max(0, oyLo), oyHi);
+        for (let j = 0; j <= 48; j++) { const ox_ = tg + (oxHi - tg) * j / 48; let ok = true;
+          for (const q of hp) if ((q.x - ox_) * zz / R > pxl && (q.y - oy_) * zz / Tt > pyb) { ok = false; break; }
+          if (ok) { if (!fb) fb = { zz, ox_, oy_ }; if (Math.abs(ox_) * zz / R <= .12) sel = { zz, ox_, oy_ }; break; } } }
+      if (!sel) sel = fb || { zz: zTop, ox_: 0, oy_: 0 };
+      z = sel.zz; const ox = sel.ox_, oy = sel.oy_;
       const shift = new THREE.Vector3(ox, oy, 0).applyQuaternion(camera.quaternion); camera.position.add(shift); controls.target.add(shift);
       camera.zoom = z; controls.minZoom = Math.min(controls.minZoom, z * .55); camera.updateProjectionMatrix(); controls.update();
-      window.__HOLOFRAME219__ = { z: +z.toFixed(4), ox: +ox.toFixed(2), oy: +oy.toFixed(2) };
+      window.__HOLOFRAME219__ = { z: +z.toFixed(4), ox: +ox.toFixed(2), oy: +oy.toFixed(2), v350: 1 };
     } catch (e) { console.warn('[holoframe219]', e); } };
 })();
 /* RUN219_HOLOFRAME_END */
@@ -20767,6 +20779,98 @@ async function run343dDetail() {
 
 if(!CFG.useGLB) { try { window.__RUN343D_P = run343dDetail().then(r => { window.__RUN343D__ = r; return r; }).catch(e => { console.error('[detail343] failed', e); window.__RUN343D__ = { error: String(e) }; }); await window.__RUN343D_P; } catch(e) { console.error('[detail343] failed', e); window.__RUN343D__ = { error: String(e) }; } }
 /* RUN343D_DETAIL_END */
+/* RUN350S_SURROUND_BEGIN: the surrounding area around the plinth, four leftovers of the Run349W review (visual only, no sim state, sim hashes unchanged):
+   (1) FLOATING PYLON GLOW POOLS: the amber pools of the Run332G / Run338T tube piers (tube332-floorglow, ten additive 18 m quads on the display floor level) all lie outside the
+       fade of the floor mirror (it ends 36 m beyond the plinth edge), so they were glow discs hanging in the void. Each pier now stands on a low dark footing slab (round, 0.5 m, own
+       fade with the tube) and the pool is shrunk to land on that slab only, with a thin warm rim line on its top edge. Slab, rim and pool share the distance fade of the tube.
+   (2) SMEARED FLOOR REFLECTION: the Run344W floor shader (FloorMirror344) now reads as a dark wet rough floor: roughness (mip level, smear length and sideways scatter) grows with
+       the distance from the plinth edge, a cooler darker water tint, lower gain, the reflection dies out sooner; a hint of reflected neon stays within the first metres of the edge.
+   (3) TUBES THAT END IN NOTHING: the girder modules, piers and rails of the two tube extensions only dimmed to near-black with distance; they now also lose alpha (like the glass skin
+       already did) from A0 to A1 metres from the portals, so they dissolve into the backdrop instead of ending as a black stub. Own cloned materials (the stub and the collars at the portals keep
+       the shared opaque ones). The train is untouched (same clock, same dimming, same hidden-end clip).
+   (4) Overview framing is solved in RUN219_HOLOFRAME (patched in place, marked RUN350S there). Query switches for evidence: ?s350=0 all off, ?s350p=0 pylons, ?s350f=0 floor, ?s350t=0 tubes. */
+(function () {
+  const Q = new URLSearchParams(location.search), R = window.__SURROUND350S__ = { ok: false, errors: [] };
+  const on = k => Q.get('s350') !== '0' && Q.get(k) !== '0', qn = (k, d) => { const v = parseFloat(Q.get(k)); return isFinite(v) ? v : d; };
+  const grp = scene.getObjectByName('tube332'), FY = (window.__TUBE332 && window.__TUBE332.floorY !== undefined) ? window.__TUBE332.floorY : -9.45;
+  const A0 = qn('s350a0', 60), A1 = qn('s350a1', 196);
+  /* ---- (3) alpha clones of the tube materials (cached per source material); the fade332 patch of the source stays, the alpha factor is one more line before opaque_fragment ---- */
+  const AM = new Map();
+  const alphaMat = m => { if (AM.has(m)) return AM.get(m); const c = m.clone(), prev = m.onBeforeCompile, k0 = m.customProgramCacheKey(); c.name = m.name + '-a350'; c.userData = Object.assign({}, m.userData); c.transparent = true;
+    c.onBeforeCompile = function (sh, r) { if (prev) prev.call(this, sh, r);
+      sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>', 'diffuseColor.a *= 1.0 - smoothstep(' + A0.toFixed(1) + ', ' + A1.toFixed(1) + ', max(max(0.0, -24.0 - vWp332.x), vWp332.x > 20.0 ? length(vWp332.xz - vec2(20.0, -6.6)) : 0.0));\n#include <opaque_fragment>'); };
+    c.customProgramCacheKey = () => k0 + '|a350'; AM.set(m, c); return c; };
+  try {
+    if (!grp) throw new Error('tube332 group missing');
+    const skin = grp.getObjectByName('tube332-skin');
+    /* ---- (1) pylon footings ---- */
+    if (on('s350p')) {
+      const gl = grp.getObjectByName('tube332-floorglow'), pad = grp.getObjectByName('tube332-pier-pad');
+      if (!gl || !pad) throw new Error('floorglow / pier-pad missing');
+      const n = gl.count, M = new THREE.Matrix4(), P = new THREE.Vector3(), C = new THREE.Color(), q0 = new THREE.Quaternion(), pos = [], br = [];
+      for (let i = 0; i < n; i++) { gl.getMatrixAt(i, M); P.setFromMatrixPosition(M); gl.getColorAt(i, C); pos.push(P.clone()); br.push(C.r); }
+      const RS = qn('s350rs', 4.6), HS = qn('s350hs', .75), TOPY = FY + .01 + HS;
+      const slabG = new THREE.CylinderGeometry(RS - .35, RS, HS, 40, 1, false); slabG.translate(0, HS / 2, 0);
+      const slab = new THREE.InstancedMesh(slabG, on('s350t') ? alphaMat(pad.material) : pad.material, n); slab.name = 'surround350-footing';
+      const ringG = new THREE.RingGeometry(RS - .62, RS - .5, 48); ringG.rotateX(-Math.PI / 2);
+      const ringM = new THREE.MeshBasicMaterial({ color: 0xffa860, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, name: 'surround350-rim' });
+      const rim = new THREE.InstancedMesh(ringG, ringM, n); rim.name = 'surround350-rim';
+      for (let i = 0; i < n; i++) { M.compose(new THREE.Vector3(pos[i].x, FY + .01, pos[i].z), q0, new THREE.Vector3(1, 1, 1)); slab.setMatrixAt(i, M);
+        M.compose(new THREE.Vector3(pos[i].x, TOPY + .015, pos[i].z), q0, new THREE.Vector3(1, 1, 1)); rim.setMatrixAt(i, M); rim.setColorAt(i, C.setScalar(br[i] * qn('s350rim', .12))); }
+      /* the pool: same additive texture, now a quad that ends at the edge of the slab, sitting on the slab top */
+      const GS = qn('s350gs', 2 * (RS - .5)), GK = qn('s350gk', 3.2);
+      for (let i = 0; i < n; i++) { M.compose(new THREE.Vector3(pos[i].x, TOPY + .02, pos[i].z), q0, new THREE.Vector3(GS, 1, GS)); gl.setMatrixAt(i, M); gl.setColorAt(i, C.setScalar(br[i] * GK)); }
+      gl.instanceMatrix.needsUpdate = true; gl.instanceColor.needsUpdate = true;
+      for (const o of [slab, rim]) { o.userData.excludeFit = true; o.userData.excludeBatching = true; o.castShadow = false; o.receiveShadow = false; o.instanceMatrix.needsUpdate = true; o.computeBoundingSphere(); }
+      rim.renderOrder = 1; rim.instanceColor.needsUpdate = true;
+      grp.add(slab); grp.add(rim); R.pylons = { n, RS, HS, topY: TOPY };
+    }
+    /* ---- (3) swap the alpha clones onto the tube modules, piers and rails (not the stub / collars: those live in tube338-east) ---- */
+    if (on('s350t')) { let k = 0;
+      grp.traverse(o => { if (!o.isMesh || !o.material || Array.isArray(o.material) || o === skin || /floorglow|surround350/.test(o.name)) return;
+        const m = o.material; if (!m.userData.f332) return; o.material = alphaMat(m); k++; });
+      R.tubes = { meshes: k, A0, A1 }; }
+  } catch (e) { R.errors.push('tube:' + e.message); console.error('[surround350s]', e); }
+  /* ---- (2) floor reflection ---- */
+  try {
+    const F = window.__FLOOR84__ && window.__FLOOR84__.mesh, m = F && F.material;
+    if (on('s350f') && m && m.fragmentShader && /textureLod\(tDiffuse/.test(m.fragmentShader)) {
+      const G = qn('s350fg', 1.1), LODF = qn('s350lod', 5.4), SMEAR = qn('s350sm', 2.4), FALL = qn('s350fall', 8);
+      m.fragmentShader = `
+uniform vec3 color;
+uniform sampler2D tDiffuse;
+uniform float uStrength;
+varying vec4 vUv;
+varying vec2 vPos;
+void main() {
+  vec2 p = vUv.xy / vUv.w;
+  float dd = max(abs(vPos.x), abs(vPos.y)) - 34.0;                   // metres beyond the plinth edge
+  float t = clamp(dd / 24.0, 0.0, 1.0);
+  float rtH = float(textureSize(tDiffuse, 0).y);
+  float lod0 = mix(1.0, ${LODF.toFixed(2)}, smoothstep(0.0, 0.5, t));       // roughness: mip level grows with distance
+  float decay = mix(34.0, 34.0 / ${SMEAR.toFixed(2)}, smoothstep(0.0, 0.7, t));  // longer streaks away from the edge
+  vec3 r = vec3(0.0); float w = 0.0; float so = 0.0;
+  for (int i = 0; i < 12; i++) { float st = 0.00105 + 0.240 * so; float o = so + st * 0.5; float k = exp(-o * decay) * st;
+    float lod = max(log2(max(st * rtH, 1.0)), lod0);
+    float jx = (fract(float(i) * 0.618034) - 0.5) * (0.004 + 0.05 * t * t);   // sideways scatter of the taps
+    r += textureLod(tDiffuse, vec2(p.x + jx, p.y - o), lod).rgb * k; w += k; so += st; }
+  r /= w;
+  float L = dot(r, vec3(0.2126, 0.7152, 0.0722));
+  r = mix(vec3(L) * vec3(0.62, 0.80, 1.10), r, 0.50) * smoothstep(0.008, 0.20, L);   // cooler, absorbs the warm light
+  float fr = mix(0.32, 1.0, pow(1.0 - clamp(viewMatrix[1].z, 0.0, 1.0), 2.0));
+  float fade = exp(-max(dd, 0.0) / ${FALL.toFixed(2)}) * (1.0 - smoothstep(10.0, 28.0, dd));
+  float alpha = 1.0 - smoothstep(14.0, 38.0, dd);
+  vec3 base = vec3(0.0011, 0.0014, 0.0026) + vec3(0.0020, 0.0028, 0.0062) * exp(-max(dd, 0.0) / 5.0);   // darker water
+  gl_FragColor = vec4(base + min(r, vec3(2.0)) * uStrength * ${G.toFixed(3)} * fr * fade, alpha);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}`;
+      m.needsUpdate = true; R.floor = { G, LODF, SMEAR, FALL };
+    } else R.floor = on('s350f') ? 'shader not matched' : 'off';
+  } catch (e) { R.errors.push('floor:' + e.message); console.error('[surround350s]', e); }
+  R.ok = R.errors.length === 0;
+})();
+/* RUN350S_SURROUND_END */
 addStaticBatches();
 
 /* RUN288S_STARTUP_BEGIN: startup latency, no intended visible change. The first frames used to link every shader program one by one and block on each
