@@ -6,7 +6,7 @@
 <title>Cyberpunk City</title>
 <meta name="description" content="One block in Sector 09 at 2:14 AM, in the rain. Six renders of the city, and a live version you can orbit.">
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
-<link rel="preload" as="image" href="spin/poster.jpg" fetchpriority="high" media="(pointer: coarse), (max-width: 760px)">
+<link rel="preload" as="image" href="live/poster.jpg" fetchpriority="high" media="(pointer: coarse), (max-width: 760px)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
@@ -87,7 +87,7 @@ a:focus-visible, button:focus-visible, .stage:focus-visible, .spin:focus-visible
 .count { padding: 6px 14px; border-radius: 999px; background: rgba(12, 11, 10, .55); font-size: 14px; color: var(--muted); }
 .bar .ctrl { position: static; padding: 0 16px; }
 
-/* phone spinner: 36 pre-rendered frames of the live city, shown on phones and touch screens */
+/* phone view: a looping recording of the live city (default), or 36 pre-rendered frames you drag to spin (data-mode="spin"). Shown on phones and touch screens. */
 .spin {
   display: none; position: relative; margin: 18px auto 0;
   width: 100%; max-width: 480px; aspect-ratio: 2 / 3;
@@ -103,6 +103,12 @@ a:focus-visible, button:focus-visible, .stage:focus-visible, .spin:focus-visible
 }
 .spin canvas { opacity: 0; }
 .spin canvas.on { opacity: 1; }
+.spin video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; background: var(--green); }
+.spin:not([data-mode="spin"]) { cursor: default; }
+.spin:not([data-mode="spin"]) img, .spin:not([data-mode="spin"]) canvas, .spin:not([data-mode="spin"]) .spin-hint { display: none; }
+.spin[data-mode="spin"] video { display: none; }
+.spin .spin-toggle { top: 14px; right: 14px; padding: 0 16px; }
+.spin .spin-toggle[hidden] { display: none; }
 .spin-hint {
   position: absolute; z-index: 2; left: 50%; bottom: 14px; transform: translateX(-50%);
   padding: 6px 14px; border-radius: 999px; background: rgba(12, 11, 10, .55);
@@ -170,10 +176,12 @@ main { padding-bottom: 64px; }
     </a>
   </header>
   <main>
-    <div class="spin" id="spin" role="group" aria-label="Spinnable view of the block. Drag, swipe or use the left and right arrow keys to turn it." tabindex="0" data-decoded="0">
-      <img src="spin/poster.jpg" width="720" height="1080" loading="lazy" decoding="async" alt="The Corner Block seen from above as a small isometric model on a dark plinth, lit with neon, with a koi-shaped dragon over its tallest tower.">
+    <div class="spin" id="spin" role="group" aria-label="The Corner Block as a looping recording of the live city, with the camera slowly orbiting the block." data-decoded="0">
+      <video id="live" autoplay muted loop playsinline preload="auto" poster="live/poster.jpg" width="720" height="1280" disablepictureinpicture disableremoteplayback aria-hidden="true"></video>
+      <img src="spin/poster.jpg" width="720" height="1080" loading="lazy" decoding="async" alt="The Corner Block, a neon-lit isometric city block on a dark plinth in the rain: stacked towers covered in signs, a gold pagoda crown, a train viaduct, an airship and a glowing hologram figure, with a koi drifting overhead.">
       <canvas width="720" height="1080" aria-hidden="true"></canvas>
       <span class="spin-hint" id="spin-hint" aria-hidden="true">Drag to spin the block</span>
+      <button class="ctrl spin-toggle" id="spin-toggle" type="button" hidden>Drag to spin</button>
     </div>
     <div class="stage" id="stage" role="group" aria-roledescription="carousel" aria-label="Renders of the city" tabindex="0">
       <figure class="slide on"><img src="../media/cb-04-district.jpg" width="1600" height="900" alt="Close on the district: stacked towers covered in neon signs and billboards, with lit windows and a glowing ring on a rooftop." fetchpriority="high"></figure>
@@ -227,7 +235,7 @@ main { padding-bottom: 64px; }
   var blobs = [], bad = {}, asked = {}, bitmaps = {}, pending = {}, nBit = 0, nPend = 0;
   var pos = 0, vel = 0, auto = !reduced, dragging = false, cur = 0, drawn = -1;
   var lastX = 0, lastT = 0, startX = 0, pxPerFrame = 20, moved = false;
-  var visible = true, raf = 0, last = 0, inFlight = 0;
+  var visible = true, raf = 0, last = 0, inFlight = 0, active = false;
 
   function mod(n) { return ((n % N) + N) % N; }
   function dist(a, b) { var d = Math.abs(a - b); return Math.min(d, N - d); }
@@ -295,7 +303,7 @@ main { padding-bottom: 64px; }
     schedule();
   }
   function schedule() {
-    if (raf || !visible || document.hidden) return;
+    if (raf || !active || !visible || document.hidden) return;
     if (dragging || vel !== 0 || auto) raf = requestAnimationFrame(tick);
   }
   function wake() { last = performance.now(); schedule(); }
@@ -304,7 +312,7 @@ main { padding-bottom: 64px; }
   function dismissHint() { hint.classList.add('gone'); }
 
   stage.addEventListener('pointerdown', function (e) {
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (!active || e.target.closest('.spin-toggle') || (e.pointerType === 'mouse' && e.button !== 0)) return; // the toggle button must still get its click
     dragging = true; moved = false; vel = 0; stopAuto();
     pxPerFrame = Math.max(8, stage.clientWidth / PX_TURN);
     startX = lastX = e.clientX; lastT = e.timeStamp;
@@ -331,7 +339,7 @@ main { padding-bottom: 64px; }
   stage.addEventListener('pointerup', release);
   stage.addEventListener('pointercancel', release);
   stage.addEventListener('keydown', function (e) {
-    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    if (!active || e.altKey || e.ctrlKey || e.metaKey) return;
     var d = e.key === 'ArrowLeft' ? 1 : e.key === 'ArrowRight' ? -1 : 0;
     if (!d) return;
     e.preventDefault(); e.stopPropagation(); // keep the slideshow's own arrow keys out of this
@@ -344,8 +352,87 @@ main { padding-bottom: 64px; }
   }
   document.addEventListener('visibilitychange', wake);
 
-  fetchNext(); fetchNext(); fetchNext();
-  wake();
+  // The live-loop script below switches this on and off. Frames are only fetched once the visitor asks to spin.
+  window.CBSpin = {
+    on: function () { if (active) return; active = true; fetchNext(); fetchNext(); fetchNext(); ensure(); paint(); wake(); },
+    off: function () {
+      active = false; dragging = false; vel = 0; stage.classList.remove('drag');
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    }
+  };
+})();
+</script>
+<script>
+(function () {
+  // Phone view: an autoplaying loop of the real city. "Drag to spin" swaps it for the 36-frame spinner and back.
+  var frame = document.getElementById('spin');
+  var video = document.getElementById('live');
+  var toggle = document.getElementById('spin-toggle');
+  if (!frame || !video || !toggle || getComputedStyle(frame).display === 'none') return;
+  var spin = window.CBSpin;
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var SOURCES = [['live/city-loop.mp4', 'video/mp4']];
+  var LIVE_LABEL = frame.getAttribute('aria-label');
+  var SPIN_LABEL = 'Spinnable view of the block. Drag, swipe or use the left and right arrow keys to turn it.';
+  var mode = '', loaded = false;
+
+  function load() {
+    if (loaded) return;
+    loaded = true;
+    SOURCES.forEach(function (s) {
+      var el = document.createElement('source');
+      el.src = s[0]; el.type = s[1];
+      video.appendChild(el);
+    });
+    video.muted = true;
+    video.load();
+  }
+  function play() {
+    load();
+    var p = video.play();
+    if (p && p.catch) p.catch(function (err) {
+      // Autoplay refused (for example iOS Low Power Mode): show the spinner. Tapping "Watch live" is a gesture and will play.
+      if (err && err.name === 'NotAllowedError' && mode === 'live' && spin) setMode('spin');
+    });
+  }
+  function setMode(m) {
+    mode = m;
+    frame.setAttribute('data-mode', m);
+    if (m === 'live') {
+      if (spin) spin.off();
+      frame.removeAttribute('tabindex');
+      frame.setAttribute('aria-label', LIVE_LABEL);
+      toggle.textContent = 'Drag to spin';
+      play();
+    } else {
+      video.pause();
+      spin.on();
+      frame.setAttribute('tabindex', '0');
+      frame.setAttribute('aria-label', SPIN_LABEL);
+      toggle.textContent = 'Watch live';
+    }
+  }
+  function broken() {
+    // No video on this device or network: the spinner is the phone city.
+    toggle.hidden = true;
+    if (spin) setMode('spin');
+  }
+  // A missing or undecodable file reports on its <source>, which does not bubble, so listen while the event travels down.
+  video.addEventListener('error', function (e) {
+    if (e.target && e.target.tagName === 'SOURCE' && e.target.nextElementSibling) return;
+    broken();
+  }, true);
+
+  toggle.addEventListener('click', function () { setMode(mode === 'live' ? 'spin' : 'live'); });
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (en) {
+      if (mode !== 'live' || !loaded) return;
+      if (en[0].isIntersecting) { var p = video.play(); if (p && p.catch) p.catch(function () {}); } else video.pause();
+    }).observe(frame);
+  }
+
+  if (spin) toggle.hidden = false;
+  if (reduced && spin) setMode('spin'); else setMode('live');
 })();
 </script>
 <script>
