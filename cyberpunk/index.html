@@ -371,7 +371,7 @@ main { padding-bottom: 64px; }
   if (!frame || !video || !toggle || getComputedStyle(frame).display === 'none') return;
   var spin = window.CBSpin;
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var SOURCES = [['live/city-loop.mp4', 'video/mp4']];
+  var SOURCES = [['live/city-loop-hevc.mp4', 'video/mp4; codecs="hvc1"'], ['live/city-loop.mp4', 'video/mp4']];
   var LIVE_LABEL = frame.getAttribute('aria-label');
   var SPIN_LABEL = 'Spinnable view of the block. Drag, swipe or use the left and right arrow keys to turn it.';
   var mode = '', loaded = false;

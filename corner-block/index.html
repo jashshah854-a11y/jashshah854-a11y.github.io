@@ -103,7 +103,6 @@
     <button id="focus-junction" type="button" title="Focus junction (J)">Junction</button>
     <button id="toggle-motion" type="button" aria-pressed="false" title="Pause or resume (Space)">Pause</button>
     <button id="toggle-quality" type="button" title="Toggle quality (Q)">Quality: high</button>
-    <button id="toggle-dragon" type="button" aria-pressed="false" title="Show or hide the hologram dragon (G)">Dragon: off</button>
   </div>
 </div>
 
@@ -12235,27 +12234,20 @@ if(!CFG.useGLB) { try { window.__CINEMA228__=await run228Cinema(); } catch(e) { 
   window.__HOLOREAD221C__ = res;
 })();
 /* RUN221C_HOLOREAD_END */
-/* RUN231_DRAGONTOGGLE_BEGIN: owner - "make the dragon an option because it takes a lot of rendering for its movement; if people want it
-   they can turn it on. Keep the koi fish in." The hologram dragon (60k tris drawn twice - depth prepass + additive pass - with a spline
-   deformation evaluated per vertex; measured ~10 ms/frame on this machine) is now behind a "Dragon" button in the title panel and the
-   G key. Off by default; ?dragon=1 in the URL turns it on (captures/review), and the viewer's last choice is remembered (try/catch,
-   per-browser convenience only). Off hides the hologram, its prepass and the projector's light beam (the projector hardware stays);
-   the Overview framing only reserves room for the dragon's orbit while it is shown. The koi always swims. */
+/* RUN231_DRAGONTOGGLE_BEGIN (Run349W: PERMANENT, owner 2026-10-08 - "make dragon permanent, I do not want it as an option"). The hologram dragon is always on.
+   The title-panel button, the G key, the cb-dragon localStorage memory and the ?dragon=0/1 URL params are gone. window.__DRAGON_ON__ stays true (other blocks read it:
+   Overview framing reserves the dragon orbit, the projector beam and prepass follow it) and window.__setDragon stays as a harness hook (not persisted). Run231 measured the
+   dragon at about 10 ms/frame on a weak GPU (60k tris drawn twice, per-vertex spline); that cost is now always paid - see Run349W in cc-work/DECISIONS.md. */
 (function () {
-  let want = false; try { const v = localStorage.getItem('cb-dragon'); if (v === '1') want = true; } catch (e) {}
-  if (/[?&]dragon=1\b/.test(location.search)) want = true; if (/[?&]dragon=0\b/.test(location.search)) want = false;
   const parts = () => { const r = []; scene.traverse(o => { if (o.name === 'dragon160-hologram' || o.name === 'dragon161-prepass') r.push(o); });
     let pr = null; scene.traverse(o => { if (o.name === 'projector169-dragon') pr = o; });
     if (pr && pr.parent) for (const k of pr.parent.children) if (k.isMesh && k.material && k.material.name === 'beam169' && Math.abs(k.position.x - pr.position.x) < .05 && Math.abs(k.position.z - pr.position.z) < .05) r.push(k);
     return r; };
   const apply = (on, refit) => { window.__DRAGON_ON__ = on; for (const o of parts()) o.visible = on;
-    const btn = document.getElementById('toggle-dragon'); if (btn) { btn.textContent = 'Dragon: ' + (on ? 'on' : 'off'); btn.setAttribute('aria-pressed', on ? 'true' : 'false'); }
     if (refit && activeView === 'overview' && typeof overviewView === 'function') overviewView(); };
-  apply(want, false);
-  window.__setDragon = (on) => { apply(!!on, true); try { localStorage.setItem('cb-dragon', on ? '1' : '0'); } catch (e) {} };
-  const btn = document.getElementById('toggle-dragon'); if (btn) btn.addEventListener('click', () => window.__setDragon(!window.__DRAGON_ON__));
-  window.addEventListener('keydown', e => { if (e.target && /input|textarea/i.test(e.target.tagName)) return; if ((e.key || '').toLowerCase() === 'g') window.__setDragon(!window.__DRAGON_ON__); });
-  window.__DRAGON231__ = { on: want };
+  apply(true, false);
+  window.__setDragon = (on) => { apply(!!on, true); };
+  window.__DRAGON231__ = { on: true, permanent: true };
 })();
 /* RUN231_DRAGONTOGGLE_END */
 /* RUN232_C8GRADE_BEGIN: Opus cycle-8 review of the seven rebuilt buildings - "in chatgpt-04 / chatgpt-08 nothing unlit is lighter than
@@ -18161,7 +18153,8 @@ await (async function run332gTube() {
    rates, uniform = sim.t). The flank screen runs a looping invented-brand ad (4 cards from assets/airship323/ad323.png, 1024x1024, + ticker) animated in a fragment shader. The hull catches the city
    glow (warm / magenta emissive on down-facing and side normals). The root is hidden when the camera looks (nearly) straight down (the loop crosses the block in plan) and at Quality low. excludeFit + excludeBatching
    on every mesh, hidden from both mirrors, no shadows, never touches the sim.
-   (2) Weather: the existing rain85 system swells between drizzle and heavier rain (uAlpha and drawRange, slow sum of sines on sim.t) and a seeded distant lightning flash fires every 40-90 s of sim
+   (Run349W: lightning and rain swell below were rewritten; see the Run349W notes in secA.)
+  (2) Weather: the existing rain85 system swells between drizzle and heavier rain (uAlpha and drawRange, slow sum of sines on sim.t) and a seeded distant lightning flash fires every 40-90 s of sim
    time: a soft pale sky add + faint far-off bolt sprite (one screen-space quad behind everything, depth-tested), hemisphere / ambient intensity pulse. Peak is capped, so no black or white frames.
    Per-frame work runs in scene.onBeforeRender (chained) for the main camera only and allocates nothing. */
 async function run323aSky() {
@@ -18310,41 +18303,73 @@ async function run323aSky() {
   // ---- weather: seeded distant lightning (40-90 s of sim time apart)
   const rg = mul32(0x323A51), ev = []; let evT = 0, evIx = 0; const FL = { f: 0, bolt: 0, e: null };
   const genEv = until => { while (!ev.length || ev[ev.length - 1].t < until + 200) { evT += 40 + rg() * 50; const side = rg() < .5 ? -1 : 1; ev.push({ t: evT, x: side * (.5 + .38 * rg()), y: -.15 + .35 * rg(), v: Math.floor(rg() * 8), hy: .2 + .08 * rg() }); } };
-  const pulse = (dt, t0, a, tau) => dt < t0 ? 0 : a * Math.exp(-(dt - t0) / tau) * sstep(0, .02, dt - t0);
+  // ---- weather (Run349W2): a permanent, very faint cloud deck across the upper backdrop (it exists at rest and drifts), and distant sheet lightning that LIGHTS that deck:
+  // one wide soft glow that is brightest on the flash side and falls off across the sky, plus a few short-lived hot cells (one per return stroke) with warped, soft edges.
+  // Cool grey with a faint blue, peak about half of Run349W, a fast decay (about half at +0.13 s, gone by about 1.2 s) with irregular re-strikes. No bolt sprite, no uniform wash.
+  // The city keeps the very subtle directional rim (rim349) from the flash side. Peak is capped, so no black or white frames.
+  const evPulses = e => {
+    if (e.pu) return e.pu; const r = mul32(0x349A0000 ^ Math.floor(e.t * 1000)), pu = []; const sx = e.x, sy = .3 + e.y * .7;
+    const cell = () => ({ x: sx + (r() - .5) * .8, y: clamp(sy + (r() - .5) * .5, -.1, .85), r: .55 + .45 * r() });
+    pu.push(Object.assign({ t: 0, a: 1, tau: .04 + .012 * r() }, cell()));
+    const t1 = .06 + .06 * r(); pu.push(Object.assign({ t: t1, a: .27 + .18 * r(), tau: .045 + .03 * r() }, cell()));
+    const t2 = t1 + .1 + .16 * r(); pu.push(Object.assign({ t: t2, a: .2 + .2 * r(), tau: .04 + .04 * r() }, cell()));
+    if (r() < .6) { const t3 = t2 + .12 + .2 * r(); pu.push(Object.assign({ t: t3, a: .12 + .18 * r(), tau: .04 + .04 * r() }, cell())); }
+    pu.push({ t: .02, a: .3, tau: .12, x: sx, y: sy, r: 1.0, soft: 1 });   // short in-cloud continuing current
+    return e.pu = pu;
+  };
+  const pulseAmp = (p, dt) => dt < p.t ? 0 : p.a * Math.exp(-(dt - p.t) / p.tau) * sstep(0, p.soft ? .04 : .006, dt - p.t);
   const flashAt = t => {
     genEv(t); while (evIx > 0 && ev[evIx].t > t) evIx--; while (ev[evIx + 1] && ev[evIx + 1].t <= t) evIx++;
-    const e = ev[evIx], dt = t - e.t; FL.e = e; if (dt < 0 || dt > 2.2) { FL.f = 0; FL.bolt = 0; return FL; }
-    const p1 = pulse(dt, 0, .85, .10), p2 = pulse(dt, .17, .5, .12), p3 = pulse(dt, .40, .8, .18), tail = pulse(dt, 0, .3, .55);
-    FL.f = Math.min(.92, p1 + p2 + p3 + tail); FL.bolt = Math.min(1, p1 + p3 * .9) * (dt < 1.0 ? 1 : 0); return FL;
+    const e = ev[evIx], dt = t - e.t; FL.e = e; FL.dt = dt; FL.f = 0; FL.bolt = 0; if (dt < 0 || dt > 2.0) return FL;
+    const pu = evPulses(e); let f = 0; for (const p of pu) f += pulseAmp(p, dt); FL.f = Math.min(1.6, f); return FL;
   };
-  const boltCv = document.createElement('canvas'); boltCv.width = 1280; boltCv.height = 640; { const g = boltCv.getContext('2d'), r = mul32(0x5B017); g.lineJoin = 'round'; g.lineCap = 'round';
-    const stroke = (pts, w, col) => { g.strokeStyle = col; g.lineWidth = w; g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.stroke(); };
-    for (let v = 0; v < 8; v++) { const ox = v * 160; let x = ox + 80 + (r() - .5) * 30, y = 6; const trunk = [];
-      while (y < 560) { trunk.push([x, y]); y += 16 + r() * 26; x = clamp(x + (r() - .5) * 46, ox + 34, ox + 126); }
-      const paths = [trunk]; for (let b = 0; b < 3; b++) { const k = 3 + Math.floor(r() * (trunk.length - 6)), dir = r() < .5 ? -1 : 1; let bx = trunk[k][0], by = trunk[k][1]; const br = [[bx, by]]; for (let j = 0; j < 4 + Math.floor(r() * 3); j++) { bx = clamp(bx + dir * (8 + r() * 14), ox + 14, ox + 146); by += 12 + r() * 16; br.push([bx, by]); } paths.push(br); }
-      for (const p of paths) { stroke(p, 11, 'rgba(120,150,255,.20)'); stroke(p, 5, 'rgba(180,205,255,.50)'); stroke(p, p === trunk ? 2.2 : 1.4, 'rgba(255,255,255,.95)'); } } }
-  const boltTex = new T.CanvasTexture(boltCv); boltTex.colorSpace = T.SRGBColorSpace;
-  const QU = { uFlash: { value: 0 }, uBoltA: { value: 0 }, uVar: { value: 0 }, uBolt: { value: new T.Vector2(.7, .1) }, uHy: { value: .22 }, uAsp: { value: 1.6 }, tBolt: { value: boltTex } };
-  const quad = new T.Mesh(new T.PlaneGeometry(1, 1), new T.ShaderMaterial({ name: 'sky323-flash', uniforms: QU, transparent: true, depthWrite: false, depthTest: true, blending: T.AdditiveBlending,
+  const KA = []; for (let i = 0; i < 5; i++) KA.push(new T.Vector4(0, 0, 1, 0));
+  const QU = { uK: { value: KA }, uAsp: { value: 1.6 }, uT: { value: 0 }, uSeed: { value: 0 }, uGain: { value: .19 }, uDeck: { value: .02 }, uBroad: { value: 0 }, uSrc: { value: new T.Vector2(-.6, .3) } };
+  const quad = new T.Mesh(new T.PlaneGeometry(1, 1), new T.ShaderMaterial({ name: 'sky349-flash', uniforms: QU, transparent: true, depthWrite: false, depthTest: true, blending: T.AdditiveBlending,
     vertexShader: 'varying vec2 vUv;\nvoid main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-    fragmentShader: ['uniform float uFlash; uniform float uBoltA; uniform float uVar; uniform vec2 uBolt; uniform float uHy; uniform float uAsp; uniform sampler2D tBolt; varying vec2 vUv;', 'void main() {',
-      '  vec2 ndc = vUv * 2.0 - 1.0; vec2 d = (ndc - uBolt) * vec2(uAsp, 1.0); float halo = exp(-dot(d * vec2(.8, 1.5), d * vec2(.8, 1.5)) * 1.7);',
-      '  vec3 sky = vec3(.042, .053, .092) * uFlash * (.4 + .6 * halo) * (.65 + .35 * (ndc.y * .5 + .5));',
-      '  vec2 hs = vec2(.25 * uHy / uAsp, uHy); vec2 c = (ndc - uBolt) / hs; float inside = step(abs(c.x), 1.0) * step(abs(c.y), 1.0);',
-      '  float b = texture2D(tBolt, vec2((uVar + clamp(c.x * .5 + .5, 0.0, 1.0)) / 8.0, clamp(c.y * .5 + .5, 0.0, 1.0))).a * inside * uBoltA;',
-      '  gl_FragColor = vec4(sky + vec3(.55, .68, 1.0) * b * .9, 1.0);', '  #include <colorspace_fragment>', '}'].join('\n') }));
-  quad.name = 'sky323-flash'; quad.frustumCulled = false; quad.renderOrder = -2; quad.visible = false; quad.userData.excludeFit = true; quad.userData.excludeBatching = true; scene.add(quad); hide(quad);
+    fragmentShader: ['uniform vec4 uK[5]; uniform float uAsp; uniform float uT; uniform float uSeed; uniform float uGain; uniform float uDeck; uniform float uBroad; uniform vec2 uSrc; varying vec2 vUv;',
+      'float h21(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }',
+      'float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h21(i), h21(i + vec2(1.0, 0.0)), f.x), mix(h21(i + vec2(0.0, 1.0)), h21(i + vec2(1.0, 1.0)), f.x), f.y); }',
+      'float fbm(vec2 p) { float a = .5, s = 0.0; for (int i = 0; i < 4; i++) { s += a * vn(p); p = p * 2.03 + vec2(17.1, 9.7); a *= .5; } return s; }',
+      'void main() {',
+      '  vec2 ndc = vUv * 2.0 - 1.0; vec2 q = vec2(ndc.x * uAsp, ndc.y);',
+      '  float sky = smoothstep(-.5, .45, ndc.y); if (sky < .002) discard;',
+      '  vec2 drift = vec2(uT * .006, uT * .002);',
+      '  float cl = fbm(q * vec2(.8, 1.5) + 3.1 + drift) * 1.2 + fbm(q * vec2(2.6, 4.4) - 5.3 - drift * 2.0) * .32 - .2;',
+      '  float dens = smoothstep(0.0, .95, clamp(cl, 0.0, 1.0));',
+      '  vec3 col = vec3(.78, .84, .95) * dens * sky * uDeck;',
+      '  if (uBroad + uK[0].w + uK[1].w + uK[2].w + uK[3].w + uK[4].w > .003) {',
+      '    vec2 w = vec2(vn(q * 1.7 + uSeed) - .5, vn(q * 1.7 + uSeed + 11.0) - .5) * .55;',
+      '    float lit = uBroad * exp(-pow(abs(ndc.x + w.x * .5 - uSrc.x) / 1.3, 1.5)) * smoothstep(-.4, .6, ndc.y + w.y * .3) * .55;',
+      '    for (int k = 0; k < 5; k++) { vec4 K = uK[k]; vec2 d = (q + w - vec2(K.x * uAsp, K.y)) / vec2(K.z * 1.6, K.z * .9); lit += K.w * exp(-dot(d, d)); }',
+      '    lit = lit / (1.0 + .2 * lit); float body = .25 + .75 * dens;',
+      '    col += vec3(.78, .86, 1.0) * lit * body * sky * uGain;',
+      '  }',
+      '  gl_FragColor = vec4(col, 1.0);', '  #include <colorspace_fragment>', '}'].join('\n') }));
+  quad.name = 'sky349-flash'; quad.frustumCulled = false; quad.renderOrder = -2; quad.visible = false; quad.userData.excludeFit = true; quad.userData.excludeBatching = true; scene.add(quad); hide(quad);
+  const rimL = new T.DirectionalLight(0xa9bfff, 0); rimL.name = 'rim349'; rimL.castShadow = false; rimL.position.set(0, 20, 0); scene.add(rimL); scene.add(rimL.target);
+  const RIM = 1.3, rv = new T.Vector3(), ru = new T.Vector3();
+  const RAIN349 = { a: 1.0, lo: .4, n0: .3, n1: .65 };   // Run349W (accepted): steady light-to-moderate rain, effective alpha x(.4..1.0), 30..65 % of the 7000 streaks
+  const DECK349 = .03;   // rest gain of the cloud deck, tuned for about +3 to 6 / 255 over the backdrop in the upper sky
   const lights = { hemi: null, amb: null }; scene.traverse(o => { if (o.isHemisphereLight && !lights.hemi) lights.hemi = o; if (o.isAmbientLight && !lights.amb) lights.amb = o; });
   const hemiB = lights.hemi ? lights.hemi.intensity : 0, ambB = lights.amb ? lights.amb.intensity : 0;
   const fwd = new T.Vector3(), W3 = { f: 0, rain: 0 }; let lastDraw = -1, lastF = -1;
   const weather = t => {
     const I = intensity(t); W3.rain = I;
-    if (rainU) { rainU.uAlpha.value = rainBase * (.4 + 1.2 * I); const n = 2 * Math.round(rainN * (.3 + .7 * sstep(0, .62, I))); if (n !== lastDraw) { lastDraw = n; rain.geometry.setDrawRange(0, n); } }
+    if (rainU) { rainU.uAlpha.value = rainBase * RAIN349.a * (RAIN349.lo + (1 - RAIN349.lo) * I); const n = 2 * Math.round(rainN * (RAIN349.n0 + (RAIN349.n1 - RAIN349.n0) * sstep(0, .62, I))); if (n !== lastDraw) { lastDraw = n; rain.geometry.setDrawRange(0, n); } }
     const fl = flashAt(t); W3.f = fl.f;
-    if (fl.f !== lastF) { lastF = fl.f; UG.uFlashA.value = fl.f; if (lights.hemi) lights.hemi.intensity = hemiB * (1 + 1.0 * fl.f); if (lights.amb) lights.amb.intensity = ambB + .06 * fl.f; }
-    quad.visible = fl.f > .003;
+    if (fl.f !== lastF) { lastF = fl.f; UG.uFlashA.value = 0; rimL.intensity = RIM * Math.min(1, fl.f / 1.4 * .9); }
+    const deckOn = CFG.quality !== 'low', flashOn = fl.f > .004; quad.visible = deckOn || flashOn;
     if (quad.visible) {
-      QU.uFlash.value = fl.f; QU.uBoltA.value = fl.bolt; QU.uVar.value = fl.e.v; QU.uBolt.value.set(fl.e.x, fl.e.y); QU.uHy.value = fl.e.hy;
+      QU.uT.value = t; QU.uDeck.value = deckOn ? DECK349 : 0; let k = 0;
+      if (flashOn) {
+        const e = fl.e, pu = evPulses(e);
+        for (const p of pu) { if (k >= 5) break; const a = pulseAmp(p, fl.dt); if (a > .01) KA[k++].set(p.x, p.y, p.r, a); }
+        QU.uSeed.value = (e.v + 1) * 3.7; QU.uBroad.value = Math.min(1.4, fl.f); QU.uSrc.value.set(e.x, .3 + e.y * .7);
+        rv.setFromMatrixColumn(mainCam.matrixWorld, 0); ru.set(0, 1, 0); mainCam.getWorldDirection(fwd); const sd = e.x < 0 ? -1 : 1;
+        rimL.position.set(0, 0, 0).addScaledVector(rv, sd * 70).addScaledVector(ru, 22).addScaledVector(fwd, 28);
+      } else QU.uBroad.value = 0;
+      for (; k < 5; k++) KA[k].w = 0;
       const cam = mainCam, w = (cam.right - cam.left) / cam.zoom * 1.1, h = (cam.top - cam.bottom) / cam.zoom * 1.1; cam.getWorldDirection(fwd);
       quad.position.copy(cam.position).addScaledVector(fwd, 520); quad.quaternion.copy(cam.quaternion); quad.scale.set(w, h, 1); QU.uAsp.value = (cam.right - cam.left) / (cam.top - cam.bottom);
     }
@@ -18356,12 +18381,21 @@ async function run323aSky() {
     if (cam === mainCam) { const vis = controls.getPolarAngle() > .6 && CFG.quality !== 'low'; if (vis !== root.visible) root.visible = vis; if (vis) placeAirship(sim.t); weather(sim.t); }
     if (prevScene) prevScene.call(this, r, s, cam, rt, a5, a6);
   };
-  window.__AIRSHIP323A__ = AB; window.__WEATHER323A__ = { intensity, flashAt, events: () => { genEv(1000); return ev.slice(0, 12).map(e => e.t); }, state: W3, quad, lights };
+  window.__RAIN349__ = RAIN349; window.__AIRSHIP323A__ = AB; window.__WEATHER323A__ = { intensity, flashAt, events: () => { genEv(1000); return ev.slice(0, 12).map(e => e.t); }, state: W3, quad, lights, rim: rimL, pulses: evPulses, qu: QU };
   res.rain = rain ? { n: rainN, base: rainBase } : 'missing'; res.firstFlash = (genEv(1), ev[0].t);
   return res;
 }
 try { window.__SKY323A__ = await run323aSky(); } catch (e) { console.error('[sky323a] failed', e); window.__SKY323A__ = { error: String(e) }; }
 /* RUN323A_SKY_END */
+/* RUN349W2_BACKDROPDITHER_BEGIN: triangular +-1/255 noise on the final painted backdrop canvas so its 8-bit gradient rings dissolve (invisible at normal brightness).
+   The Run150/243N backdrop is re-blurred (2 px) after its own +-1.5 noise, so the rings come back; this runs after every backdrop writer. */
+(function () { const bg = scene.background; if (!bg || !bg.image || !bg.image.getContext) { window.__DITHER349W__ = { error: 'no canvas backdrop' }; return; }
+  const cv = bg.image, g = cv.getContext('2d'), img = g.getImageData(0, 0, cv.width, cv.height), d = img.data; let q = 0x349d17 >>> 0;
+  const r = () => { q ^= q << 13; q >>>= 0; q ^= q >>> 17; q ^= q << 5; q >>>= 0; return q / 4294967296; };
+  for (let i = 0; i < d.length; i += 4) { d[i] += r() + r() - 1; d[i + 1] += r() + r() - 1; d[i + 2] += r() + r() - 1; }
+  g.putImageData(img, 0, 0); bg.needsUpdate = true; window.__DITHER349W__ = { ok: true, w: cv.width, h: cv.height }; })();
+/* RUN349W2_BACKDROPDITHER_END */
+
 /* RUN325S_STREET_BEGIN (v4): street-level life, all VISUAL ONLY (no sim writes; every motion is a function of sim.t or of read-only sim state, so pause freezes it and the seed hashes hold).
    (1) Street sweeper robot: Blender model (assets/street325/street325.glb + LOD1) that skins ONE existing simulated road-car slot (slot 4, east ring). It inherits the car body world matrix, so it drives with the traffic,
        stops at the signals and sinks into the Run331S portal hoods like every other car. Disc brushes and the lidar spin in the vertex shader (sim.t), the roof light bar flashes amber A/B, and two spray mists trail the
