@@ -21258,7 +21258,9 @@ document.getElementById('toggle-quality').addEventListener('click', () => {
 
 // Default to the immersive neighborhood only on a narrow phone.  Explicit view
 // selection always wins thereafter, including when the viewport changes size.
-if (window.matchMedia('(max-width: 600px)').matches) fitDistrictView(); else overviewView();
+/* RUN351P: the District crop cannot contain the dragon orbit (about 110 m wide), so a narrow PORTRAIT screen now opens on the Overview, whose solver reserves the whole orbit,
+   the koi ring and the NOVA figure; a narrow landscape window (rare) keeps the old District opening. Desktop and tablet paths are unchanged. */
+if (window.matchMedia('(max-width: 600px)').matches && innerHeight <= innerWidth) fitDistrictView(); else overviewView();
 
 // prove the scene actually built
 console.log('[corner-block] ready', {
