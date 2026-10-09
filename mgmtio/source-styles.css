@@ -447,6 +447,5 @@ a:focus-visible,
 .marketing-schedule-timeline .mgmt-panel-header {
   background: transparent;
 }
-/* Capture-only reset, wrapper and offline font fallbacks. Product rules above are copied verbatim. */
-:root{--font-barlow-condensed:'Arial Narrow';--font-geist-sans:'Segoe UI';--font-geist-mono:Consolas}
-*{box-sizing:border-box}body{margin:0;background:var(--surface-0);color:var(--fg-1);font-family:var(--font-geist-sans);font-size:14px}a{color:inherit}main{max-width:1120px;margin:auto;padding:28px 32px 38px}.capture-header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:18px;margin-bottom:24px;gap:16px}.capture-header h1{font-size:22px;margin:0}.capture-header p{margin:6px 0 0;color:var(--fg-3);font-size:12px}.capture-label{font-size:11px;letter-spacing:.07em;color:var(--accent-text);text-align:right}.capture-note{font-size:12px;color:var(--fg-3);border-top:1px solid var(--border);padding-top:14px;margin-top:25px}a:focus-visible{outline:3px solid var(--accent-text);outline-offset:3px}@media(max-width:600px){main{padding:20px 18px}.capture-header{align-items:flex-start}.capture-label{max-width:120px}}
+/* Font families that next/font injects in the real app. */
+:root{--font-barlow-condensed:"Barlow Condensed";--font-geist-sans:"Geist";--font-geist-mono:"Geist Mono"}
