@@ -3,6 +3,123 @@
 <head>
 <base href="/corner-block/">
 <meta charset="utf-8" />
+<script>
+/* Run352M2 lab: ON-DEVICE LOAD LOG + one-line debug line. Classic script, runs before the module, so it sees errors from the first line of the page.
+   - Overlay (top, over the loading veil): phase, files done / total, MB done / total, elapsed s, canvas count and MB, GLBs parsed, main-thread stall, errors as text, Copy button.
+   - State is written to localStorage on every step (rate limited): phase, files, MB, elapsed, loading = true. The flag is cleared after the first rendered frame.
+     If a page load starts and the flag is still set, the previous attempt stopped (iOS reloads a tab it killed): the overlay says where.
+   - After the city runs the overlay collapses to the one-line debug line (tier | dpr | tex ~MB | calls | fps); tap the line to open the log again.
+   Numbers come from window.__PHONE352__ (the phone block): renderer and scene are known from the start of the startup block, so the line no longer depends on window.__CB__,
+   which the page only sets at the very end of the build. */
+(function () {
+  'use strict';
+  // the same decision as the page (AUTO_PHONE_TIER = true): the log exists in the phone tier only
+  var q = location.search, phoneTier = false;
+  try {
+    if (/[?&]tier=full(&|$)/.test(q)) phoneTier = false;
+    else if (/[?&]tier=phone(&|$)/.test(q)) phoneTier = true;
+    else phoneTier = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) || (matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 820);
+  } catch (e) {}
+  if (!phoneTier) return;
+  var KEY = 'cb352.run', MAN = {"arcade50.glb":2851796,"cinema19-facade.png":911403,"commercial-interior-atlas-v2.png":937997,"facade-material-atlas.png":1144268,"hotel-facade.png":2978333,"interiors57-atlas.png":1137661,"landmark48.glb":1121432,"lotus-line-poster.png":1282810,"nightline48-poster.png":1013344,"ramen-courier-poster.png":1356447,"second-life-poster.png":1490572,"shop-interior-atlas.png":1848657,"airship323/ad323.png":592099,"airship323/airship323.glb":1366120,"airship323/ticker323.png":67221,"backside309/glyph-atlas.png":123501,"backside309/plaque.png":21057,"backside314/backside314.glb":1538672,"bar324/bar324.glb":1400276,"bridge82/bridge82.glb":119516,"capsule341/capsule341.glb":71280,"capsule341/sign.png":93659,"car157/car157.glb":216204,"car162/car162.glb":357592,"car162/taxi162.glb":369116,"car180/car180-coupe.glb":379336,"car180/car180-sedan.glb":392804,"car180/car180-van.glb":366884,"cinema221/cinema221.glb":1195808,"collar205/collar205.glb":305692,"corner31/corner31.glb":6811728,"crown185/crown185.glb":188716,"crown286/crown286.glb":1896440,"crown287/crown287.glb":4172668,"crown88/crown88.glb":137640,"depot290/depot290.glb":843672,"detail343/detail343.glb":2157984,"dragon153/dragon153.glb":69772,"dragon160/dragon160.glb":1208144,"dragon200/dragon200.glb":1350604,"dragon200/dragon200b.glb":1336944,"dragon200/dragon200c.glb":1354868,"dragon200/dragon200e.glb":1339580,"dragon200/dragon200f.glb":1426472,"dragon200/dragon300.glb":1512496,"dragon200/dragon301.glb":1730544,"dragon200/dragon303.glb":1806120,"dragon200/dragon304.glb":2038748,"drone103/drone103.glb":41712,"drones320/drones320.glb":1157228,"drones320/drones320lo.glb":724524,"east338/east338.glb":92396,"eaststack279/eaststack279.glb":400028,"edge196/edge196.glb":58892,"foliage306/foliage306.glb":474272,"frontage284/frontage284.glb":1097672,"garden104/garden104.glb":117284,"greeble164/greeble164.glb":673468,"holo340/holo340v2.glb":2148868,"hotel218/hotel218.glb":1272796,"hover161/hover161.glb":470508,"hover205/hover205.glb":381412,"hover215/hover215.glb":612752,"hover328/hover328.glb":1220356,"hover328/hover328b.glb":1138612,"ivy210/ivy210.glb":473352,"koi159/koi159.glb":180392,"koi180/koi180b.glb":478556,"koi277/koi277.glb":658536,"koi91/koi91.glb":31920,"kuro264/kuro264.glb":866328,"lamp163/lamp163.glb":40284,"landmark219/landmark219.glb":1379164,"landmark219/landmark219b.glb":1478940,"landmark298/landmark298.glb":2916880,"lotus230/lotus230.glb":1486548,"market32/market32.glb":982540,"marquee89/marquee89.glb":244496,"midrise216/midrise216.glb":757660,"midrise216/midrise216b.glb":760272,"midrise34/midrise34.glb":971780,"nova243/nova243.glb":537428,"people272/people272.glb":1106648,"people324/people324.glb":1029000,"people324/people324_lo.glb":440480,"people93/people93.glb":244832,"plinth166/plinth166.glb":292104,"portal331/portal331.glb":78088,"projector165/projector165.glb":186220,"relief-building/repair-relief-v5.glb":4272792,"roof167/roof167.glb":405476,"roof249/roof249.glb":388352,"roof268/roof268.glb":284540,"roofkit312/roofkit312.glb":2008428,"rooftop321/rooftop321.glb":3250168,"rooftop80/rooftop80.glb":495304,"screens322/kanji-atlas.png":91338,"screens322/ticker-strip.png":18851,"shoprow221/shoprow221.glb":753028,"signal217/signal217.glb":1480400,"sky342b3/sky342b3.glb":416168,"spinner151/spinner151.glb":175200,"station338/station338.glb":1046980,"street325/cruiser325.glb":498208,"street325/cruiser325_lo.glb":133392,"street325/pod325.glb":482116,"street325/pod325_lo.glb":151156,"street325/street325.glb":1444524,"street325/street325_lo.glb":563068,"street81/street81.glb":527084,"tea237/tea237.glb":686580,"train158/train158.glb":683012,"trees317/trees317.glb":1527460,"tube332/tube332.glb":295748,"under339/plinth339.glb":286252,"under339/under339.glb":8289648,"under339/under339_meta.json":2028,"viaduct221/viaduct221.glb":750312,"viaduct221/viaduct221b.glb":617808,"wallac112/wallac112.glb":99700,"wallac327/wallac327.glb":982420,"west237/west237.glb":465936,"wings293/wings293.glb":1054404}, TOTAL = 0, TOTAL_B = 0, k;
+  for (k in MAN) { TOTAL++; TOTAL_B += MAN[k]; }
+  try { performance.setResourceTimingBufferSize(2000); } catch (e) {}
+  var prev = null, attempt = 1;
+  try { prev = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+  if (prev && prev.loading) attempt = (prev.attempt || 1) + 1;
+  var lastCN = -1, lastBuild = 0;
+  var errs = [], running = false, stallMax = 0, lastTick = performance.now(), lastPersist = 0, lastEvent = '', est = null;
+  var el = document.createElement('div'), pre = document.createElement('pre'), btn = document.createElement('button'), dbg = document.createElement('div');
+  el.id = 'log352'; dbg.id = 'dbg352';
+  el.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:2147483000;max-height:46vh;overflow:auto;background:rgba(10,12,18,.9);border-bottom:1px solid rgba(120,140,180,.3);color:#cfd6e4;padding:4px 6px;font:10px/1.35 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;-webkit-text-size-adjust:100%';
+  pre.style.cssText = 'margin:0;white-space:pre-wrap;word-break:break-word;font:inherit;padding-right:54px';
+  btn.textContent = 'Copy'; btn.type = 'button';
+  btn.style.cssText = 'position:absolute;right:6px;top:4px;font:inherit;color:#bfeef7;background:#121b29;border:1px solid #3c5269;border-radius:5px;padding:3px 8px;min-height:24px';
+  dbg.style.cssText = 'position:fixed;left:0;z-index:2147482999;font:9px/12px ui-monospace,Menlo,monospace;color:#8ef0ff;background:rgba(0,0,0,.6);padding:1px 5px;border-radius:0 4px 0 0;display:none';
+  el.appendChild(pre); el.appendChild(btn);
+  document.documentElement.appendChild(el); document.documentElement.appendChild(dbg);
+  var st = document.createElement('style');
+  st.textContent = '#dbg352{bottom:0}body.compact352 #dbg352{bottom:38px}';   /* clear of the slim signal bar of the compact header */
+  document.head.appendChild(st);
+
+  function secs() { return performance.now() / 1000; }
+  function assetState() {
+    var seen = {}, n = 0, b = 0, es = performance.getEntriesByType('resource'), i, p, j;
+    for (i = 0; i < es.length; i++) { p = es[i].name; j = p.indexOf('/assets-phone/'); if (j < 0) continue; p = p.slice(j + 14).split('?')[0]; if (!seen[p]) { seen[p] = 1; n++; b += MAN[p] || es[i].encodedBodySize || 0; } }
+    return { n: n, b: b };
+  }
+  function veilText() { var v = document.querySelector('#veil288s p'); return v ? v.textContent : ''; }
+  function ph() { return window.__PHONE352__ || {}; }
+  function phase(a) {
+    if (running) return 'running';
+    var p = ph(), v = veilText();
+    if (p.renderer && p.renderer.info && p.renderer.info.render.calls > 0) return 'first frame';
+    if (/^Compiling/.test(v)) return 'compiling shaders / uploading textures';
+    if (p.parsing > 0) return 'parsing GLBs';
+    if (p.canvasN !== lastCN) { lastCN = p.canvasN; lastBuild = performance.now(); }   // the build draws canvases all the time: a canvas in the last 2 s means "building blocks"
+    if (performance.now() - lastBuild < 2000) return 'building blocks';
+    if (a.n < TOTAL) return 'fetching assets';
+    return 'building blocks';
+  }
+  function add(msg) { errs.push((secs()).toFixed(1) + 's ' + String(msg).slice(0, 220)); if (errs.length > 8) errs.shift(); persist(true); render(); }
+  function persist(force) {
+    var now = performance.now(); if (!force && now - lastPersist < 300) return; lastPersist = now;
+    var a = assetState(), p = ph();
+    try { localStorage.setItem(KEY, JSON.stringify({ loading: !running, attempt: attempt, phase: phase(a), files: a.n, totalFiles: TOTAL, mb: +(a.b / 1048576).toFixed(1), totalMb: +(TOTAL_B / 1048576).toFixed(1),
+      t: +secs().toFixed(1), canvasN: p.canvasN || 0, canvasMB: Math.round(p.canvasMB || 0), glb: p.glbParsed || 0, stall: +stallMax.toFixed(1), err: errs.length ? errs[errs.length - 1] : '', ev: lastEvent, ts: Date.now() })); } catch (e) {}
+  }
+  window.__CB352_TOUCH__ = function () { persist(false); };
+  var fps = 0, frames = 0, fl = performance.now();
+  (function raf() { frames++; requestAnimationFrame(raf); })();
+
+  function text() {
+    var a = assetState(), p = ph(), L = [];
+    L.push('CB352 load log  attempt ' + attempt + '  ' + (running ? 'city running' : 'loading') + '  tier ' + (window.__TIER352__ || '?') + '  dpr ' + devicePixelRatio + '  ' + innerWidth + 'x' + innerHeight);
+    if (prev && prev.loading) L.push('PREVIOUS ATTEMPT STOPPED during ' + prev.phase + ' after ' + prev.files + ' files / ' + prev.mb + ' MB / ' + prev.t + ' s  (attempt ' + prev.attempt + ', canvases ' + prev.canvasN + ' / ' + prev.canvasMB + ' MB, GLB ' + prev.glb + ', stall ' + prev.stall + ' s)' + (prev.err ? '  last error: ' + prev.err : ''));
+    L.push('phase  ' + phase(a) + '   ' + secs().toFixed(1) + ' s');
+    L.push('files  ' + a.n + ' / ' + TOTAL + '   ' + (a.b / 1048576).toFixed(1) + ' / ' + (TOTAL_B / 1048576).toFixed(1) + ' MB');
+    L.push('canvases ' + (p.canvasN || 0) + ' / ' + Math.round(p.canvasMB || 0) + ' MB   GLB parsed ' + (p.glbParsed || 0) + (p.parsing ? ' (+' + p.parsing + ' parsing)' : '') + '   main-thread stall max ' + stallMax.toFixed(1) + ' s');
+    if (veilText()) L.push('page says: ' + veilText());
+    L.push(errs.length ? 'errors:\n  ' + errs.join('\n  ') : 'errors: none');
+    return L.join('\n');
+  }
+  function render() { try { pre.textContent = text(); } catch (e) { pre.textContent = 'log error ' + e; } }
+  function debugLine() {
+    var p = ph(), calls = (p.renderer && p.renderer.info) ? p.renderer.info.render.calls : '-';
+    dbg.textContent = 'tier ' + (window.__TIER352__ || '?') + ' | dpr ' + devicePixelRatio + ' | tex ' + (est === null ? '~...' : '~' + Math.round(est)) + ' MB | calls ' + calls + ' | ' + fps + ' fps';
+  }
+  btn.addEventListener('click', function () {
+    var t = pre.textContent;
+    function fb() { var ta = document.createElement('textarea'); ta.value = t; ta.style.cssText = 'position:fixed;left:0;top:0;opacity:0'; document.body.appendChild(ta); ta.focus(); ta.select(); try { document.execCommand('copy'); } catch (e) {} ta.remove(); }
+    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).catch(fb); else fb(); } catch (e) { fb(); }
+    btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy'; }, 1200);
+  });
+  dbg.addEventListener('click', function () { el.style.display = el.style.display === 'none' ? 'block' : 'none'; });
+
+  window.addEventListener('error', function (e) { add('error: ' + e.message + ' @' + String(e.filename || '').split('/').pop() + ':' + e.lineno); });
+  window.addEventListener('unhandledrejection', function (e) { var r = e.reason; add('unhandledrejection: ' + (r && (r.stack || r.message) ? String(r.stack || r.message).split('\n').slice(0, 2).join(' | ') : String(r))); });
+  window.addEventListener('webglcontextlost', function () { add('WEBGL CONTEXT LOST'); }, true);
+  window.addEventListener('webglcontextrestored', function () { add('webgl context restored'); }, true);
+  window.addEventListener('pagehide', function () { lastEvent = 'pagehide'; persist(true); });
+  document.addEventListener('visibilitychange', function () { lastEvent = 'visibility ' + document.visibilityState; persist(true); });
+  var ce = console.error; console.error = function () { try { add('console.error: ' + Array.prototype.map.call(arguments, function (x) { return x && x.message ? x.message : String(x); }).join(' ')); } catch (e) {} return ce.apply(console, arguments); };
+
+  setInterval(function () {
+    var now = performance.now(), gap = (now - lastTick) / 1000; lastTick = now; if (gap > stallMax) stallMax = gap;
+    if (now - fl >= 1000) { fps = Math.round(frames * 1000 / (now - fl)); frames = 0; fl = now; }
+    var p = ph();
+    if (!running && p.renderer && p.renderer.info && p.renderer.info.render.calls > 0) {
+      running = true; persist(true);
+      try { var a = JSON.parse(localStorage.getItem(KEY)); a.loading = false; a.attempt = 0; localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {}
+      el.style.display = 'none'; dbg.style.display = 'block';
+    }
+    if (window.__TIER352__ === 'phone') dbg.style.display = 'block';
+    render(); debugLine(); persist(false);
+  }, 400);
+  setInterval(function () { var p = ph(); if (p.estimate && p.scene) p.estimate(p.scene, function (mb) { est = mb; }); }, 2500);
+  render(); persist(true);
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Corner Block — a live cyberpunk intersection</title>
 <style>
@@ -152,10 +269,57 @@ const PHONE352 = (() => {
 })();
 window.__TIER352__ = PHONE352 ? 'phone' : 'full';
 const NOCAP352 = new WeakSet();   // canvases the page reads back or draws into through texture.image (none today: the backdrop canvases are 1024 px)
+const CK352 = PHONE352 ? .5 : 1;   // creation-time scale of the biggest runtime canvases: they are made at CK352 x their logical size and drawn through ctx.scale(CK352, CK352)
 const PHK352 = im => (PHONE352 && im && im.width) ? im.width / 1024 : 1;   // pixel-rect scale for the 1024 px wide poster, whose phone copy is smaller
 const PH352 = PHONE352 ? (() => {
   const CAP = 1024, TP = THREE.Texture.prototype;
   const st = window.__PHONE352__ = { routed: 0, capped: 0, cappedFromPx: 0, cappedToPx: 0, released: 0, releasedPx: 0, restored: 0, sweeps: 0, mirrors: 0, reloads: 0, shared: 0, scaled: 0 };
+  Object.assign(st, { renderer: null, scene: null, canvasN: 0, canvasMB: 0, glbParsed: 0, parsing: 0, drained: 0 });
+  const touch = () => { if (window.__CB352_TOUCH__) window.__CB352_TOUCH__(); };   // the lab load log persists its state when we call this (rate limited there)
+  // (0) load diagnostics: how many 2D canvases (and how many MB of canvas pixels, at their size when first drawn into) the build has made, and how many GLBs are being parsed
+  const getContext0 = HTMLCanvasElement.prototype.getContext, seenCv = new WeakSet();
+  HTMLCanvasElement.prototype.getContext = function (type, ...a) {
+    if (type === '2d' && !seenCv.has(this)) { seenCv.add(this); st.canvasN++; st.canvasMB += this.width * this.height * 4 / 1048576; touch(); }
+    return getContext0.call(this, type, ...a);
+  };
+  const parse0 = GLTFLoader.prototype.parse;
+  GLTFLoader.prototype.parse = function (data, path, onLoad, onError) {
+    st.parsing++; touch();
+    const done = () => { st.parsing--; st.glbParsed++; touch(); };
+    return parse0.call(this, data, path, g => { done(); onLoad(g); }, e => { done(); if (onError) onError(e); });
+  };
+  // The prefetch above only warms the HTTP cache: read the body in chunks and drop it instead of holding 117 MB of ArrayBuffers (iOS counts them).
+  const drain = r => {
+    if (!r.body || !r.body.getReader) return r.arrayBuffer().then(() => { st.drained++; });
+    const rd = r.body.getReader(), pump = () => rd.read().then(x => x.done ? (st.drained++, touch()) : pump());
+    return pump();
+  };
+  // (0b) compact header on narrow portrait screens: one slim row (title + Menu button) instead of the title and two rows of six buttons; the buttons open on tap.
+  // Same tokens as the page (panel, .actions button colours, mono font); nothing changes for the full tier or for landscape / wide screens.
+  function compact() {
+    const title = document.getElementById('title'); if (!title) return;
+    const css = document.createElement('style');
+    css.textContent = '#menu352{display:none}' +
+      'body.compact352 #title{display:grid;grid-template-columns:1fr auto;grid-template-areas:"eb btn" "h1 btn" "act act";align-items:center;column-gap:8px;padding:5px 8px}' +
+      'body.compact352 #title .eyebrow{grid-area:eb;line-height:1.1}' +
+      'body.compact352 #title h1{grid-area:h1;margin:0;line-height:1.2}' +
+      'body.compact352 #menu352{display:block;grid-area:btn;pointer-events:auto;font:inherit;font-size:10px;color:#bfeef7;background:#121b29;border:1px solid #3c5269;border-radius:5px;padding:4px 14px;min-height:44px;cursor:pointer}' +
+      'body.compact352 #menu352:focus-visible{background:#263d52;outline:2px solid #81e5f4;outline-offset:1px}' +
+      'body.compact352 #menu352[aria-expanded="true"]{color:#ffd19a;border-color:#be784e}' +
+      'body.compact352 #title .actions{grid-area:act;display:none;margin-top:6px}' +
+      'body.compact352.menu352 #title .actions{display:grid}' +
+      'body.compact352 #signals{bottom:8px;padding:3px 7px}' +
+      'body.compact352 #hint{display:none}';
+    document.head.appendChild(css);
+    const btn = document.createElement('button'); btn.id = 'menu352'; btn.type = 'button'; btn.textContent = 'Menu'; btn.setAttribute('aria-expanded', 'false'); title.appendChild(btn);
+    const set = open => { document.body.classList.toggle('menu352', open); btn.textContent = open ? 'Close' : 'Menu'; btn.setAttribute('aria-expanded', String(open)); };
+    btn.addEventListener('click', () => set(!document.body.classList.contains('menu352')));
+    const acts = title.querySelector('.actions'); if (acts) acts.addEventListener('click', e => { if (e.target.closest('button')) set(false); });
+    const mq = matchMedia('(max-width: 600px) and (orientation: portrait)');
+    const apply = () => { document.body.classList.toggle('compact352', mq.matches); if (!mq.matches) set(false); };
+    apply(); if (mq.addEventListener) mq.addEventListener('change', apply); else if (mq.addListener) mq.addListener(apply);
+  }
+  compact();
   // (1) routing
   const route = u => {
     if (typeof u !== 'string' || u.startsWith('data:') || u.startsWith('blob:')) return u;
@@ -274,8 +438,8 @@ const PH352 = PHONE352 ? (() => {
   st.estimate = estimate;   // (scene, cb) -> cb(MB): used by the lab debug line
   // start(): the build is finished. From here on texture.image hands out the 1024 px copies, and every canvas texture that is still waiting for one gets it now
   // (time-sliced, alongside the startup block), so the big canvases are not all alive at the same time as the GPU uploads.
-  function start(scene) { capOn = true; collect(scene, bySrc => { for (const s of bySrc.keys()) if (s.__phCap === 1) capNow(s); }); }
-  return { route, start, scale, arm, estimate, halveTarget, st };
+  function start(scene, renderer) { capOn = true; st.scene = scene; st.renderer = renderer || null; touch(); collect(scene, bySrc => { for (const s of bySrc.keys()) if (s.__phCap === 1) capNow(s); }); }
+  return { route, start, scale, arm, estimate, halveTarget, drain, st };
 })() : null;
 /* RUN352M_PHONE_END */
 /* RUN288S_VEIL_BEGIN: startup veil (companion to RUN288S_STARTUP; must run first so something is on screen while the scene builds) + parallel asset prefetch.
@@ -307,7 +471,7 @@ const veil288s = (() => {
 {
   const own = document.querySelector('script[type="module"]'), src = own ? own.textContent : '', seen = new Set();
   if (src.length < 8e6) for (const m of src.matchAll(/['"`](\.\/assets\/[A-Za-z0-9_\-\/.]+\.(?:glb|png|jpg|jpeg|webp)(?:\?[A-Za-z0-9=&_.\-]+)?)['"`]/g)) {
-    const u = new URL(m[1], document.baseURI).href; if (seen.has(u)) continue; seen.add(u); fetch(u).then(r => r.arrayBuffer()).catch(() => {});
+    const u = new URL(m[1], document.baseURI).href; if (seen.has(u)) continue; seen.add(u); fetch(u).then(r => PH352 ? PH352.drain(r) : r.arrayBuffer()).catch(() => {});   /* RUN352M2 */
   }
 }
 /* RUN288S_VEIL_END */
@@ -917,7 +1081,7 @@ function texAsphaltMaps(size = 1024) {
 // Run27: physical-scale jointed paving on the unchanged pedestrian plane.
 // Local hash is independent of the simulation RNG. Maps are generated once.
 function installPaving27() {
-  const size=2048, span=HALF*2, px=size/span;
+  const size=2048*CK352, span=HALF*2, px=size/span;   /* RUN352M2: paving maps are 2048 on desktop, 1024 on the phone (every length below scales with px) */
   const make=()=>{const c=document.createElement('canvas');c.width=c.height=size;return c};
   const color=make(),height=make(),rough=make();
   const a=color.getContext('2d'),b=height.getContext('2d'),r=rough.getContext('2d');
@@ -933,7 +1097,7 @@ function installPaving27() {
     if(n>.92){a.strokeStyle='rgba(29,31,29,.6)';a.lineWidth=.021*px;a.beginPath();a.moveTo(x+w*.23,z+h*.06);a.lineTo(x+w*.48,z+h*.4);a.lineTo(x+w*.44,z+h*.7);a.lineTo(x+w*.7,z+h*.96);a.stroke()}
   }
   // Fine aggregate and mineral flecks; low contrast prevents a noisy grid.
-  for(let i=0;i<115000;i++){
+  for(let i=0;i<115000*CK352*CK352;i++){
     const x=roadHash(i,901)*size,y=roadHash(i,712)*size;
     a.fillStyle=i%3?'rgba(12,17,16,.045)':'rgba(239,230,209,.07)';a.fillRect(x,y,1,1);
   }
@@ -8373,7 +8537,7 @@ function run67Neon(plan) {
   let wdi327 = 0; const uniqueWord327 = () => WDECK327[wdi327++ % WDECK327.length];
   const TAGS = ['BRIGHTER TOMORROW', 'NEVER SLEEP', 'CITY OF LIGHT', 'DREAM LOUDER', 'NEW AGE', 'STAY ONLINE'];
 
-  function atlas() { const cv = document.createElement('canvas'); cv.width = cv.height = 2048; const g = cv.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, 2048, 2048); return { cv, g }; }
+  function atlas() { const cv = document.createElement('canvas'); cv.width = cv.height = 2048 * CK352; const g = cv.getContext('2d'); if (PHONE352) g.scale(CK352, CK352); g.fillStyle = '#000'; g.fillRect(0, 0, 2048, 2048); return { cv, g };   /* RUN352M2 */ }
   const A = atlas(), B = atlas();
   const uvOf = (cx, cy, w, h) => [cx / 2048, 1 - (cy + h) / 2048, (cx + w) / 2048, 1 - cy / 2048];
   let bladeCell = 0, boardCell = 0, roofCell = 0;
@@ -10084,11 +10248,11 @@ if(!CFG.useGLB) { try { window.__SKY136__=run136Sky(); } catch(e) { console.erro
 function run137Plaques() {
   const half = (CFG.slab + 1.0) / 2, flat = half - 5.2, top = -.35, bot = -.35 - 3.5, H = 2.55, yc = (top + bot) / 2 + .05;
   const F = '"Yu Gothic UI","Yu Gothic","Meiryo","Hiragino Sans",sans-serif';
-  const panel = (w, draw) => { const px = 160, cv = document.createElement('canvas'); cv.width = Math.round(w * px); cv.height = Math.round(H * px); const g = cv.getContext('2d');
-    g.fillStyle = '#0b0c10'; g.fillRect(0, 0, cv.width, cv.height);
-    for (let i = 0; i < 4000; i++) { g.fillStyle = i % 2 ? 'rgba(255,255,255,.018)' : 'rgba(0,0,0,.2)'; g.fillRect((i * 7919) % cv.width, (i * 104729) % cv.height, 2, 1); }
-    g.strokeStyle = 'rgba(160,165,180,.35)'; g.lineWidth = 3; g.strokeRect(10, 10, cv.width - 20, cv.height - 20);
-    g.fillStyle = '#e4e6ee'; g.textBaseline = 'middle'; draw(g, cv.width, cv.height, F);
+  const panel = (w, draw) => { const px = 160, cv = document.createElement('canvas'), LW = Math.round(w * px), LH = Math.round(H * px); cv.width = Math.round(LW * CK352); cv.height = Math.round(LH * CK352); const g = cv.getContext('2d'); if (PHONE352) g.scale(cv.width / LW, cv.height / LH);   /* RUN352M2: LW x LH is the logical size */
+    g.fillStyle = '#0b0c10'; g.fillRect(0, 0, LW, LH);
+    for (let i = 0; i < 4000; i++) { g.fillStyle = i % 2 ? 'rgba(255,255,255,.018)' : 'rgba(0,0,0,.2)'; g.fillRect((i * 7919) % LW, (i * 104729) % LH, 2, 1); }
+    g.strokeStyle = 'rgba(160,165,180,.35)'; g.lineWidth = 3; g.strokeRect(10, 10, LW - 20, LH - 20);
+    g.fillStyle = '#e4e6ee'; g.textBaseline = 'middle'; draw(g, LW, LH, F);
     const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = renderer.capabilities.getMaxAnisotropy();
     const m = new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: .75, roughness: .4, metalness: .2, name: 'plaque137' });
     return new THREE.Mesh(new THREE.PlaneGeometry(w, H), m); };
@@ -11666,7 +11830,7 @@ if(!CFG.useGLB) { try { window.__DRAGON206__=await run206DragonGeo(); } catch(e)
   const sp = (g, txt, x, y, size, ls, weight) => { g.font = `${weight || 400} ${size}px ${F}`; let cx = x; for (const ch of txt) { g.fillText(ch, cx, y); cx += g.measureText(ch).width + ls; } return cx; };
   const bars = (g, x, y, h, n, w, gap, sk) => { for (let i = 0; i < n; i++) { const x0 = x + i * (w + gap); g.beginPath(); g.moveTo(x0 + sk, y); g.lineTo(x0 + sk + w, y); g.lineTo(x0 + w, y + h); g.lineTo(x0, y + h); g.closePath(); g.fill(); } };
   const cut = (g, x0, x1, y, size) => { g.fillStyle = BG; g.fillRect(x0, y - size * .03, x1 - x0, Math.max(4, size * .05)); g.fillStyle = INK; };
-  const mk = (len, draw) => { const cv = document.createElement('canvas'); cv.width = Math.round(len * PX); cv.height = Math.round(H * PX); const g = cv.getContext('2d'), W = cv.width, Hh = cv.height;
+  const mk = (len, draw) => { const cv = document.createElement('canvas'), LW = Math.round(len * PX), LH = Math.round(H * PX); cv.width = Math.round(LW * CK352); cv.height = Math.round(LH * CK352); const g = cv.getContext('2d'), W = LW, Hh = LH; if (PHONE352) g.scale(cv.width / LW, cv.height / LH);   /* RUN352M2 */
     g.fillStyle = BG; g.fillRect(0, 0, W, Hh);
     for (let i = 0; i < 5000; i++) { g.fillStyle = i % 2 ? 'rgba(255,255,255,.02)' : 'rgba(0,0,0,.22)'; g.fillRect(rnd() * W, rnd() * Hh, 2, 1); }
     g.strokeStyle = 'rgba(160,165,180,.35)'; g.lineWidth = 3; g.strokeRect(10, 10, W - 20, Hh - 20);
@@ -12273,7 +12437,7 @@ if(!CFG.useGLB) { try { window.__CINEMA228__=await run228Cinema(); } catch(e) { 
   try {
     let face = null; world.traverse(o => { if (!face && o.material && o.material.name === 'yume125-face') face = o.material; });
     if (!face) throw new Error('no yume125-face');
-    const W = 1024, H = 2271, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+    const W = 1024, H = 2271, cv = document.createElement('canvas'); cv.width = W * CK352; cv.height = H * CK352; const g = cv.getContext('2d'); if (PHONE352) g.scale(CK352, CK352);   /* RUN352M2 */
     const rnd = mk(0x221c);
     const bg = g.createLinearGradient(0, 0, 0, H);
     bg.addColorStop(0, '#4a1240'); bg.addColorStop(.30, '#3a0f33'); bg.addColorStop(.58, '#200818'); bg.addColorStop(1, '#07020a');
@@ -12331,7 +12495,7 @@ if(!CFG.useGLB) { try { window.__CINEMA228__=await run228Cinema(); } catch(e) { 
     world.traverse(o => { if (o.name === 'holo105-band') band = o;
       const p = o.isMesh && o.geometry && o.geometry.parameters; if (p && p.width === 8.4 && p.height === 12.6 && o.material && o.material.map) src = o.material.map; });
     if (!band) throw new Error('no holo105-band');
-    const W = 4096, H = 346, P = 1024, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+    const W = 4096, H = 346, P = 1024, cv = document.createElement('canvas'); cv.width = W * CK352; cv.height = H * CK352; const g = cv.getContext('2d'); if (PHONE352) g.scale(CK352, CK352);   /* RUN352M2 */
     const rnd = mk(0x221d); const blossoms = []; for (let i = 0; i < 64; i++) blossoms.push([rnd(), rnd(), 8 + rnd() * 18, rnd(), rnd() * 6.28]);
     let drawnFace = false;
     const sign = (txt, x, y, font, fill, glow, sw, align) => { g.font = font; g.textAlign = align || 'center'; g.textBaseline = 'middle';
@@ -13968,7 +14132,7 @@ async function run284Frontage() {
   let posterTex = null;
   try { const L = new THREE.TextureLoader(), u = n => new URL('./assets/' + n, document.baseURI).href;
     const [ta, tb] = await Promise.all([L.loadAsync(u('nightline48-poster.png')), L.loadAsync(u('ramen-courier-poster.png'))]);
-    const cv = document.createElement('canvas'); cv.width = 2048; cv.height = 1536; const cx = cv.getContext('2d');
+    const cv = document.createElement('canvas'); cv.width = 2048 * CK352; cv.height = 1536 * CK352; const cx = cv.getContext('2d'); if (PHONE352) cx.scale(CK352, CK352);   /* RUN352M2 */
     cx.drawImage(ta.image, 0, 0, 1024, 1536); cx.drawImage(tb.image, 1024, 0, 1024, 1536);
     posterTex = new THREE.CanvasTexture(cv); posterTex.flipY = false; posterTex.colorSpace = THREE.SRGBColorSpace; posterTex.anisotropy = 4; } catch (e) { console.error('[frontage284] posters', e); }
   const LV = { 'fr-room0': 1.6, 'fr-room1': 2.1 };
@@ -14274,7 +14438,7 @@ if(!CFG.useGLB) { try { window.__WINGS293__=await run293Wings(); } catch(e) { co
 
   try {
     // ---------------------------------------------------------------- #2 board art atlas
-    const A = cv(2048, 1024), x = A.getContext('2d'); x.textBaseline = 'alphabetic';
+    const A = cv(2048 * CK352, 1024 * CK352), x = A.getContext('2d'); if (PHONE352) x.scale(CK352, CK352); x.textBaseline = 'alphabetic';   /* RUN352M2 */
     const ls = px => { try { x.letterSpacing = px + 'px'; } catch (e) { /* older canvas */ } };
     const grain = (ox, oy, w, h, a) => { for (let i = 0; i < w * h / 180; i++) { x.fillStyle = 'rgba(0,0,0,' + (rnd() * a).toFixed(3) + ')'; x.fillRect(ox + rnd() * w, oy + rnd() * h, 2, 2); } };
     const R = { A: [0, 0, 1024, 430], B: [1024, 0, 1024, 430], C: [0, 440, 1024, 262], E: [1024, 440, 1024, 314], D: [0, 770, 1536, 130] };
@@ -19232,7 +19396,7 @@ void main(){ vec4 mv = viewMatrix * modelMatrix * vec4(position, 1.0); gl_Positi
     const bpts = mark(new T.Points(bg, bm), 'skyring342r-beacons'); bpts.renderOrder = -2; root.add(bpts); diag.draws++;
     // far silhouette card (canvas): a denser, lower-contrast layer behind the 3D towers
     let cardMesh = null, cardMat = null;
-    { const W = 4096, H = 400, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+    { const W = 4096, H = 400, cv = document.createElement('canvas'); cv.width = W * CK352; cv.height = H * CK352; const g = cv.getContext('2d'); if (PHONE352) g.scale(CK352, CK352);   /* RUN352M2 */
       const layers = [[.38, 'rgba(14,22,40,', 0.55, 150, 40], [.60, 'rgba(8,13,26,', 0.85, 120, 30]];
       for (const [a, c, , maxH, minH] of layers) {
         let x = 0; while (x < W) { const w = 14 + rng() * 52, h = (minH + (maxH - minH) * Math.pow(rng(), 1.6)) * (H / 170) * .9; const top = H - 40 - h;
@@ -20683,7 +20847,7 @@ async function run343dDetail() {
   const place = (site, i = 0) => (placements[site] || [])[i];
   // ---- signs / menu boards / noren / vending fronts: one atlas, one draw (ShaderMaterial, per-quad sway and flicker)
   const AT = 2048, AH = 2048;
-  const cvs = document.createElement('canvas'); cvs.width = AT; cvs.height = AH; const g = cvs.getContext('2d');
+  const cvs = document.createElement('canvas'); cvs.width = AT * CK352; cvs.height = AH * CK352; const g = cvs.getContext('2d'); if (PHONE352) g.scale(CK352, CK352);   /* RUN352M2 */
   const FONT = '"Noto Sans JP","Yu Gothic","Meiryo","MS Gothic","Segoe UI",sans-serif';
   g.fillStyle = '#000'; g.fillRect(0, 0, AT, AH);
   const CELL = {};                                   // id -> [x, y, w, h] in pixels
@@ -20812,7 +20976,7 @@ async function run343dDetail() {
       for (let q = 0; q < 7; q++) { const a = rr() * 6.28, sp_ = .9 + rr() * 1.6; bb([p.x, p.y, p.z], [.06, ph + (rr() - .5) * .04, per, 1], [Math.cos(a) * sp_, 1.2 + rr() * 1.4, Math.sin(a) * sp_, 0], [1, .85, .5], 4); } } res.sparks = spots.length; }
   // AR graffiti (kind 2)
   const FXA = AT;
-  const ftex = (() => { const c = document.createElement('canvas'); c.width = 2048; c.height = 1024; const x = c.getContext('2d'); x.clearRect(0, 0, 2048, 1024);
+  const ftex = (() => { const c = document.createElement('canvas'); c.width = 2048 * CK352; c.height = 1024 * CK352; const x = c.getContext('2d'); if (PHONE352) x.scale(CK352, CK352); x.clearRect(0, 0, 2048, 1024);   /* RUN352M2 */
     const glowT = (t, cx, cy, size, col, gc, rot = 0, w = '900') => { x.save(); x.translate(cx, cy); x.rotate(rot); x.font = w + ' ' + size + 'px ' + FONT; x.textAlign = 'center'; x.textBaseline = 'middle'; x.shadowColor = gc; x.shadowBlur = 18; x.fillStyle = col; x.fillText(t, 0, 0); x.shadowBlur = 0; x.lineWidth = 3; x.strokeStyle = gc; x.strokeText(t, 0, 0); x.restore(); };
     const hexF = (cx, cy, r, col) => { x.strokeStyle = col; x.lineWidth = 4; x.shadowColor = col; x.shadowBlur = 10; x.beginPath(); for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3 + Math.PI / 6; x.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); } x.closePath(); x.stroke(); x.shadowBlur = 0; };
     const brk = (x0, y0, w, h, col) => { x.strokeStyle = col; x.lineWidth = 5; const L = 34; for (const [ax, ay, sx, sy] of [[x0, y0, 1, 1], [x0 + w, y0, -1, 1], [x0, y0 + h, 1, -1], [x0 + w, y0 + h, -1, -1]]) { x.beginPath(); x.moveTo(ax, ay + sy * L); x.lineTo(ax, ay); x.lineTo(ax + sx * L, ay); x.stroke(); } };
@@ -21019,7 +21183,7 @@ void main() {
 /* RUN350S_SURROUND_END */
 addStaticBatches();
 
-if (PH352) PH352.start(scene);   /* RUN352M */
+if (PH352) PH352.start(scene, renderer);   /* RUN352M */
 /* RUN288S_STARTUP_BEGIN: startup latency, no intended visible change. The first frames used to link every shader program one by one and block on each
    (renderer.compile was never called), so the first frames took tens of seconds. After the scene is complete and batched, link all programs in parallel
    with renderer.compileAsync (KHR_parallel_shader_compile) BEFORE the first frame: (1) the scene's materials, (2) the post-processing passes' materials
@@ -21423,23 +21587,6 @@ console.log('[corner-block] ready', {
 window.__CORNER_BLOCK_READY__ = true;
 // debug handle — lets a harness drive the camera and read state without a DOM hack
 window.__CB__ = { THREE, scene, camera, renderer, controls, sim, simDebug, CFG, LANES, reflector, bloomPass, staticBatchStats, vehicleBatchStats, vehicleArchetypeStats, get socialState() { return socialState; }, get composer() { return composer; } };
-</script>
-<div id="dbg352" style="position:fixed;left:0;bottom:0;z-index:99;font:9px/12px ui-monospace,Menlo,monospace;color:#8ef0ff;background:rgba(0,0,0,.6);padding:1px 5px;border-radius:0 4px 0 0;pointer-events:none;display:none"></div>
-<script>
-(function () {
-  var el = document.getElementById('dbg352'), frames = 0, last = performance.now(), fps = 0, tex = '...';
-  (function raf() { frames++; requestAnimationFrame(raf); })();
-  setInterval(function () {
-    var now = performance.now(); fps = Math.round(frames * 1000 / (now - last)); frames = 0; last = now;
-    if (window.__TIER352__ !== 'phone') return;
-    var cb = window.__CB__; el.style.display = 'block';
-    el.textContent = 'tier ' + window.__TIER352__ + ' | dpr ' + devicePixelRatio + ' | tex ~' + tex + ' MB | calls ' + (cb && cb.renderer ? cb.renderer.info.render.calls : '-') + ' | ' + fps + ' fps';
-  }, 500);
-  setInterval(function () {
-    var cb = window.__CB__, p = window.__PHONE352__;
-    if (window.__TIER352__ === 'phone' && cb && cb.scene && p && p.estimate) p.estimate(cb.scene, function (mb) { tex = Math.round(mb); });
-  }, 5000);
-})();
 </script>
 </body>
 </html>
