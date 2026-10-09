@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Phone Test</title>
+<style>
+  :root {
+    --bg: #0b0d12; --panel: #141821; --line: #262c3a; --text: #e8ebf2; --muted: #9aa3b5;
+    --accent: #f0a84a; --ok: #5fd39a; --bad: #ff6b7a;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 var(--font); }
+  main { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 26px; margin: 0 0 8px; }
+  p { margin: 0 0 12px; color: var(--muted); }
+  ol { margin: 0 0 20px; padding-left: 20px; color: var(--muted); }
+  li { margin-bottom: 6px; }
+  .steps { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 16px 0; }
+  .steps h2 { font-size: 17px; margin: 0 0 6px; }
+  button { font: 600 16px var(--font); color: #111; background: var(--accent); border: 0; border-radius: 8px;
+    padding: 12px 16px; width: 100%; margin-top: 8px; }
+  button.secondary { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  button:disabled { opacity: .5; }
+  #status { font-weight: 600; margin: 12px 0; min-height: 24px; }
+  #status.ok { color: var(--ok); } #status.bad { color: var(--bad); }
+  pre { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px;
+    font: 12px/1.45 var(--mono); white-space: pre-wrap; word-break: break-word; max-height: 50vh; overflow: auto; }
+  canvas { display: block; width: 100%; height: 160px; border-radius: 10px; background: #000; margin-top: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Phone test for Corner Block</h1>
+  <p>This page measures what your phone can handle, so the phone version of the city fits it. Nothing is sent anywhere. You copy or share the results yourself.</p>
+
+  <div class="steps">
+    <h2>1. Speed test (about 1 minute)</h2>
+    <p>Keep the screen on and the page open until it says done.</p>
+    <button id="run">Run speed test</button>
+  </div>
+
+  <div class="steps">
+    <h2>2. Memory test (run it last)</h2>
+    <p>This fills graphics memory until the phone says stop. The page may reload or show an error. That is expected: the result is saved, so just open this page again.</p>
+    <button id="mem">Run memory test</button>
+  </div>
+
+  <div id="status"></div>
+  <pre id="out">No results yet.</pre>
+  <button id="share" class="secondary">Share results</button>
+  <button id="copy" class="secondary">Copy results</button>
+  <button id="reset" class="secondary">Clear saved results</button>
+  <canvas id="cv"></canvas>
+</main>
+<script>
+(function () {
+  'use strict';
+  var KEY = 'phone-test-v1';
+  var out = document.getElementById('out'), statusEl = document.getElementById('status'), cv = document.getElementById('cv');
+  var results = load();
+
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(results)); } catch (e) {} }
+  function show() { out.textContent = Object.keys(results).length ? JSON.stringify(results, null, 1) : 'No results yet.'; }
+  function say(t, cls) { statusEl.textContent = t; statusEl.className = cls || ''; }
+  function nextFrame() { return new Promise(function (r) { requestAnimationFrame(function () { r(); }); }); }
+  function median(a) { var s = a.slice().sort(function (x, y) { return x - y; }); return s[Math.floor(s.length / 2)]; }
+  function r2(x) { return Math.round(x * 100) / 100; }
+
+  // A memory test that was still marked as running means the tab was killed or reloaded mid-test.
+  if (results.memory && results.memory.running) {
+    results.memory.running = false;
+    results.memory.endedBy = 'tab reloaded or crashed';
+    results.memory.ceilingMB = results.memory.okMB;
+    save();
+    say('Memory test finished: the tab stopped after ' + results.memory.okMB + ' MB. Share the results below.', 'ok');
+  }
+  show();
+
+  function deviceInfo() {
+    var n = navigator;
+    return {
+      ua: n.userAgent, screen: screen.width + 'x' + screen.height, dpr: window.devicePixelRatio,
+      viewport: innerWidth + 'x' + innerHeight, cores: n.hardwareConcurrency || null, deviceMemoryGB: n.deviceMemory || null,
+      reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+      jsHeapLimitMB: performance.memory ? Math.round(performance.memory.jsHeapSizeLimit / 1048576) : null
+    };
+  }
+
+  function webglInfo() {
+    var c = document.createElement('canvas'), gl = c.getContext('webgl2');
+    if (!gl) return { webgl2: false };
+    var dbg = gl.getExtension('WEBGL_debug_renderer_info'), ext = gl.getSupportedExtensions() || [];
+    var want = ['WEBGL_compressed_texture_astc', 'WEBGL_compressed_texture_etc', 'WEBGL_compressed_texture_s3tc',
+      'EXT_texture_compression_bptc', 'EXT_color_buffer_float', 'EXT_color_buffer_half_float', 'OES_texture_float_linear',
+      'EXT_disjoint_timer_query_webgl2', 'KHR_parallel_shader_compile'];
+    var info = {
+      webgl2: true,
+      renderer: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
+      vendor: dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR),
+      maxTexture: gl.getParameter(gl.MAX_TEXTURE_SIZE), maxSamples: gl.getParameter(gl.MAX_SAMPLES),
+      maxVertexUniformVectors: gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS),
+      maxTextureUnits: gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS),
+      extensions: want.filter(function (e) { return ext.indexOf(e) >= 0; })
+    };
+    var lose = gl.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext();
+    return info;
+  }
+
+  async function webgpuInfo() {
+    if (!navigator.gpu) return { available: false, reason: 'navigator.gpu missing' };
+    try {
+      var a = await navigator.gpu.requestAdapter();
+      if (!a) return { available: false, reason: 'no adapter' };
+      var info = a.info || (a.requestAdapterInfo ? await a.requestAdapterInfo() : {});
+      var L = a.limits, feats = []; a.features.forEach(function (f) { feats.push(f); });
+      var dev = null, devErr = null;
+      try { dev = await a.requestDevice(); } catch (e) { devErr = String(e); }
+      if (dev) dev.destroy();
+      return {
+        available: true, device: !!dev, deviceError: devErr,
+        adapter: { vendor: info.vendor, architecture: info.architecture, description: info.description },
+        features: feats,
+        limits: { maxBufferSizeMB: Math.round(L.maxBufferSize / 1048576), maxStorageBindingMB: Math.round(L.maxStorageBufferBindingSize / 1048576),
+          maxTexture2D: L.maxTextureDimension2D, maxBindGroups: L.maxBindGroups }
+      };
+    } catch (e) { return { available: false, reason: String(e) }; }
+  }
+
+  function makeGL() {
+    var dpr = window.devicePixelRatio || 1;
+    cv.width = Math.round(cv.clientWidth * dpr); cv.height = Math.round(cv.clientHeight * dpr);
+    var gl = cv.getContext('webgl2', { antialias: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
+    return gl;
+  }
+  function program(gl, vs, fs) {
+    function sh(t, s) { var o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o);
+      if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; }
+    var p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
+    gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); return p;
+  }
+  // readPixels forces the GPU to finish, so "total" includes GPU time, "submit" is CPU time only.
+  function sync(gl) { var px = new Uint8Array(4); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); }
+
+  // Many small draws, each with its own VAO bind and uniform upload: close to how three.js submits a scene.
+  async function drawCallTest(gl) {
+    var p = program(gl,
+      '#version 300 es\nin vec2 a; uniform vec4 u; void main(){ gl_Position = vec4(a * u.z + u.xy, 0., 1.); }',
+      '#version 300 es\nprecision mediump float; uniform vec4 c; out vec4 o; void main(){ o = c; }');
+    var uLoc = gl.getUniformLocation(p, 'u'), cLoc = gl.getUniformLocation(p, 'c');
+    var N = 1600, vaos = [];
+    for (var i = 0; i < N; i++) {
+      var v = gl.createVertexArray(); gl.bindVertexArray(v);
+      var b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, 0, 1]), gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0); vaos.push(v);
+    }
+    gl.useProgram(p);
+    var res = {};
+    var counts = [100, 300, 600, 1000, 1400];
+    for (var k = 0; k < counts.length; k++) {
+      var n = counts[k], sub = [], tot = [];
+      for (var f = 0; f < 40; f++) {
+        await nextFrame();
+        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight); gl.clear(gl.COLOR_BUFFER_BIT);
+        var t0 = performance.now();
+        for (var j = 0; j < n; j++) {
+          gl.bindVertexArray(vaos[j]);
+          gl.uniform4f(uLoc, ((j * 37) % 100) / 50 - 1, ((j * 53) % 100) / 50 - 1, .02, 0);
+          gl.uniform4f(cLoc, (j % 7) / 7, (j % 5) / 5, (j % 3) / 3, 1);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+        }
+        var t1 = performance.now(); sync(gl); var t2 = performance.now();
+        if (f >= 8) { sub.push(t1 - t0); tot.push(t2 - t0); }
+      }
+      res[n] = { submitMs: r2(median(sub)), totalMs: r2(median(tot)), usPerDraw: r2(median(sub) * 1000 / n) };
+      say('Speed test: ' + n + ' draw calls done');
+    }
+    return res;
+  }
+
+  // Same draws, but switching between 24 shader programs and 16 textures like a real scene with many materials.
+  async function mixedDrawTest(gl) {
+    var progs = [], N = 1400, P = 24, T = 16;
+    for (var k = 0; k < P; k++) {
+      var p = program(gl,
+        '#version 300 es\nin vec2 a; uniform vec4 u; out vec2 v; void main(){ v = a * .5 + .5; gl_Position = vec4(a * u.z + u.xy, 0., 1.); }',
+        '#version 300 es\nprecision mediump float; uniform sampler2D s; uniform vec4 c; in vec2 v; out vec4 o;\n' +
+        'void main(){ o = texture(s, v * ' + (1 + k) + '.0) * c + vec4(' + (k / P).toFixed(3) + '); }');
+      progs.push({ p: p, u: gl.getUniformLocation(p, 'u'), c: gl.getUniformLocation(p, 'c'), s: gl.getUniformLocation(p, 's') });
+    }
+    var texs = [];
+    for (k = 0; k < T; k++) {
+      var t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+      var px = new Uint8Array(256 * 256 * 4); for (var i = 0; i < px.length; i++) px[i] = (i * (k + 3)) & 255;
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 256, 256, 0, gl.RGBA, gl.UNSIGNED_BYTE, px); gl.generateMipmap(gl.TEXTURE_2D);
+      texs.push(t);
+    }
+    var vaos = [];
+    for (i = 0; i < N; i++) {
+      var v = gl.createVertexArray(); gl.bindVertexArray(v);
+      var b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, 0, 1]), gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0); vaos.push(v);
+    }
+    // Draw every program once first, so shader compile time is not counted.
+    for (k = 0; k < P; k++) { gl.useProgram(progs[k].p); gl.bindVertexArray(vaos[0]); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+    sync(gl);
+    var res = {}, counts = [300, 700, 1000, 1400];
+    for (var c = 0; c < counts.length; c++) {
+      var n = counts[c], sub = [], tot = [];
+      for (var f = 0; f < 40; f++) {
+        await nextFrame();
+        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight); gl.clear(gl.COLOR_BUFFER_BIT);
+        var t0 = performance.now();
+        for (var j = 0; j < n; j++) {
+          var pr = progs[(j * 7) % P];
+          gl.useProgram(pr.p);
+          gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texs[(j * 5) % T]); gl.uniform1i(pr.s, 0);
+          gl.bindVertexArray(vaos[j]);
+          gl.uniform4f(pr.u, ((j * 37) % 100) / 50 - 1, ((j * 53) % 100) / 50 - 1, .02, 0);
+          gl.uniform4f(pr.c, 1, (j % 5) / 5, (j % 3) / 3, 1);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+        }
+        var t1 = performance.now(); sync(gl); var t2 = performance.now();
+        if (f >= 8) { sub.push(t1 - t0); tot.push(t2 - t0); }
+      }
+      res[n] = { submitMs: r2(median(sub)), totalMs: r2(median(tot)), usPerDraw: r2(median(tot) * 1000 / n) };
+      say('Speed test: ' + n + ' mixed draw calls done');
+    }
+    return res;
+  }
+
+  // One indexed mesh of tiny triangles spread over the canvas: vertex and triangle throughput.
+  async function triangleTest(gl) {
+    var p = program(gl,
+      '#version 300 es\nin vec2 a; void main(){ gl_Position = vec4(a, 0., 1.); }',
+      '#version 300 es\nprecision mediump float; out vec4 o; void main(){ o = vec4(.9, .5, .2, 1.); }');
+    gl.useProgram(p);
+    var res = {}, targets = [400000, 1000000, 2700000];
+    for (var k = 0; k < targets.length; k++) {
+      var tris = targets[k], side = Math.ceil(Math.sqrt(tris / 2)), nv = (side + 1) * (side + 1);
+      var pos = new Float32Array(nv * 2), idx = new Uint32Array(side * side * 6), q = 0;
+      for (var y = 0; y <= side; y++) for (var x = 0; x <= side; x++) { var o = (y * (side + 1) + x) * 2; pos[o] = x / side * 2 - 1; pos[o + 1] = y / side * 2 - 1; }
+      for (y = 0; y < side; y++) for (x = 0; x < side; x++) { var a = y * (side + 1) + x, b = a + 1, c = a + side + 1, d = c + 1;
+        idx[q++] = a; idx[q++] = b; idx[q++] = c; idx[q++] = b; idx[q++] = d; idx[q++] = c; }
+      var vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+      var vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, pos, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+      var ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
+      var tot = [];
+      for (var f = 0; f < 25; f++) {
+        await nextFrame();
+        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight); gl.clear(gl.COLOR_BUFFER_BIT);
+        var t0 = performance.now(); gl.drawElements(gl.TRIANGLES, idx.length, gl.UNSIGNED_INT, 0); sync(gl);
+        if (f >= 5) tot.push(performance.now() - t0);
+      }
+      res[tris] = { totalMs: r2(median(tot)) };
+      gl.deleteBuffer(vb); gl.deleteBuffer(ib); gl.deleteVertexArray(vao);
+      say('Speed test: ' + tris + ' triangles done');
+    }
+    return res;
+  }
+
+  // A full-screen shader with some per-pixel work, drawn 4 times (overdraw), at several render resolutions.
+  async function fillTest(gl) {
+    var p = program(gl,
+      '#version 300 es\nin vec2 a; void main(){ gl_Position = vec4(a, 0., 1.); }',
+      '#version 300 es\nprecision highp float; uniform float t; out vec4 o;\n' +
+      'void main(){ vec2 q = gl_FragCoord.xy * .01; float s = 0.; for (int i = 0; i < 24; i++) { q = vec2(q.x * q.y + t, sin(q.x + q.y)); s += q.x; }\n' +
+      ' o = vec4(fract(s), .2, .4, .25); }');
+    gl.useProgram(p); var tLoc = gl.getUniformLocation(p, 't');
+    var vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+    var b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    var res = {}, native = window.devicePixelRatio || 1, scales = [1, 1.5, 2, native].filter(function (s, i, a) { return s <= native && a.indexOf(s) === i; });
+    for (var k = 0; k < scales.length; k++) {
+      var s = scales[k], w = Math.round(innerWidth * s), h = Math.round(innerHeight * s);
+      cv.width = w; cv.height = h;
+      var tot = [];
+      for (var f = 0; f < 25; f++) {
+        await nextFrame();
+        gl.viewport(0, 0, w, h); gl.clear(gl.COLOR_BUFFER_BIT);
+        var t0 = performance.now();
+        for (var i = 0; i < 4; i++) { gl.uniform1f(tLoc, f * .01 + i); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+        sync(gl); if (f >= 5) tot.push(performance.now() - t0);
+      }
+      res['dpr' + s] = { pixels: w + 'x' + h, totalMs: r2(median(tot)) };
+      say('Speed test: resolution ' + s + 'x done');
+    }
+    gl.disable(gl.BLEND);
+    return res;
+  }
+
+  document.getElementById('run').onclick = async function () {
+    var btn = this; btn.disabled = true; say('Speed test running. Keep the screen on.');
+    try {
+      results.device = deviceInfo();
+      results.webgl = webglInfo();
+      say('Checking WebGPU');
+      results.webgpu = await webgpuInfo();
+      var gl = makeGL();
+      if (!gl) throw new Error('WebGL2 not available');
+      results.drawCalls = await drawCallTest(gl);
+      gl = makeGL(); results.mixedDrawCalls = await mixedDrawTest(gl);
+      gl = makeGL(); results.triangles = await triangleTest(gl);
+      results.fill = await fillTest(gl);
+      results.speedTestAt = new Date().toISOString();
+      save(); show(); say('Speed test done. Now run the memory test, or share the results.', 'ok');
+    } catch (e) {
+      results.speedError = String(e && e.message || e); save(); show(); say('Speed test stopped: ' + results.speedError, 'bad');
+    }
+    btn.disabled = false;
+  };
+
+  // Allocates 16 MB GPU textures and forces each one to exist by clearing it through a framebuffer.
+  // Progress is saved before each step, so a tab crash still leaves the last good amount.
+  document.getElementById('mem').onclick = async function () {
+    this.disabled = true;
+    var c = document.createElement('canvas'); c.width = c.height = 16;
+    var gl = c.getContext('webgl2'), lost = false;
+    if (!gl) { say('WebGL2 not available', 'bad'); return; }
+    c.addEventListener('webglcontextlost', function (e) { lost = true; e.preventDefault(); });
+    // ?cap=N lowers the ceiling, so the test can be tried on a desktop without filling its GPU.
+    var cap = Math.min(3072, +(new URLSearchParams(location.search).get('cap')) || 3072);
+    results.memory = { running: true, okMB: 0, stepMB: 16, capMB: cap };
+    save();
+    var fb = gl.createFramebuffer(), keep = [], mb = 0;
+    try {
+      while (mb < cap) {
+        var t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+        gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, 2048, 2048);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+        gl.viewport(0, 0, 2048, 2048); gl.clearColor(Math.random(), .5, .5, 1); gl.clear(gl.COLOR_BUFFER_BIT);
+        sync(gl);
+        var err = gl.getError();
+        if (lost || gl.isContextLost()) { results.memory.endedBy = 'graphics context lost'; break; }
+        if (err !== gl.NO_ERROR) { results.memory.endedBy = 'GL error ' + err; break; }
+        keep.push(t); mb += 16; results.memory.okMB = mb; save();
+        say('Memory test: ' + mb + ' MB of graphics memory in use');
+        if (mb % 64 === 0) await nextFrame();
+      }
+      if (!results.memory.endedBy) results.memory.endedBy = 'reached the ' + cap + ' MB cap';
+    } catch (e) { results.memory.endedBy = 'exception: ' + String(e && e.message || e); }
+    results.memory.running = false; results.memory.ceilingMB = results.memory.okMB; save();
+    keep.forEach(function (t) { gl.deleteTexture(t); });
+    var lose = gl.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext();
+    show(); say('Memory test done: ' + results.memory.okMB + ' MB (' + results.memory.endedBy + '). Share the results.', 'ok');
+    this.disabled = false;
+  };
+
+  document.getElementById('copy').onclick = async function () {
+    var text = out.textContent;
+    try { await navigator.clipboard.writeText(text); say('Copied. Paste it into the chat.', 'ok'); }
+    catch (e) { var r = document.createRange(); r.selectNodeContents(out); var s = getSelection(); s.removeAllRanges(); s.addRange(r); say('Text selected. Use Copy from the menu.'); }
+  };
+  document.getElementById('share').onclick = async function () {
+    if (!navigator.share) { document.getElementById('copy').click(); return; }
+    try { await navigator.share({ title: 'Phone test results', text: out.textContent }); } catch (e) {}
+  };
+  document.getElementById('reset').onclick = function () { results = {}; try { localStorage.removeItem(KEY); } catch (e) {} show(); say(''); };
+})();
+</script>
+</body>
+</html>
