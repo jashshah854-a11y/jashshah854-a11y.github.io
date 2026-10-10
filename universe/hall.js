@@ -469,14 +469,15 @@ export function buildHall({scene, lite, perpetua, video = true}){
     root.traverse(o => {
       if (!o.isMesh || o.isInstancedMesh || o.userData.keep || hasSkipAncestor(o)) return;
       const mat = o.material;
-      if (Array.isArray(mat) || mat.isShaderMaterial || !o.geometry.index || mat.alphaMap) return;
+      if (Array.isArray(mat) || mat.isShaderMaterial || mat.alphaMap) return;
       eligible.push(o);
     });
     const keep = ['position', 'normal', 'uv'];
     for (const o of eligible) {
       const mat = o.material;
       const additiveGlow = mat.isMeshBasicMaterial && mat.blending === THREE.AdditiveBlending && mat.map;
-      const key = additiveGlow ? 'add:' + mat.map.uuid : mat.uuid + ':' + o.renderOrder;
+      // mergeGeometries needs all-indexed or all-non-indexed input; RoundedBoxGeometry (decks, trims) is non-indexed
+      const key = (o.geometry.index ? 'i:' : 'n:') + (additiveGlow ? 'add:' + mat.map.uuid : mat.uuid + ':' + o.renderOrder);
       if (!groups.has(key)) groups.set(key, {mat, glow:!!additiveGlow, order:o.renderOrder, list:[]});
       groups.get(key).list.push(o);
     }
