@@ -112,7 +112,7 @@ a:hover{color:#000}
   #stage{position:relative;left:auto;top:auto;width:100%;height:auto;min-height:100dvh;transform:none;display:flex;flex-direction:column;overflow:visible;padding-bottom:70px}
   #panel,.slide.on{display:contents!important}
   .slide{position:static;padding:0}
-  .hd{position:static;order:1;padding:16px 16px 10px;font-size:38px!important;line-height:.92!important}
+  .hd{position:static;order:1;padding:62px 16px 10px;font-size:38px!important;line-height:.92!important}
   .slide[data-n="1"] .hd{font-size:50px!important}
   #viz{position:relative;order:2;width:100%;height:min(46dvh,420px);border-bottom:3px dashed var(--blue)}
   #ovs{position:static;order:3;width:100%;height:auto;pointer-events:auto}
@@ -130,7 +130,12 @@ a:hover{color:#000}
   .nvc{display:flex;align-items:center;flex:1;justify-content:center;font-size:12px;border-right:1px solid var(--rule)}
   #nb-src{order:5;border-right:0}
   #src{width:100%;border-left:0;padding:20px 16px 80px;z-index:40;position:fixed}
+  #src li a{display:inline-block;padding:10px 0}
   .chip{min-height:44px}
+  html .hall-pill[data-at]{bottom:auto;top:calc(12px + env(safe-area-inset-top))}
+  .ref{font-size:12px;position:relative;z-index:3}
+  .ref::after{content:"";position:absolute;inset:-14px -8px}
+  .ref+.ref{margin-left:17px}
 }
 </style>
 <!--hall-pill-css--><link rel="stylesheet" href="../../universe/hallpill.css"><!--/hall-pill-css--></head>

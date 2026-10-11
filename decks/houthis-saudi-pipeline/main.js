@@ -708,6 +708,7 @@ function build3D() {
     pinObjs.forEach(po => { po.g.visible = bProg >= po.d - .2 || (REDUCED && bProgT >= po.d); });
     rings.forEach(r => { const on = curSC.rings && ((caseSel === 'A' && (r.k === 'yan')) || (caseSel === 'B' && (r.k === 'bab' || r.k === 'yan')) || (caseSel === 'C' && (r.k === 'bab' || r.k === 'pipe')) || (caseSel === 'D' && r.k === 'hz')); r.r.visible = !!on; r.r.scale.setScalar(S * (1 + (REDUCED ? 0 : .06 * Math.sin(tt * 2.4)))); });
     /* labels */
+    const mobQ = [];
     for (const l of LB) {
       const vis = l.slides.includes(cur + 1);
       let txt = typeof l.txt === 'function' ? l.txt() : l.txt;
@@ -715,13 +716,34 @@ function build3D() {
       const a = typeof l.anchor === 'function' ? l.anchor() : l.anchor;
       tmp.copy(a).project(camera);
       if (Math.abs(tmp.x) > 1.05 || Math.abs(tmp.y) > 1.05) { if (l.vis) { l.el.style.visibility = 'hidden'; l.vis = false; } continue; }
-      if (txt !== l.last) { l.el.textContent = txt; l.last = txt; }
+      if (txt !== l.last) { l.el.textContent = txt; l.last = txt; l.w = 0; }
       const x = (tmp.x * .5 + .5) * W + (l.dx || 0), y = (-tmp.y * .5 + .5) * H + (l.dy || 0);
+      if (MOBILE) { if (!l.w) { l.w = l.el.offsetWidth || 1; l.h = l.el.offsetHeight || 1; } mobQ.push({ l, x, y }); continue; }
       const tr = l.al === 'l' ? 'translate(0,-50%)' : l.al === 'r' ? 'translate(-100%,-50%)' : 'translate(-50%,-100%)';
       l.el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) ` + tr;
       if (!l.vis) { l.el.style.visibility = 'visible'; l.vis = true; }
     }
+    if (MOBILE) placeLabelsPhone(mobQ);
     renderer.render(scene, camera);
+  }
+  /* phone: the canvas is small, so keep every label inside it and push overlapping ones down (first declared keeps its place) */
+  function placeLabelsPhone(q) {
+    const rects = [];
+    for (const { l, x, y } of q) {
+      const w = l.w, h = l.h;
+      let left = l.al === 'l' ? x : l.al === 'r' ? x - w : x - w / 2;
+      let top = l.al === 'l' || l.al === 'r' ? y - h / 2 : y - h;
+      left = Math.max(2, Math.min(W - w - 2, left));
+      for (let t = 0; t < 6; t++) {
+        const hit = rects.find(r => left < r.r + 2 && left + w > r.l - 2 && top < r.b + 1 && top + h > r.t - 1);
+        if (!hit) break;
+        top = hit.b + 2;
+      }
+      top = Math.max(2, Math.min(H - h - 2, top));
+      rects.push({ l: left, r: left + w, t: top, b: top + h });
+      l.el.style.transform = `translate(${left.toFixed(1)}px,${top.toFixed(1)}px)`;
+      if (!l.vis) { l.el.style.visibility = 'visible'; l.vis = true; }
+    }
   }
   let caseSel = 'A';
   return {
@@ -842,7 +864,15 @@ $$('.stepper').forEach(b => b.addEventListener('click', doStep));
 /* nav */
 $('#b-next').addEventListener('click', () => (MOBILE ? scrollToSlide(cur + 1) : next()));
 $('#b-prev').addEventListener('click', () => (MOBILE ? scrollToSlide(cur - 1) : prev()));
-function scrollToSlide(i) { i = clamp(i, 0, N - 1); slides[i].scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' }); }
+function scrollToSlide(i) {
+  i = clamp(i, 0, N - 1); const s = slides[i];
+  s.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
+  /* leaving a plate hides its stepper, which pulls the layout above the target up; align again once the scroll has settled */
+  const realign = () => { if (Math.abs(s.getBoundingClientRect().top) > 3) s.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  clearTimeout(scrollToSlide.t);
+  if ('onscrollend' in window) addEventListener('scrollend', () => setTimeout(realign, 0), { once: true });
+  else scrollToSlide.t = setTimeout(realign, 800);
+}
 addEventListener('keydown', e => {
   if ($('#src').classList.contains('open')) { if (e.key === 'Escape') closeSrc(); return; }
   if (e.metaKey || e.ctrlKey || e.altKey) return;

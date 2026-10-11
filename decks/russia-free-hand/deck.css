@@ -301,6 +301,14 @@ html.reader .timeline li{padding-right:0}
 html.reader .reset{display:inline-flex;align-items:center}
 html.reader .panel-h{display:none}
 html.reader .slide.gauge-slide .viz-mount{height:min(80vw,340px)}
+/* phone: a Next tap scrolls the sheet to the top, so keep its heading clear of the Back to the hall pill */
+html.reader .slide{scroll-margin-top:30px}
+/* phone: nothing under 12 px; the two charts keep their labels apart by staggering the ones that would collide */
+html.reader .col,html.reader .mlabs,html.reader .hb-v em,html.reader .ctl .ends,html.reader .gl,html.reader #sources-list a{font-size:12px}
+html.reader .col.gap .v{font-size:12px;white-space:normal;text-align:center;line-height:1.1;width:46px;letter-spacing:-.02em}
+html.reader .col.gap:nth-child(even) .v{margin-bottom:34px}
+html.reader #charts-air .chart:nth-child(2) .col:not(.gap):nth-child(even) .v{margin-bottom:15px}
+html.reader #sources-list a{display:inline-block;padding:10px 0}
 
 @media (prefers-reduced-motion:reduce){
   *{transition:none!important;animation:none!important}

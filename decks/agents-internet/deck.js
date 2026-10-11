@@ -1287,12 +1287,14 @@ addEventListener('keydown', e => {
 addEventListener('hashchange', () => { const n = parseInt(location.hash.slice(1), 10); if (n && n !== cur) goto(n); });
 // swipe
 let sx0 = null, sy0 = 0;
-document.addEventListener('pointerdown', e => { if (e.pointerType === 'touch') { sx0 = e.clientX; sy0 = e.clientY; } });
-document.addEventListener('pointerup', e => {
+// touch events, not pointer events: on a phone the browser takes a swipe for a pan and cancels the pointer, so pointerup never arrives
+document.addEventListener('touchstart', e => { sx0 = e.touches[0].clientX; sy0 = e.touches[0].clientY; }, { passive: true });
+document.addEventListener('touchend', e => {
   if (sx0 === null) return;
-  const dx = e.clientX - sx0, dy = e.clientY - sy0; sx0 = null;
+  const t = e.changedTouches[0], dx = t.clientX - sx0, dy = t.clientY - sy0; sx0 = null;
+  if (e.target.closest && e.target.closest('#src')) return;
   if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) { dx < 0 ? next() : prevSlide(); }
-});
+}, { passive: true });
 // chips
 $$('.chip').forEach(c => c.addEventListener('click', () => selectTier(+c.dataset.tier, true)));
 

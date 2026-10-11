@@ -145,7 +145,7 @@ html.m #stage{width:100%!important;height:auto!important;overflow:visible;--u:.5
 html.m #shade,html.m #frame{display:none}
 html.m #glwrap{position:relative;inset:auto;width:100%;height:min(88vw,380px);border:1.5px solid var(--ink);background:var(--paper);z-index:1}
 html.m #stage.cover-on #glwrap{visibility:visible}
-html.m .slide{position:relative;inset:auto;visibility:visible;opacity:1;pointer-events:auto;padding:28px 18px 8px;border-top:1px solid var(--rule);transition:none}
+html.m .slide{position:relative;inset:auto;visibility:visible;opacity:1;pointer-events:auto;padding:64px 18px 20px;border-top:1px solid var(--rule);transition:none}
 html.m .slide.cover{padding:0;min-height:100svh;border-top:0;overflow:hidden}
 html.m .slide.cover .cbg{position:absolute}
 html.m .slide.cover .ctext{left:18px;right:18px;top:26px;gap:12px}
@@ -167,7 +167,14 @@ html.m #count{background:none;padding:0;font-size:12px}
 html.m .btn{min-height:44px;font-size:13px}
 html.m #bar{font-size:12px}
 html.m .slide:last-of-type{padding-bottom:96px}
-html.m .lb{font-size:10px}
+html.m .slide.cover .ctext{top:66px}
+html.m .stepper .st b{font-size:12px}
+html.m a[data-ref]{position:relative;z-index:3}
+html.m a[data-ref]::after{content:"";position:absolute;inset:-14px -12px}
+html.m #scen thead tr{cursor:default}
+html.m #src li a{display:inline-block;padding:10px 0}
+html.m .hall-pill[data-at]{bottom:auto;top:calc(12px + env(safe-area-inset-top))}
+html.m .lb{font-size:12px;white-space:normal;max-width:min(300px,calc(100% - 8px))}
 html.m .lb[data-m="0"]{display:none}
 html.m #src .panel{padding:18px}
 </style>

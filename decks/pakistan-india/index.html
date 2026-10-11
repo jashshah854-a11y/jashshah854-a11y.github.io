@@ -131,7 +131,7 @@ html.mob{overflow:auto;height:auto}
 html.mob body{overflow:visible;height:auto}
 body.mob #stage{position:relative;left:auto;top:auto;width:100%;height:auto;transform:none!important;overflow:visible;padding-bottom:84px}
 body.mob #viz{position:sticky;top:0;height:42dvh;z-index:5;border-bottom:1px solid var(--hair)}
-body.mob #cntm{display:block;position:absolute;left:12px;top:10px;font-weight:500;font-size:14px;z-index:4;text-shadow:0 1px 3px #000}
+body.mob #cntm{display:block;position:absolute;left:12px;top:62px;font-weight:500;font-size:14px;z-index:4;text-shadow:0 1px 3px #000}
 body.mob #fade{position:absolute}
 body.mob .slide{position:relative;inset:auto;opacity:1;visibility:visible;padding:22px 16px 18px;z-index:3;transition:none;scroll-margin-top:calc(42dvh + 2px)}
 body.mob .lb.sm{display:none}
@@ -149,6 +149,7 @@ body.mob .hd,body.mob .chips,body.mob .side,body.mob .cap,body.mob .ver,body.mob
 body.mob .hd{font-size:30px;margin-bottom:12px}
 body.mob .chips{margin-bottom:12px}
 body.mob .chip{min-height:44px}
+body.mob .srcs button{min-width:40px;height:40px}
 body.mob .side{margin-bottom:10px;padding:18px 22px}
 body.mob .side p{font-size:16px}
 body.mob .noacct .side{display:none}
@@ -1215,7 +1216,8 @@ function projectLabels(){
     const l = LB[k]; if (!l.on) continue;
     const p = l.getPos(); tmpV.copy(p).project(cm);
     const vis = tmpV.z < 1 && Math.abs(tmpV.x) < 1.1 && Math.abs(tmpV.y) < 1.1;
-    const x = (tmpV.x * 0.5 + 0.5) * R.W + l.dx - (l.right ? l.e.offsetWidth : 0), y = (-tmpV.y * 0.5 + 0.5) * R.H + l.dy;
+    let x = (tmpV.x * 0.5 + 0.5) * R.W + l.dx - (l.right ? l.e.offsetWidth : 0); const y = (-tmpV.y * 0.5 + 0.5) * R.H + l.dy;
+    if (mob) x = Math.max(4, Math.min(R.W - l.e.offsetWidth - 4, x));
     l.e.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px)';
     l.e.style.visibility = vis ? 'visible' : 'hidden';
   }
