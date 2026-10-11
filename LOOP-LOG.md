@@ -8,6 +8,8 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - [ ] Reduced motion: wheel and swipe do not step stops (bar hint says swipe); OS setting read once at load. Launchboard has no prefers-reduced-motion rule.
 - [ ] Resume link: add resume.pdf ONLY when Jash hands over the approved file.
 
+- [ ] Launchboard source: launchboard/ is a static export of outputs/launchboard (Next.js 15 + Tailwind v4). phone-fixes.css lives only in the export; a re-export drops it. Port it into the source (globals or layout link) before the next build. Owner-level source fixes: launch-bar titles truncate on phones (list view or two-line bar), scroll containers have no scroll cue and open at the left edge (latest data off screen), nav wrap is a stand-in for a phone menu, ?note=restricted sticks after switching roles.
+
 ## Rounds
 
 ### Round 1 (2026-10-10): static batching now merges non-indexed geometry
@@ -55,3 +57,9 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - Phone calls, before -> after: vitrine 100/103 -> 89/89, hall peak 100 -> 89, start 61 -> 58, end 62 -> 55. No stop worse. Every phone stop now under 100 at peak.
 - Pixel diff in reduced-motion stills: within the noise floor on phone and desktop.
 - Gate: PASS at all three sizes; keyboard walk passes in both motion modes.
+
+### Round 8 (2026-10-11): Launchboard demo on phones (worker E, reviewed and merged)
+- Audit: 12 pages x 3 roles x 2 phone sizes = 72 loads. Section nav scrolled sideways with 3 of 7 tabs off screen; revenue chart labels rendered at 9.5 px; 252 text runs under 12 px; 346 tap targets under 40 px.
+- Change: launchboard/phone-fixes.css, one max-width:640px block, linked from all 194 exported pages. Nav wraps to two rows; tap areas grow with padding cancelled by negative margin (no layout shift); 11.5 px labels to 12 px; chart min-width 620 -> 800 so labels render 12 px+.
+- After: small text 252 -> 0, short targets 346 -> 0, pages with nav off screen 59 -> 0. Desktop 1440 screenshots byte-identical.
+- Gate: PASS; sub-page sweep clean.
