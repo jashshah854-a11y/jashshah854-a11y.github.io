@@ -7,7 +7,9 @@
 .hall-pill svg{fill:none;stroke:currentColor;stroke-width:1.6;flex:none}
 .hall-pill[data-at=tl]{top:calc(var(--hp-t,12px) + env(safe-area-inset-top))}
 .hall-pill[data-at=bl]{bottom:calc(var(--hp-b,12px) + env(safe-area-inset-bottom))}
-@media (max-width:700px){.hall-pill{padding:0 12px 0 10px;gap:6px;font-size:13px;left:max(8px,env(safe-area-inset-left))}}
+/* Phones: a 44 px round arrow. The worded pill covered content on small screens; the label stays in the
+   DOM at font-size 0, so screen readers still hear "Back to the hall". */
+@media (max-width:700px){.hall-pill{width:44px;height:44px;padding:0;gap:0;justify-content:center;font-size:0;left:max(8px,env(safe-area-inset-left))}}
 @media (min-width:701px){
   .hall-pill{left:16px}
   .hall-pill[data-at=tl]{top:calc(var(--hp-tw,var(--hp-t,12px)) + env(safe-area-inset-top))}

@@ -226,6 +226,8 @@ body { background: radial-gradient(ellipse at 64% 35%, #fffcf3, #f3efe5 70%); }
 .inbox-breadcrumb button { border: 0; padding: 5px 4px; min-height: 32px; font-size: 10px; text-decoration: underline; text-underline-offset: 3px; margin-left: auto; }
 @media(max-width:370px) { .inbox-breadcrumb span:last-child { display: none; } }
 </style><style id="phone-fixes">
+/* Phones: the hall arrow sits bottom-left over the stage; start the note after it (it also carries the 3D-unavailable message, so it stays visible). */
+@media (max-width:700px){#render-note{margin-left:34px}}
 @media(pointer:coarse) and (max-width:1090px){
 .top-actions button:last-child{min-width:40px}
 .brand,.top-actions button,.viewbar button,.scene-bottom button,.journey-stops button,.watch,.message-card .text-button,.footnote button,.inbox-breadcrumb button,.inbox-folders > button{min-height:40px}

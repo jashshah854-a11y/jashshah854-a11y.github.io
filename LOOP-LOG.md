@@ -110,3 +110,9 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - Fixed: Pipeline forecast company links (18 px), Automations rule links (23 px) and the campaign Linked launch link (18 px) now have 40 px tap areas via the existing phone padding/negative-margin rule (tap-pad class); page heights unchanged. Re-measured 468 page loads: only 2 links inside running sentences remain short.
 - Rejected in review: labels printed under narrow All-launches bars (source commit 1b7a1a8); reverted in source commit 99864fd before export.
 - Checks: typecheck clean, 231/231 tests, NDA gate OK; gate PASS; Launchboard sweep clean.
+
+### Round 17 (2026-10-11): the hall pill is a round arrow on phones
+- Decision (Jash asked the loop to decide by his taste): on phones the worded Back to the hall pill (137x44) became a 44x44 round arrow; same reasoning as his earlier call for light arrows over a heavy bottom bar. Desktop keeps the label. The label stays in the DOM at font-size 0, so screen readers still hear it.
+- Before -> after, elements the pill covered in the first view across 13 pages: 390x844 4 -> 1, 360x740 2 -> 1. The one left on agents-internet is the headline box edge, not text (checked in a screenshot).
+- Jev: its note line (also used for the 3D-unavailable message, so it stays visible) starts 34 px in on phones to clear the arrow.
+- Gate PASS; sub-page sweep clean.
