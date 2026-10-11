@@ -7,7 +7,7 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - [ ] Reduced motion: the OS setting is read once at load (a mid-session change needs a reload). Launchboard has no prefers-reduced-motion rule.
 - [ ] Resume link: add resume.pdf ONLY when Jash hands over the approved file.
 
-- [ ] Launchboard: in the All launches window 17 of 19 bars are 50-97 px wide, so titles still cut at two lines (the List tab shows them in full); a label-outside layout would fix it. Pipeline deal links (18 px) and the Automations draft link (23 px) are short tap targets.
+- [ ] Launchboard All launches window: 17 of 19 bars too narrow for their titles on phones (List tab shows them in full). Tried labels under narrow bars (worker K): rejected in review, read busier and still clipped at the screen edge. Needs a design call, not a patch.
 
 - [ ] Cyberpunk page (owned by the Corner Block chat, report only): "How I made it" link is 105x20 on phones; in landscape 844x390 the hero video is 718 px tall.
 
@@ -105,3 +105,8 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - Fixed: launch titles in full on phones (Today 4/6 -> 6/6, Launches 6 weeks 3/6 -> 6/6, quarter 4/6 -> 6/6, client 0/2 -> 2/2); timelines and the revenue chart open on today / the latest week with an edge-fade scroll cue (new ScrollRegion component replaces TimelineScroller); section nav is one scrollable row that centres the active tab (replaces the two-row wrap); ?note=restricted is cleared on role change.
 - Deploy: launchboard/ replaced with the new out/; phone-fixes.css and its 194 links removed (the build now carries the rules; keeping the old file would have re-applied the wrap). Diff vs old export: no other post-export patches existed.
 - Verified: 60 page-and-role loads with 0 console errors and 0 failed requests; desktop 1440 PNGs byte-identical on 6 pages; gate PASS; Launches tab shows the active tab in view.
+
+### Round 16 (2026-10-11): Launchboard tap areas (worker K, partly merged)
+- Fixed: Pipeline forecast company links (18 px), Automations rule links (23 px) and the campaign Linked launch link (18 px) now have 40 px tap areas via the existing phone padding/negative-margin rule (tap-pad class); page heights unchanged. Re-measured 468 page loads: only 2 links inside running sentences remain short.
+- Rejected in review: labels printed under narrow All-launches bars (source commit 1b7a1a8); reverted in source commit 99864fd before export.
+- Checks: typecheck clean, 231/231 tests, NDA gate OK; gate PASS; Launchboard sweep clean.
