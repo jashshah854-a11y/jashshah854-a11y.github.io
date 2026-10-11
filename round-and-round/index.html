@@ -108,7 +108,8 @@ dialog { color: var(--ink); background: var(--cream); width: min(530px,calc(100%
   .intro .eyebrow { font-size: 10px; }.intro .lede { font-size: 12px; }.metrics { top: 96px; }.metrics span { font-size: 9px; }
   .inspect-button { min-height: 40px; font-size: 12px; }
   .viewbar button { font-size: 11px; min-height: 40px; }.viewbar #home { min-width: 40px; }
-  .orbit-hint { top: 56px; bottom: auto; left: 20px; max-width: calc(100% - 40px); font-size: 10px; pointer-events: none; }
+  /* No free spot on a phone stage: the top crosses the machine, the bottom holds the hall pill and Find one marble. Touch users drag by default. */
+  .orbit-hint { display: none; }
   #rendererNote:not([hidden]) + .orbit-hint { top: 96px; }
   .highlight { min-height: 40px; font-size: 11px; }
   #status-kicker { font-size: 10px; }
