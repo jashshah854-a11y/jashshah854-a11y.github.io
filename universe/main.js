@@ -208,6 +208,23 @@ addEventListener('wheel', onInput, {passive:true});
 addEventListener('touchstart', e => { if (e.target.closest?.('#stopbar')) return; touching = true; cancelGlide(); clearTimeout(idleT); }, {passive:true});
 addEventListener('touchend', e => { if (e.target.closest?.('#stopbar')) return; touching = false; armSnap(); }, {passive:true});
 addEventListener('touchcancel', () => { touching = false; armSnap(); }, {passive:true});
+/* Reduced motion has no scroll camera, so the copy's "scroll" and "swipe" would do nothing: one wheel gesture
+   or one swipe steps one still. Trackpad inertia keeps a gesture alive until the wheel has been quiet for 500 ms. */
+let stillWheelAt = 0, swipe = null;
+const inSheet = t => t.closest?.('dialog, #worlds, #contact, #stopbar');
+addEventListener('wheel', e => {
+  if (mode === 'gl' || Math.abs(e.deltaY) < 4 || inSheet(e.target)) return;
+  const now = performance.now(), fresh = now - stillWheelAt > 500;
+  stillWheelAt = now;
+  if (fresh) stepBy(Math.sign(e.deltaY));
+}, {passive:true});
+addEventListener('touchstart', e => { swipe = mode !== 'gl' && !inSheet(e.target) ? {x:e.touches[0].clientX, y:e.touches[0].clientY} : null; }, {passive:true});
+addEventListener('touchend', e => {
+  if (!swipe) return;
+  const dx = e.changedTouches[0].clientX - swipe.x, dy = e.changedTouches[0].clientY - swipe.y; swipe = null;
+  const d = Math.abs(dy) >= Math.abs(dx) ? dy : dx;        // up or left = onward, like scrolling down
+  if (Math.abs(d) > 48) stepBy(d < 0 ? 1 : -1);
+}, {passive:true});
 
 /* ---------------- ink-mask transition and scroll memory ---------------- */
 /* The address (#fieldfold) and sessionStorage follow the camera, throttled. Nothing is written until the

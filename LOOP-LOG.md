@@ -5,10 +5,10 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 
 ## Backlog (top = next)
 - [ ] Desktop transit hitch: NOT video (worker A, 5 paired tours: video off hitched as much as on; 156 play/pause flips line up with hitches at chance; video uploads ~0.2 ms). Stalls are 40-120 ms renderer.render() calls under a busy box. Lead: the first transit (Start to vitrine) hitches in most runs, where hall.startLoading() begins image uploads (17-18 ms texImage2D seen). Re-measure on a QUIET box before changing anything. Scripts: pf/loop-tools/out-a/measure.cjs.
-- [ ] Reduced motion: wheel and swipe do not step stops (bar hint says swipe); OS setting read once at load. Launchboard has no prefers-reduced-motion rule.
+- [ ] Reduced motion: the OS setting is read once at load (a mid-session change needs a reload). Launchboard has no prefers-reduced-motion rule.
 - [ ] Resume link: add resume.pdf ONLY when Jash hands over the approved file.
 
-- [ ] Launchboard source: launchboard/ is a static export of outputs/launchboard (Next.js 15 + Tailwind v4). phone-fixes.css lives only in the export; a re-export drops it. Port it into the source (globals or layout link) before the next build. Owner-level source fixes: launch-bar titles truncate on phones (list view or two-line bar), scroll containers have no scroll cue and open at the left edge (latest data off screen), nav wrap is a stand-in for a phone menu, ?note=restricted sticks after switching roles.
+- [ ] Launchboard source: launchboard/ is a static export of outputs/launchboard (Next.js 15 + Tailwind v4). phone-fixes.css rules PORTED to the source app/globals.css (outputs/launchboard commit c0afb9f, local repo), so a rebuild keeps them. Owner-level source fixes: launch-bar titles truncate on phones (list view or two-line bar), scroll containers have no scroll cue and open at the left edge (latest data off screen), nav wrap is a stand-in for a phone menu, ?note=restricted sticks after switching roles.
 
 - [ ] Cyberpunk page (owned by the Corner Block chat, report only): "How I made it" link is 105x20 on phones; in landscape 844x390 the hero video is 718 px tall.
 
@@ -70,3 +70,8 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - Audit at 390x844, 360x740, 844x390, both tabs, both themes: no overflow, no small text, no errors; tap targets under 40 px (Open budgets 33 px, landscape Search/Feedback/theme 34-35 px, action buttons 33 px); the sample-data note lived only in the closed drawer, so phones never saw it.
 - Change: mgmtio/index.html, touch-scoped tap sizes and the existing sample-data sentence repeated under the content up to 1180 px, using the page source tokens (--space-5, --text-xs, --fg-5).
 - Desktop 1440: zero differing pixels in all four tab/theme states.
+
+### Round 10 (2026-10-11): reduced motion, wheel and swipe step stills
+- Cause: with reduced motion there is no scroll camera, so the copy's "Scroll to step back" and "swipe" did nothing.
+- Change: main.js, still mode only: one wheel gesture (quiet 500 ms ends it, so trackpad inertia is one gesture) or one swipe over 48 px steps one still. Ignored inside dialogs, the Worlds and Contact sheets, and the stop bar.
+- Verified: desktop reduced, two wheel bursts and one tick up walk vitrine, hall, vitrine; phone reduced, swipe up, up, down walk vitrine, hall, vitrine. Normal mode: gate PASS, keyboard walk unchanged, all 14 stops and draw calls unchanged.
