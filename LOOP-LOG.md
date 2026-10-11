@@ -1,11 +1,11 @@
 # Portfolio improvement loop
 
 One verified change per round. Numbers are phone tier (390x844, iPhone UA) draw calls unless noted.
-Gate per round: no console errors except resume.pdf 404; deep link, Back restore and back-to-hall pass at 390x844, 1366x768, 1440x900; all 14 stops reachable; live routes 200 after the Pages build.
+Gate per round: no console errors; deep link, Back restore and back-to-hall pass at 390x844, 1366x768, 1440x900; all 14 stops reachable; live routes 200 after the Pages build.
 
 ## Backlog (top = next)
 - [ ] Reduced motion: the OS setting is read once at load (a mid-session change needs a reload). Launchboard has no prefers-reduced-motion rule.
-- [ ] Resume link: add resume.pdf ONLY when Jash hands over the approved file.
+- [x] Resume link: resume.pdf added 2026-10-11 (Resume B, Oct 2; public copy without phone, HubSpot or "AI-assisted"; source pf/resume-work).
 
 - [ ] Launchboard All launches window: 17 of 19 bars too narrow for their titles on phones (List tab shows them in full). Tried labels under narrow bars (worker K): rejected in review, read busier and still clipped at the screen edge. Needs a design call, not a patch.
 
