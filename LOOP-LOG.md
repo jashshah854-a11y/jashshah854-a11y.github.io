@@ -147,3 +147,9 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - Verified: first run byte-identical to the hand-written lists (proves the generator matches); drift test (Email removed from noscript) -> --check exit 1, rewrite restores byte-identical.
 - Rule from now on: after editing data.js, run `node tools/plain-links.mjs`; run `--check` before each push.
 - Next: launchboard share tags in source (needs an export, the heavy job); then item 5, one vendored three.js r186.
+
+### Round 23 (2026-10-11): a 404 page (Greybeard item 7)
+- Before: a wrong URL showed GitHub's generic 404, with no way back into the site.
+- Change: 404.html in the home's own layout and tokens (links /universe/universe.css, same fonts, pills): "This part of / the machine is missing." with Back to the start, Go to the hall (/#hall) and Email. noindex. Absolute paths, because Pages serves it at any depth.
+- Verified: /no/such/page returns 404 with the page at 390 and 1366, Instrument Serif, night background, 0 px overflow, no console errors; Go to the hall lands on The hall. Test server serve.cjs now serves 404.html the way Pages does.
+- Next: launchboard share tags in source (export is the heavy job; wait for a quiet laptop); item 5 vendored three.js; item 6 shorter desktop veil.
