@@ -140,3 +140,10 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - Not touched: cyberpunk and corner-block (owned by the other chat), launchboard (its head comes from the Next.js source; do it there).
 - Verified: all 13 image URLs 200; sub-page sweep 34/34 ok locally; gate PASS.
 - Next: launchboard share tags in source; then Greybeard item 4, generate #plain and noscript from data.js with --check.
+
+### Round 22 (2026-10-11): one source for the plain-link lists (Greybeard item 4)
+- Before: the world list lived in three places (data.js, #plain, noscript) and had already drifted once (noscript lacked LinkedIn until round 20).
+- Change: tools/plain-links.mjs writes both lists in index.html from universe/data.js (WORLDS with a page, LINKEDIN, EMAIL, DECKS; Perpetua first because it stands in the vitrine). `--check` exits 1 when index.html is out of date.
+- Verified: first run byte-identical to the hand-written lists (proves the generator matches); drift test (Email removed from noscript) -> --check exit 1, rewrite restores byte-identical.
+- Rule from now on: after editing data.js, run `node tools/plain-links.mjs`; run `--check` before each push.
+- Next: launchboard share tags in source (needs an export, the heavy job); then item 5, one vendored three.js r186.
