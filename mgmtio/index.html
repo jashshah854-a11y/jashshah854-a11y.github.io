@@ -288,6 +288,23 @@ svg.i { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: rou
   .tbl .bar { min-width: 0; }
   .cell-t, .cell-s { white-space: normal; }
 }
+/* Touch screens at any width up to the drawer breakpoint: full-size tap targets, same strip height as the phone layout */
+@media (max-width: 1180px) and (pointer: coarse) {
+  .back-strip { height: 36px; }
+  .shell { height: calc(100dvh - 36px); }
+  .sidebar { top: 36px; }
+  .search, .tb-btn { min-height: 44px; }
+  .tb-icon { width: 44px; height: 44px; }
+}
+@media (max-width: 1180px) and (pointer: coarse), (max-width: 700px) {
+  .act { min-height: 40px; }
+}
+
+/* The sample-data note lives in the sidebar, which is a closed drawer here. Repeat it under the content. */
+.sample-foot { display: none; margin: 0; }
+@media (max-width: 1180px) {
+  .sample-foot { display: block; margin-top: var(--space-5); font-size: var(--text-xs); line-height: 1.4; color: var(--fg-5); }
+}
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 </style>
 </head>
@@ -504,6 +521,8 @@ svg.i { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: rou
           </table>
         </section>
       </div>
+
+      <p class="sample-foot">Sample data. A walkthrough of the real interface.</p>
     </div>
   </main>
 </div>
