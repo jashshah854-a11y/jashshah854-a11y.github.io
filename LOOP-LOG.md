@@ -5,7 +5,7 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 
 ## Backlog (top = next)
 - [ ] Vitrine sits at the budget line (100 settled, 102 peak). Next cut: the Perpetua machine is 34 separate meshes in its own vitrine; parts that never move relative to each other can share a draw.
-- [ ] Occasional video-decode hitch in desktop transit between worlds.
+- [ ] Desktop transit hitch: NOT video (worker A, 5 paired tours: video off hitched as much as on; 156 play/pause flips line up with hitches at chance; video uploads ~0.2 ms). Stalls are 40-120 ms renderer.render() calls under a busy box. Lead: the first transit (Start to vitrine) hitches in most runs, where hall.startLoading() begins image uploads (17-18 ms texImage2D seen). Re-measure on a QUIET box before changing anything. Scripts: pf/loop-tools/out-a/measure.cjs.
 - [ ] Reduced motion: wheel and swipe do not step stops (bar hint says swipe); OS setting read once at load. Launchboard has no prefers-reduced-motion rule.
 - [ ] Resume link: add resume.pdf ONLY when Jash hands over the approved file.
 
