@@ -233,6 +233,53 @@ dialog#renders img{width:100%;height:auto;border-radius:12px;display:block}
   .copy[data-copy=vitrine]{right:40px}
   #stepback{right:36px}
 }
+/* Landscape phones (about 844x390, 740x360). Short and wide: the header sits tight to the top, the card is a
+   compact right column that stops above the arrows, and the Worlds and Contact panels get a Close button. */
+@media (orientation:landscape) and (max-height:500px){
+  :root{--lx:max(24px,calc(env(safe-area-inset-left) + 8px)); --rx:max(24px,calc(env(safe-area-inset-right) + 8px))}
+  #top{height:64px}
+  .brand{left:var(--lx);top:calc(10px + env(safe-area-inset-top))}
+  #back{left:var(--lx);top:calc(10px + env(safe-area-inset-top))}
+  #topbtns{right:var(--rx);top:calc(10px + env(safe-area-inset-top))}
+  #top .pill{padding:0 14px;font-size:14px}
+  #back .lg{display:none}
+  #back .sm{display:inline}
+  #stopbar .arrow{bottom:max(6px,calc(env(safe-area-inset-bottom) - 6px))}
+  #prevStop{left:max(14px,calc(env(safe-area-inset-left) + 4px))}
+  #nextStop{right:max(14px,calc(env(safe-area-inset-right) + 4px))}
+  .copy[data-copy=inside],.copy[data-copy=end]{left:var(--lx);bottom:64px}
+  .copy[data-copy=inside] h1,.copy[data-copy=end] h2{font-size:clamp(40px,10vh,54px)}
+  .copy[data-copy=inside]{gap:10px}
+  .copy[data-copy=vitrine]{right:var(--rx);top:96px;max-width:min(420px,48vw);gap:12px}
+  .copy[data-copy=vitrine] h2{font-size:clamp(30px,4.2vw,40px)}
+  .copy[data-copy=hall]{left:var(--lx);right:var(--rx);bottom:64px;gap:12px}
+  .copy[data-copy=hall] h2{font-size:clamp(32px,4.6vw,44px)}
+  .copy[data-copy=hall] p{font-size:16px}
+  .copy p{font-size:16px}
+  .copy .links{gap:8px}
+  .copy .pill.ghost,.copy .pill.solid{min-height:44px;padding:0 18px}
+  #stepback{right:var(--rx);bottom:64px}
+  /* The world card: smaller type, the seven decks behind a toggle, and a scroll as the last resort. */
+  #card{right:var(--rx);bottom:62px;width:clamp(300px,44vw,380px);gap:10px;max-height:calc(100dvh - 126px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
+  #card::-webkit-scrollbar{display:none}
+  #cardTitle{font-size:34px}
+  #cardTitle em{display:inline}
+  #cardLine{font-size:15px;line-height:1.4}
+  #card .row{gap:8px}
+  #card .pill.solid,#card .pill.ghost{min-height:44px;padding:0 18px}
+  .chip{min-height:30px;font-size:13px}
+  #deckToggle{display:inline-flex}
+  #card:not(.decks-open) #cardDecks{display:none}
+  #card.decks-open #cardLine{display:none}
+  .decks a{min-height:44px}
+  #worlds ul ul a{min-height:44px}
+  .pin{min-height:40px;font-size:14px}
+  /* Worlds and Contact: a panel with its own title and Close, inside the short viewport. */
+  #worlds,#contact{top:calc(8px + env(safe-area-inset-top));right:var(--rx);bottom:8px;max-height:none;padding:0 10px 10px;background:rgba(12,11,10,.97);z-index:60}
+  #contact{bottom:auto;max-height:calc(100dvh - 16px)}
+  .sheethead{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:2;min-height:60px;padding:8px 4px;background:#0c0b0a}
+  .sheettitle{font:400 28px/1 var(--serif);color:#f4efe4}
+}
 @media (prefers-reduced-motion:reduce){
   *{transition-duration:.01ms!important;animation:none!important}
 }
