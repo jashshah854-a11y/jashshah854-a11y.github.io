@@ -86,3 +86,9 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - Mirror off vs on (3 paired tours): 12, 9, 8 vs 26, 14, 9 over-50 frames. A weak trend, inside run-to-run noise. Not enough evidence to change code.
 - Verdict: closed as measured. If it is ever reported by a real visitor, the next test is a one-frame reflector warm-up behind the veil (compile the clipped program variants before the first transit).
 - Watch item: once per page sweep, one random page load takes about 9.6 s (houthis locally, russia live) and re-times at 0.25-0.42 s x4. Likely an external request (fonts/CDN) stalling; not reproducible on demand.
+
+### Round 13 (2026-10-11): Fieldfold, Workbench, Jev on phones (worker I, reviewed and merged)
+- Before: landscape 844x390 broken on fieldfold (heading, text, buttons overlapped) and workbench (page 874 px wide, Reset cut off); controls below the fold at 360x740; 6/7/14 tap targets under 40 px; hall pill covered footer text, Run, the jev lesson heading and footnote; text down to 7 px; a visible stage seam on workbench phones.
+- Change: one <style id=phone-fixes> block per page (+80 lines), no inline blobs touched. Touch-landscape grid for fieldfold and workbench; short-phone compression so all controls show (workbench stage about 184 px at 360x740, chosen over hidden controls).
+- After: 0 short tap targets on fieldfold and workbench (jev: one 21 px checkbox with a 44 px label); drag and every button work by touch; load time unchanged; desktop 1440 and 1366 pixel-identical.
+- Still open: decorative caps labels at 7-9 px; the shared hall pill covers bottom-left content on scrolling world pages in the first view (fix belongs in the shared pill).
