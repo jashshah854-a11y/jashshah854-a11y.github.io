@@ -2,53 +2,131 @@
 <html lang="en">
 <head>
 <base href="/corner-block/">
+<meta name="robots" content="noindex">
 <meta charset="utf-8" />
 <script>
-/* Run352M2 lab: ON-DEVICE LOAD LOG + one-line debug line. Classic script, runs before the module, so it sees errors from the first line of the page.
-   - Overlay (top, over the loading veil): phase, files done / total, MB done / total, elapsed s, canvas count and MB, GLBs parsed, main-thread stall, errors as text, Copy button.
-   - State is written to localStorage on every step (rate limited): phase, files, MB, elapsed, loading = true. The flag is cleared after the first rendered frame.
-     If a page load starts and the flag is still set, the previous attempt stopped (iOS reloads a tab it killed): the overlay says where.
-   - After the city runs the overlay collapses to the one-line debug line (tier | dpr | tex ~MB | calls | fps); tap the line to open the log again.
-   Numbers come from window.__PHONE352__ (the phone block): renderer and scene are known from the start of the startup block, so the line no longer depends on window.__CB__,
-   which the page only sets at the very end of the build. */
+// Phone gate. Phones keep the live city (the page picks its own phone tier) unless this device cannot
+// finish loading it; then they go to the video page, and that is remembered for 7 days.
+// ?video=1 sends anyone to the video page. ?force=1 and ?tier=full keep the city and skip every check.
+(function () {
+  try {
+    var p = new URLSearchParams(location.search), V = '../cyberpunk/', D = 864e5, now = Date.now(), ls = null;
+    if (p.get('video') === '1') { location.replace(V); return; }
+    if (p.get('force') === '1' || p.get('tier') === 'full') return;
+    var ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!ios && !(matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 820)) return;
+    try { ls = localStorage; } catch (e) {}
+    var g = function (k) { try { return ls.getItem(k); } catch (e) { return null; } };
+    var s = function (k, v) { try { ls.setItem(k, v); } catch (e) {} };
+    var go = function (mem) { if (mem) s('cb-phone-fallback', now + 7 * D); location.replace(V); };
+    if (+g('cb-phone-fallback') > now) return go();
+    if (navigator.deviceMemory < 4) return go();
+    var gl = document.createElement('canvas').getContext('webgl2');
+    if (!gl) return go();
+    var x = gl.getExtension('WEBGL_lose_context'); if (x) x.loseContext();
+    // The last phone attempt never drew a frame (cb352.run still says loading) and the page was not closed on purpose.
+    var t = +g('cb-phone-try'), left = +g('cb-phone-left'), r = null;
+    try { r = JSON.parse(g('cb352.run')); } catch (e) {}
+    if (r && r.loading && t && now - t < D && !(left >= t)) return go(1);
+    s('cb-phone-try', now);
+    addEventListener('pagehide', function () { s('cb-phone-left', Date.now()); });
+    // Watchdog: 150 s of visible wall-clock time without a drawn frame (timers can be late while the page builds, so count time, not ticks).
+    var lim = +p.get('cbwd'), max = (lim > 0 && lim < 150 ? lim : 150) * 1000, seen = 0, since = document.hidden ? 0 : now;
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { if (since) seen += Date.now() - since; since = 0; } else since = Date.now();
+    });
+    var h = setInterval(function () {
+      var c = (window.__CB__ && window.__CB__.renderer) || (window.__PHONE352__ && window.__PHONE352__.renderer);
+      var i = c && c.info && c.info.render;
+      if (i && (i.calls > 0 || i.frame > 0)) { clearInterval(h); return; }
+      if (seen + (since ? Date.now() - since : 0) >= max) { clearInterval(h); go(1); }
+    }, 1000);
+  } catch (e) { /* fall through to the live city */ }
+})();
+</script>
+<link rel="preload" as="image" href="assets/poster355/city-wide.webp" media="(min-aspect-ratio: 1/1)" fetchpriority="high">
+<link rel="preload" as="image" href="assets-phone/poster355/city-tall.webp" media="(max-aspect-ratio: 1/1)" fetchpriority="high">
+<style>
+/* RUN353A instant first view: a still of the city fills the screen from the first paint; the loader (the page's own veil panel, same tokens) sits on it as a slim line with MB / percent.
+   Both are plain HTML + CSS, so they show before the module has loaded. The poster fades out (0.8 s) once the live canvas has drawn real frames; prefers-reduced-motion swaps it at once. */
+#poster353 { position:fixed; inset:0; background:#05060a url(assets/poster355/city-wide.webp) center/cover no-repeat; pointer-events:none; }
+@media (max-aspect-ratio: 1/1) { #poster353 { background-image:url(assets-phone/poster355/city-tall.webp); } }
+#poster353.fade353 { opacity:0; transition:opacity .8s ease; }
+@media (prefers-reduced-motion: reduce) { #poster353.fade353 { transition:none; } }
+#veil288s { left:50%; top:auto; bottom:28px; transform:translateX(-50%); min-width:232px; max-width:calc(100vw - 32px); z-index:5; }
+@media (max-width: 600px) { #veil288s { bottom:64px; } }
+#veil288s h1 { margin:0 0 3px; font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:#ffd9a0; }
+#veil288s p { margin:0 0 9px; color:#8b93a7; font-size:11px; }
+#veil288s .track { height:2px; border-radius:1px; background:rgba(120,140,180,.18); overflow:hidden; }
+#veil288s .track i { display:block; height:100%; width:38%; background:#8ef0ff; animation:veil288s 1.5s ease-in-out infinite; }
+#veil288s .track.det353 i { width:0; animation:none; transition:width .25s linear; }
+@keyframes veil288s { 0% { transform:translateX(-100%); } 100% { transform:translateX(265%); } }
+@media (prefers-reduced-motion: reduce) { #veil288s .track i { animation:none; width:100%; opacity:.5; } #veil288s .track.det353 i { opacity:1; transition:none; } }
+</style>
+<script>
+/* RUN353A early script (classic, runs before the module). Three jobs:
+   (1) asset progress for the slim loader line: window.__CB353__.progress() = files and MB fetched so far from the active asset root, against a manifest of that root
+       (resource timing; with data: URIs there are no entries and the loader keeps its indeterminate bar);
+   (2) window.__POSTER353__: the still poster behind the loader fades out (0.8 s, or is swapped at once with prefers-reduced-motion) once the first real frame has been drawn;
+   (3) phone tier only: the load bookkeeping that was the Run352M2 lab log. The state is ALWAYS kept in localStorage (cb352.run: phase, files, MB, elapsed, loading flag, last
+       error; a load that finds loading = true knows the previous attempt was killed, which is what the later automatic fallback to the video page reads), but nothing is drawn
+       unless the URL has ?debug=1: then the overlay (phase, files, MB, canvases, GLBs, stall, errors, Copy) and the one-line debug line (tier | dpr | tex | calls | fps) appear. */
 (function () {
   'use strict';
-  // the same decision as the page (AUTO_PHONE_TIER = true): the log exists in the phone tier only
-  var q = location.search, phoneTier = false;
+  var q = location.search, DBG = /[?&]debug=1(&|$)/.test(q), M = !/[?&]m=0(&|$)/.test(q), phone = false;
   try {
-    if (/[?&]tier=full(&|$)/.test(q)) phoneTier = false;
-    else if (/[?&]tier=phone(&|$)/.test(q)) phoneTier = true;
-    else phoneTier = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) || (matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 820);
+    if (/[?&]tier=full(&|$)/.test(q)) phone = false;
+    else if (/[?&]tier=phone(&|$)/.test(q)) phone = true;
+    else phone = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) || (matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 820);
   } catch (e) {}
-  if (!phoneTier) return;
-  var KEY = 'cb352.run', MAN = {"arcade50.glb":2851796,"cinema19-facade.png":911403,"commercial-interior-atlas-v2.png":937997,"facade-material-atlas.png":1144268,"hotel-facade.png":2978333,"interiors57-atlas.png":1137661,"landmark48.glb":1121432,"lotus-line-poster.png":1282810,"nightline48-poster.png":1013344,"ramen-courier-poster.png":1356447,"second-life-poster.png":1490572,"shop-interior-atlas.png":1848657,"airship323/ad323.png":592099,"airship323/airship323.glb":1366120,"airship323/ticker323.png":67221,"backside309/glyph-atlas.png":123501,"backside309/plaque.png":21057,"backside314/backside314.glb":1538672,"bar324/bar324.glb":1400276,"bridge82/bridge82.glb":119516,"capsule341/capsule341.glb":71280,"capsule341/sign.png":93659,"car157/car157.glb":216204,"car162/car162.glb":357592,"car162/taxi162.glb":369116,"car180/car180-coupe.glb":379336,"car180/car180-sedan.glb":392804,"car180/car180-van.glb":366884,"cinema221/cinema221.glb":1195808,"collar205/collar205.glb":305692,"corner31/corner31.glb":6811728,"crown185/crown185.glb":188716,"crown286/crown286.glb":1896440,"crown287/crown287.glb":4172668,"crown88/crown88.glb":137640,"depot290/depot290.glb":843672,"detail343/detail343.glb":2157984,"dragon153/dragon153.glb":69772,"dragon160/dragon160.glb":1208144,"dragon200/dragon200.glb":1350604,"dragon200/dragon200b.glb":1336944,"dragon200/dragon200c.glb":1354868,"dragon200/dragon200e.glb":1339580,"dragon200/dragon200f.glb":1426472,"dragon200/dragon300.glb":1512496,"dragon200/dragon301.glb":1730544,"dragon200/dragon303.glb":1806120,"dragon200/dragon304.glb":2038748,"drone103/drone103.glb":41712,"drones320/drones320.glb":1157228,"drones320/drones320lo.glb":724524,"east338/east338.glb":92396,"eaststack279/eaststack279.glb":400028,"edge196/edge196.glb":58892,"foliage306/foliage306.glb":474272,"frontage284/frontage284.glb":1097672,"garden104/garden104.glb":117284,"greeble164/greeble164.glb":673468,"holo340/holo340v2.glb":2148868,"hotel218/hotel218.glb":1272796,"hover161/hover161.glb":470508,"hover205/hover205.glb":381412,"hover215/hover215.glb":612752,"hover328/hover328.glb":1220356,"hover328/hover328b.glb":1138612,"ivy210/ivy210.glb":473352,"koi159/koi159.glb":180392,"koi180/koi180b.glb":478556,"koi277/koi277.glb":658536,"koi91/koi91.glb":31920,"kuro264/kuro264.glb":866328,"lamp163/lamp163.glb":40284,"landmark219/landmark219.glb":1379164,"landmark219/landmark219b.glb":1478940,"landmark298/landmark298.glb":2916880,"lotus230/lotus230.glb":1486548,"market32/market32.glb":982540,"marquee89/marquee89.glb":244496,"midrise216/midrise216.glb":757660,"midrise216/midrise216b.glb":760272,"midrise34/midrise34.glb":971780,"nova243/nova243.glb":537428,"people272/people272.glb":1106648,"people324/people324.glb":1029000,"people324/people324_lo.glb":440480,"people93/people93.glb":244832,"plinth166/plinth166.glb":292104,"portal331/portal331.glb":78088,"projector165/projector165.glb":186220,"relief-building/repair-relief-v5.glb":4272792,"roof167/roof167.glb":405476,"roof249/roof249.glb":388352,"roof268/roof268.glb":284540,"roofkit312/roofkit312.glb":2008428,"rooftop321/rooftop321.glb":3250168,"rooftop80/rooftop80.glb":495304,"screens322/kanji-atlas.png":91338,"screens322/ticker-strip.png":18851,"shoprow221/shoprow221.glb":753028,"signal217/signal217.glb":1480400,"sky342b3/sky342b3.glb":416168,"spinner151/spinner151.glb":175200,"station338/station338.glb":1046980,"street325/cruiser325.glb":498208,"street325/cruiser325_lo.glb":133392,"street325/pod325.glb":482116,"street325/pod325_lo.glb":151156,"street325/street325.glb":1444524,"street325/street325_lo.glb":563068,"street81/street81.glb":527084,"tea237/tea237.glb":686580,"train158/train158.glb":683012,"trees317/trees317.glb":1527460,"tube332/tube332.glb":295748,"under339/plinth339.glb":286252,"under339/under339.glb":8289648,"under339/under339_meta.json":2028,"viaduct221/viaduct221.glb":750312,"viaduct221/viaduct221b.glb":617808,"wallac112/wallac112.glb":99700,"wallac327/wallac327.glb":982420,"west237/west237.glb":465936,"wings293/wings293.glb":1054404}, TOTAL = 0, TOTAL_B = 0, k;
+  var ROOT = (phone ? 'assets-phone' : 'assets') + (M ? '-m' : ''), SEG = '/' + ROOT + '/';
+  var MAN = phone ? {"airship323/ad323.ktx2":638210,"airship323/airship323.glb":658528,"airship323/ticker323.png":67221,"arcade50.glb":1805428,"backside309/glyph-atlas.ktx2":137174,"backside309/plaque.ktx2":37810,"backside314/backside314.glb":585972,"bar324/bar324.glb":575360,"bridge82/bridge82.glb":86192,"capsule341/capsule341.glb":25052,"capsule341/sign.ktx2":90183,"car157/car157.glb":116072,"car162/car162.glb":155932,"car162/taxi162.glb":160732,"car180/car180-coupe.glb":164664,"car180/car180-sedan.glb":172328,"car180/car180-van.glb":155424,"cinema19-facade.png":911403,"cinema221/cinema221.glb":399796,"collar205/collar205.glb":128512,"commercial-interior-atlas-v2.ktx2":542191,"corner31/corner31.glb":2439172,"crown185/crown185.glb":61824,"crown286/crown286.glb":690348,"crown287/crown287.glb":1826656,"crown88/crown88.glb":137640,"depot290/depot290.glb":335304,"detail343/detail343.glb":807412,"dragon153/dragon153.glb":37700,"dragon160/dragon160.glb":448512,"dragon200/dragon200.glb":488896,"dragon200/dragon200b.glb":484792,"dragon200/dragon200c.glb":491608,"dragon200/dragon200e.glb":482456,"dragon200/dragon200f.glb":513340,"dragon200/dragon300.glb":580060,"dragon200/dragon301.glb":648916,"dragon200/dragon303.glb":675316,"dragon200/dragon304.glb":788156,"drone103/drone103.glb":32560,"drones320/drones320.glb":631228,"drones320/drones320lo.glb":453444,"east338/east338.glb":43628,"eaststack279/eaststack279.glb":161440,"edge196/edge196.glb":36736,"facade-material-atlas.png":1144268,"foliage306/foliage306.glb":304080,"frontage284/frontage284.glb":405628,"garden104/garden104.glb":99504,"greeble164/greeble164.glb":276988,"holo340/holo340v2.glb":920768,"hotel-facade.png":2978333,"hotel218/hotel218.glb":415352,"hover161/hover161.glb":291756,"hover205/hover205.glb":173940,"hover215/hover215.glb":263124,"hover328/hover328.glb":669612,"hover328/hover328b.glb":642756,"interiors57-atlas.png":1137661,"ivy210/ivy210.glb":228680,"koi159/koi159.glb":77020,"koi180/koi180b.glb":189732,"koi277/koi277.glb":204248,"koi91/koi91.glb":12500,"kuro264/kuro264.glb":363712,"lamp163/lamp163.glb":20484,"landmark219/landmark219.glb":274100,"landmark219/landmark219b.glb":288848,"landmark298/landmark298.glb":868368,"landmark48.glb":623936,"lotus-line-poster.png":1282810,"lotus230/lotus230.glb":506944,"market32/market32.glb":584668,"marquee89/marquee89.glb":212544,"midrise216/midrise216.glb":233704,"midrise216/midrise216b.glb":235204,"midrise34/midrise34.glb":267200,"nightline48-poster.png":1013344,"nova243/nova243.glb":181572,"people272/people272.glb":682128,"people324/people324.glb":477384,"people324/people324_lo.glb":218180,"people93/people93.glb":192440,"plinth166/plinth166.glb":95240,"portal331/portal331.glb":32960,"projector165/projector165.glb":80668,"ramen-courier-poster.png":1356447,"relief-building/repair-relief-v5.glb":1906988,"roof167/roof167.glb":172576,"roof249/roof249.glb":178512,"roof268/roof268.glb":160580,"roofkit312/roofkit312.glb":1024612,"rooftop321/rooftop321.glb":1623516,"rooftop80/rooftop80.glb":366340,"screens322/kanji-atlas.ktx2":106173,"screens322/ticker-strip.png":18851,"second-life-poster.png":1490572,"shop-interior-atlas.png":1848657,"shoprow221/shoprow221.glb":305748,"signal217/signal217.glb":586684,"sky342b3/sky342b3.glb":124924,"spinner151/spinner151.glb":89016,"station338/station338.glb":477576,"street325/cruiser325.glb":264784,"street325/cruiser325_lo.glb":92532,"street325/pod325.glb":248508,"street325/pod325_lo.glb":93464,"street325/street325.glb":784500,"street325/street325_lo.glb":323336,"street81/street81.glb":349848,"tea237/tea237.glb":244376,"train158/train158.glb":295548,"trees317/trees317.glb":807760,"tube332/tube332.glb":126892,"under339/plinth339.glb":102052,"under339/under339.glb":3070272,"under339/under339_meta.json":2028,"viaduct221/viaduct221.glb":234876,"viaduct221/viaduct221b.glb":192392,"wallac112/wallac112.glb":93200,"wallac327/wallac327.glb":564152,"west237/west237.glb":168832,"wings293/wings293.glb":435896} : {"airship323/ad323.ktx2":638210,"airship323/airship323.glb":658528,"airship323/ticker323.png":67221,"arcade50.glb":6607540,"backside309/glyph-atlas.ktx2":137174,"backside309/plaque.ktx2":37810,"backside314/backside314.glb":585972,"bar324/bar324.glb":575360,"bridge82/bridge82.glb":86192,"capsule341/capsule341.glb":25052,"capsule341/sign.ktx2":190902,"car157/car157.glb":116072,"car162/car162.glb":155932,"car162/taxi162.glb":160732,"car180/car180-coupe.glb":164664,"car180/car180-sedan.glb":172328,"car180/car180-van.glb":155424,"cinema19-facade.png":2611792,"cinema221/cinema221.glb":399796,"collar205/collar205.glb":128512,"commercial-interior-atlas-v2.ktx2":2176403,"corner31/corner31.glb":2868524,"crown185/crown185.glb":61824,"crown286/crown286.glb":690348,"crown287/crown287.glb":1826656,"crown88/crown88.glb":137640,"depot290/depot290.glb":335304,"detail343/detail343.glb":807412,"dragon153/dragon153.glb":37700,"dragon160/dragon160.glb":448512,"dragon200/dragon200.glb":488896,"dragon200/dragon200b.glb":484792,"dragon200/dragon200c.glb":491608,"dragon200/dragon200e.glb":482456,"dragon200/dragon200f.glb":513340,"dragon200/dragon300.glb":580060,"dragon200/dragon301.glb":648916,"dragon200/dragon303.glb":675316,"dragon200/dragon304.glb":788156,"drone103/drone103.glb":32560,"drones320/drones320.glb":631228,"drones320/drones320lo.glb":453444,"east338/east338.glb":43628,"eaststack279/eaststack279.glb":161440,"edge196/edge196.glb":36736,"facade-material-atlas.png":2734674,"foliage306/foliage306.glb":304080,"frontage284/frontage284.glb":405628,"garden104/garden104.glb":99504,"greeble164/greeble164.glb":276988,"holo340/holo340v2.glb":920768,"hotel-facade.png":2978333,"hotel218/hotel218.glb":415352,"hover161/hover161.glb":291756,"hover205/hover205.glb":173940,"hover215/hover215.glb":263124,"hover328/hover328.glb":669612,"hover328/hover328b.glb":642756,"interiors57-atlas.png":2586620,"ivy210/ivy210.glb":228680,"koi159/koi159.glb":77020,"koi180/koi180b.glb":189732,"koi277/koi277.glb":204248,"koi91/koi91.glb":12500,"kuro264/kuro264.glb":363712,"lamp163/lamp163.glb":20484,"landmark219/landmark219.glb":274100,"landmark219/landmark219b.glb":288848,"landmark298/landmark298.glb":868368,"landmark48.glb":2160416,"lotus-line-poster.png":3011775,"lotus230/lotus230.glb":506944,"market32/market32.glb":1725816,"marquee89/marquee89.glb":212544,"midrise216/midrise216.glb":233704,"midrise216/midrise216b.glb":235204,"midrise34/midrise34.glb":836688,"nightline48-poster.png":2332969,"nova243/nova243.glb":181572,"people272/people272.glb":682128,"people324/people324.glb":477384,"people324/people324_lo.glb":218180,"people93/people93.glb":192440,"plinth166/plinth166.glb":95240,"portal331/portal331.glb":32960,"projector165/projector165.glb":80668,"ramen-courier-poster.png":3290604,"relief-building/repair-relief-v5.glb":4205904,"roof167/roof167.glb":172576,"roof249/roof249.glb":178512,"roof268/roof268.glb":160580,"roofkit312/roofkit312.glb":1024612,"rooftop321/rooftop321.glb":1623516,"rooftop80/rooftop80.glb":366340,"screens322/kanji-atlas.ktx2":180091,"screens322/ticker-strip.png":18851,"second-life-poster.png":3781345,"shop-interior-atlas.png":2736363,"shoprow221/shoprow221.glb":305748,"signal217/signal217.glb":586684,"sky342b3/sky342b3.glb":124924,"spinner151/spinner151.glb":89016,"station338/station338.glb":477576,"street325/cruiser325.glb":264784,"street325/cruiser325_lo.glb":92532,"street325/pod325.glb":248508,"street325/pod325_lo.glb":93464,"street325/street325.glb":784500,"street325/street325_lo.glb":323336,"street81/street81.glb":349848,"tea237/tea237.glb":244376,"train158/train158.glb":295548,"trees317/trees317.glb":807760,"tube332/tube332.glb":126892,"under339/plinth339.glb":102052,"under339/under339.glb":3070272,"under339/under339_meta.json":2028,"viaduct221/viaduct221.glb":234876,"viaduct221/viaduct221b.glb":192392,"wallac112/wallac112.glb":93200,"wallac327/wallac327.glb":564152,"west237/west237.glb":168832,"wings293/wings293.glb":435896}, TOTAL = 0, TOTAL_B = 0, k;
   for (k in MAN) { TOTAL++; TOTAL_B += MAN[k]; }
   try { performance.setResourceTimingBufferSize(2000); } catch (e) {}
-  var prev = null, attempt = 1;
-  try { prev = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
-  if (prev && prev.loading) attempt = (prev.attempt || 1) + 1;
-  var lastCN = -1, lastBuild = 0;
-  var errs = [], running = false, stallMax = 0, lastTick = performance.now(), lastPersist = 0, lastEvent = '', est = null;
-  var el = document.createElement('div'), pre = document.createElement('pre'), btn = document.createElement('button'), dbg = document.createElement('div');
-  el.id = 'log352'; dbg.id = 'dbg352';
-  el.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:2147483000;max-height:46vh;overflow:auto;background:rgba(10,12,18,.9);border-bottom:1px solid rgba(120,140,180,.3);color:#cfd6e4;padding:4px 6px;font:10px/1.35 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;-webkit-text-size-adjust:100%';
-  pre.style.cssText = 'margin:0;white-space:pre-wrap;word-break:break-word;font:inherit;padding-right:54px';
-  btn.textContent = 'Copy'; btn.type = 'button';
-  btn.style.cssText = 'position:absolute;right:6px;top:4px;font:inherit;color:#bfeef7;background:#121b29;border:1px solid #3c5269;border-radius:5px;padding:3px 8px;min-height:24px';
-  dbg.style.cssText = 'position:fixed;left:0;z-index:2147482999;font:9px/12px ui-monospace,Menlo,monospace;color:#8ef0ff;background:rgba(0,0,0,.6);padding:1px 5px;border-radius:0 4px 0 0;display:none';
-  el.appendChild(pre); el.appendChild(btn);
-  document.documentElement.appendChild(el); document.documentElement.appendChild(dbg);
-  var st = document.createElement('style');
-  st.textContent = '#dbg352{bottom:0}body.compact352 #dbg352{bottom:38px}';   /* clear of the slim signal bar of the compact header */
-  document.head.appendChild(st);
-
-  function secs() { return performance.now() / 1000; }
   function assetState() {
-    var seen = {}, n = 0, b = 0, es = performance.getEntriesByType('resource'), i, p, j;
-    for (i = 0; i < es.length; i++) { p = es[i].name; j = p.indexOf('/assets-phone/'); if (j < 0) continue; p = p.slice(j + 14).split('?')[0]; if (!seen[p]) { seen[p] = 1; n++; b += MAN[p] || es[i].encodedBodySize || 0; } }
+    var seen = {}, n = 0, b = 0, es, i, p, j;
+    try { es = performance.getEntriesByType('resource'); } catch (e) { return { n: 0, b: 0 }; }
+    for (i = 0; i < es.length; i++) {
+      p = es[i].name; j = p.indexOf(SEG); if (j < 0 || !es[i].responseEnd) continue;
+      p = p.slice(j + SEG.length).split('?')[0];
+      if (!seen[p]) { seen[p] = 1; n++; b += MAN[p] || es[i].encodedBodySize || 0; }
+    }
     return { n: n, b: b };
   }
-  function veilText() { var v = document.querySelector('#veil288s p'); return v ? v.textContent : ''; }
+  window.__CB353__ = { phone: phone, root: ROOT, m: M, total: TOTAL, totalBytes: TOTAL_B, progress: function () { var a = assetState(); return { n: a.n, b: a.b, total: TOTAL, totalBytes: TOTAL_B }; } };
+  var P = window.__POSTER353__ = { t0: performance.now(), tFade: 0, tDrop: 0,
+    fade: function () {
+      var el = document.getElementById('poster353'); if (!el || P.tFade) return;
+      var PS = window.__POSTER355__; if (PS && PS.settle && !P.settled) { P.settled = true; if (PS.settle(function () { P.fade(); })) return; }   /* RUN355T: ease the still onto the live framing first when it is off */
+      P.tFade = Math.round(performance.now());
+      var reduce = false; try { reduce = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+      var rm = function () { if (el.parentNode) { el.parentNode.removeChild(el); P.tDrop = Math.round(performance.now()); } };
+      if (reduce) { rm(); return; }
+      el.classList.add('fade353'); el.addEventListener('transitionend', rm); setTimeout(rm, 1300);
+    },
+    drop: function () { var el = document.getElementById('poster353'); if (el && el.parentNode) el.parentNode.removeChild(el); P.tFade = P.tFade || Math.round(performance.now()); } };
+  if (!phone) return;
+  var KEY = 'cb352.run', prev = null, attempt = 1, NL = String.fromCharCode(10);
+  try { prev = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+  if (prev && prev.loading) attempt = (prev.attempt || 1) + 1;
+  var lastCN = -1, lastBuild = 0, errs = [], running = false, stallMax = 0, lastTick = performance.now(), lastPersist = 0, lastEvent = '', est = null;
+  var el = null, pre = null, btn = null, dbg = null;
+  if (DBG) {
+    el = document.createElement('div'); pre = document.createElement('pre'); btn = document.createElement('button'); dbg = document.createElement('div');
+    el.id = 'log352'; dbg.id = 'dbg352';
+    el.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:2147483000;max-height:46vh;overflow:auto;background:rgba(10,12,18,.9);border-bottom:1px solid rgba(120,140,180,.3);color:#cfd6e4;padding:4px 6px;font:10px/1.35 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;-webkit-text-size-adjust:100%';
+    pre.style.cssText = 'margin:0;white-space:pre-wrap;word-break:break-word;font:inherit;padding-right:54px';
+    btn.textContent = 'Copy'; btn.type = 'button';
+    btn.style.cssText = 'position:absolute;right:6px;top:4px;font:inherit;color:#bfeef7;background:#121b29;border:1px solid #3c5269;border-radius:5px;padding:3px 8px;min-height:24px';
+    dbg.style.cssText = 'position:fixed;left:0;z-index:2147482999;font:9px/12px ui-monospace,Menlo,monospace;color:#8ef0ff;background:rgba(0,0,0,.6);padding:1px 5px;border-radius:0 4px 0 0;display:none';
+    el.appendChild(pre); el.appendChild(btn);
+    document.documentElement.appendChild(el); document.documentElement.appendChild(dbg);
+    var st = document.createElement('style');
+    st.textContent = '#dbg352{bottom:0}body.compact352 #dbg352{bottom:38px}';   /* clear of the slim signal bar of the compact header */
+    document.head.appendChild(st);
+  }
+  function secs() { return performance.now() / 1000; }
+  function veilText() { var v = document.querySelector('#veil288s p'); return v ? (v.getAttribute('data-say') || v.textContent) : ''; }
   function ph() { return window.__PHONE352__ || {}; }
   function phase(a) {
     if (running) return 'running';
@@ -61,7 +139,7 @@
     if (a.n < TOTAL) return 'fetching assets';
     return 'building blocks';
   }
-  function add(msg) { errs.push((secs()).toFixed(1) + 's ' + String(msg).slice(0, 220)); if (errs.length > 8) errs.shift(); persist(true); render(); }
+  function add(msg) { errs.push(secs().toFixed(1) + 's ' + String(msg).slice(0, 220)); if (errs.length > 8) errs.shift(); persist(true); render(); }
   function persist(force) {
     var now = performance.now(); if (!force && now - lastPersist < 300) return; lastPersist = now;
     var a = assetState(), p = ph();
@@ -71,39 +149,39 @@
   window.__CB352_TOUCH__ = function () { persist(false); };
   var fps = 0, frames = 0, fl = performance.now();
   (function raf() { frames++; requestAnimationFrame(raf); })();
-
   function text() {
     var a = assetState(), p = ph(), L = [];
-    L.push('CB352 load log  attempt ' + attempt + '  ' + (running ? 'city running' : 'loading') + '  tier ' + (window.__TIER352__ || '?') + '  dpr ' + devicePixelRatio + '  ' + innerWidth + 'x' + innerHeight);
+    L.push('CB352 load log  attempt ' + attempt + '  ' + (running ? 'city running' : 'loading') + '  tier ' + (window.__TIER352__ || '?') + '  dpr ' + devicePixelRatio + '  ' + innerWidth + 'x' + innerHeight + '  assets ' + ROOT);
     if (prev && prev.loading) L.push('PREVIOUS ATTEMPT STOPPED during ' + prev.phase + ' after ' + prev.files + ' files / ' + prev.mb + ' MB / ' + prev.t + ' s  (attempt ' + prev.attempt + ', canvases ' + prev.canvasN + ' / ' + prev.canvasMB + ' MB, GLB ' + prev.glb + ', stall ' + prev.stall + ' s)' + (prev.err ? '  last error: ' + prev.err : ''));
     L.push('phase  ' + phase(a) + '   ' + secs().toFixed(1) + ' s');
     L.push('files  ' + a.n + ' / ' + TOTAL + '   ' + (a.b / 1048576).toFixed(1) + ' / ' + (TOTAL_B / 1048576).toFixed(1) + ' MB');
     L.push('canvases ' + (p.canvasN || 0) + ' / ' + Math.round(p.canvasMB || 0) + ' MB   GLB parsed ' + (p.glbParsed || 0) + (p.parsing ? ' (+' + p.parsing + ' parsing)' : '') + '   main-thread stall max ' + stallMax.toFixed(1) + ' s');
     if (veilText()) L.push('page says: ' + veilText());
-    L.push(errs.length ? 'errors:\n  ' + errs.join('\n  ') : 'errors: none');
-    return L.join('\n');
+    L.push(errs.length ? 'errors:' + NL + '  ' + errs.join(NL + '  ') : 'errors: none');
+    return L.join(NL);
   }
-  function render() { try { pre.textContent = text(); } catch (e) { pre.textContent = 'log error ' + e; } }
+  function render() { if (!DBG) return; try { pre.textContent = text(); } catch (e) { pre.textContent = 'log error ' + e; } }
   function debugLine() {
+    if (!DBG) return;
     var p = ph(), calls = (p.renderer && p.renderer.info) ? p.renderer.info.render.calls : '-';
     dbg.textContent = 'tier ' + (window.__TIER352__ || '?') + ' | dpr ' + devicePixelRatio + ' | tex ' + (est === null ? '~...' : '~' + Math.round(est)) + ' MB | calls ' + calls + ' | ' + fps + ' fps';
   }
-  btn.addEventListener('click', function () {
-    var t = pre.textContent;
-    function fb() { var ta = document.createElement('textarea'); ta.value = t; ta.style.cssText = 'position:fixed;left:0;top:0;opacity:0'; document.body.appendChild(ta); ta.focus(); ta.select(); try { document.execCommand('copy'); } catch (e) {} ta.remove(); }
-    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).catch(fb); else fb(); } catch (e) { fb(); }
-    btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy'; }, 1200);
-  });
-  dbg.addEventListener('click', function () { el.style.display = el.style.display === 'none' ? 'block' : 'none'; });
-
+  if (DBG) {
+    btn.addEventListener('click', function () {
+      var t = pre.textContent;
+      function fb() { var ta = document.createElement('textarea'); ta.value = t; ta.style.cssText = 'position:fixed;left:0;top:0;opacity:0'; document.body.appendChild(ta); ta.focus(); ta.select(); try { document.execCommand('copy'); } catch (e) {} ta.remove(); }
+      try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).catch(fb); else fb(); } catch (e) { fb(); }
+      btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy'; }, 1200);
+    });
+    dbg.addEventListener('click', function () { el.style.display = el.style.display === 'none' ? 'block' : 'none'; });
+  }
   window.addEventListener('error', function (e) { add('error: ' + e.message + ' @' + String(e.filename || '').split('/').pop() + ':' + e.lineno); });
-  window.addEventListener('unhandledrejection', function (e) { var r = e.reason; add('unhandledrejection: ' + (r && (r.stack || r.message) ? String(r.stack || r.message).split('\n').slice(0, 2).join(' | ') : String(r))); });
+  window.addEventListener('unhandledrejection', function (e) { var r = e.reason; add('unhandledrejection: ' + (r && (r.stack || r.message) ? String(r.stack || r.message).split(NL).slice(0, 2).join(' | ') : String(r))); });
   window.addEventListener('webglcontextlost', function () { add('WEBGL CONTEXT LOST'); }, true);
   window.addEventListener('webglcontextrestored', function () { add('webgl context restored'); }, true);
   window.addEventListener('pagehide', function () { lastEvent = 'pagehide'; persist(true); });
   document.addEventListener('visibilitychange', function () { lastEvent = 'visibility ' + document.visibilityState; persist(true); });
   var ce = console.error; console.error = function () { try { add('console.error: ' + Array.prototype.map.call(arguments, function (x) { return x && x.message ? x.message : String(x); }).join(' ')); } catch (e) {} return ce.apply(console, arguments); };
-
   setInterval(function () {
     var now = performance.now(), gap = (now - lastTick) / 1000; lastTick = now; if (gap > stallMax) stallMax = gap;
     if (now - fl >= 1000) { fps = Math.round(frames * 1000 / (now - fl)); frames = 0; fl = now; }
@@ -111,17 +189,32 @@
     if (!running && p.renderer && p.renderer.info && p.renderer.info.render.calls > 0) {
       running = true; persist(true);
       try { var a = JSON.parse(localStorage.getItem(KEY)); a.loading = false; a.attempt = 0; localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {}
-      el.style.display = 'none'; dbg.style.display = 'block';
+      if (DBG) { el.style.display = 'none'; dbg.style.display = 'block'; }
     }
-    if (window.__TIER352__ === 'phone') dbg.style.display = 'block';
     render(); debugLine(); persist(false);
   }, 400);
-  setInterval(function () { var p = ph(); if (p.estimate && p.scene) p.estimate(p.scene, function (mb) { est = mb; }); }, 2500);
+  if (DBG) setInterval(function () { var p = ph(); if (p.estimate && p.scene) p.estimate(p.scene, function (mb) { est = mb; }); }, 2500);
   render(); persist(true);
 })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Corner Block — a live cyberpunk intersection</title>
+<meta name="description" content="A rain-soaked cyberpunk city block you can orbit and zoom, running live in the browser. Best on a desktop; phones get a recorded version.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Jash Shah">
+<meta property="og:title" content="Corner Block">
+<meta property="og:description" content="A rain-soaked cyberpunk city block you can orbit and zoom, running live in the browser. Best on a desktop; phones get a recorded version.">
+<meta property="og:url" content="https://jashshah854-a11y.github.io/corner-block/">
+<meta property="og:image" content="https://jashshah854-a11y.github.io/media/corner-block-share.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Corner Block, a lit isometric cyberpunk city block on a dark plinth, with a red dragon hologram and an airship above it.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Corner Block">
+<meta name="twitter:description" content="A rain-soaked cyberpunk city block you can orbit and zoom, running live in the browser. Best on a desktop; phones get a recorded version.">
+<meta name="twitter:image" content="https://jashshah854-a11y.github.io/media/corner-block-share.jpg">
+<meta name="twitter:image:alt" content="The Corner Block, a lit isometric cyberpunk city block on a dark plinth, with a red dragon hologram and an airship above it.">
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -185,6 +278,66 @@
 </head>
 <body>
 <div id="app"></div>
+<div id="poster353" aria-hidden="true"></div>
+<script>
+/* RUN355T poster placement. The still is a render of the SAME iso rig (az 45, el 35.26, orthographic) at a known scale, so it maps onto the live frame by one scale and one shift:
+     live  px = w/2 + s_l * ((P - T_l) . right)        poster px = W/2 + s_p * ((P - T_p) . right)       (up is mirrored)
+   hence the poster is drawn with background-size k*W x k*H, k = s_l / s_p, and background-position left = w/2 - k*W/2 - s_l*(a_l - a_p), top = h/2 - k*H/2 + s_l*(b_l - b_p),
+   where s_l = H_l * zoom / 108 (CSS px per screen metre), (a_l, b_l) = the live camera target in the rig plane (right, up coordinates) and (a_p, b_p) the poster camera's.
+   The live Overview framing is a pure function of the viewport, solved by the page's own fit (Run219 / Run350S). Measured with that fit:
+     phone portrait (compact header, w/h <= .75):  s_l = (w - 32) / 104.536227,  a_l = 5.298864,  b_l = 12.342204 + 1564.40013 / (w - 32)      (exact for 223 sizes)
+     desktop (w >= 900): bilinear over a table of the real solver (14 widths x 13 heights; exact at the grid points, which include 1440x900, 1366x768, 1280x720)
+   Anything else falls back to the old cover placement. At the end of the load (before the crossfade) the page calls settle(): it reads the REAL live camera, and if the still is more than 1 px off it eases it into place over
+   0.5 s first, so the crossfade itself never shows a jump. */
+(function () {
+  var el = document.getElementById('poster353'); if (!el) return;
+  var SPEC = { wide: { url: 'assets/poster355/city-wide.webp', W: 2400, H: 1350, SP: 9.0 }, tall: { url: 'assets-phone/poster355/city-tall.webp', W: 1200, H: 2400, SP: 7.5 } };
+  var AP = 0, BP = 14.863314690776583;
+  var WL = [900,1024,1152,1280,1366,1440,1536,1600,1680,1792,1920,2048,2304,2560], HL = [600,640,700,720,768,800,864,900,960,1000,1080,1200,1440], TB = [[[2.7272,16.587,8.689],[3.02,16.384,8.954],[3.2214,14.887,9.285],[3.3487,15.788,9.382],[3.7023,7.482,9.591],[4.0376,9.054,9.714],[4.722,10.658,9.931],[5.062,9.244,10.038],[5.5798,7.42,10.196],[6.0116,8.373,10.223],[6.7423,7.903,10.223],[7.473,6.337,10.223],[8.3033,5.299,10.223]],[[3.7823,16.076,8.689],[3.9839,14.831,8.954],[4.2399,13.422,9.285],[4.473,13.643,9.382],[4.7788,12.165,9.591],[4.8342,11.917,9.714],[5.0807,10.88,9.931],[5.2495,8.181,10.038],[5.7311,2.572,10.196],[6.1648,4.382,10.29],[7.0223,6.833,10.456],[8.199,6.918,10.488],[9.4895,5.299,10.488]],[[4.9767,12.586,13.062],[5.1405,13.237,11.016],[5.3295,12.432,9.285],[5.4263,10.837,9.382],[5.6716,11.112,9.591],[5.8779,11.429,9.714],[6.2462,11.063,9.931],[6.5619,9.985,10.038],[6.7365,10.218,10.196],[6.7602,10.139,10.29],[7.1917,6.087,10.456],[8.3046,2.295,10.659],[10.714,5.299,10.7]],[[4.9767,-0.0,13.062],[5.3547,1.482,13.413],[5.9217,3.748,13.854],[6.1107,4.726,13.983],[6.5643,5.173,14.263],[6.8667,7.579,14.428],[7.4715,7.941,14.719],[7.8118,9.338,14.863],[8.3788,9.085,15.077],[8.4065,9.008,12.882],[8.5235,8.69,10.456],[8.9434,8.124,10.659],[10.8401,1.776,10.868]],[[4.9767,-0.0,13.062],[5.3547,-0.0,13.413],[5.9217,-0.0,13.854],[6.1107,-0.0,13.983],[6.5643,-0.0,14.263],[6.8667,1.078,14.428],[7.4715,1.828,14.719],[7.8118,4.165,14.863],[8.3788,4.276,15.077],[8.7568,5.769,15.204],[9.5128,7.723,15.429],[9.7525,8.143,10.659],[11.1787,6.241,10.958]],[[4.9767,-0.0,13.062],[5.3547,-0.0,13.413],[5.9217,-0.0,13.854],[6.1107,-0.0,13.983],[6.5643,-0.0,14.263],[6.8667,-0.0,14.428],[7.4715,-0.0,14.719],[7.8118,-0.0,14.863],[8.3788,-0.0,15.077],[8.7568,1.458,15.204],[9.5128,3.576,15.429],[10.6469,7.339,15.705],[11.4168,7.454,10.958]],[[4.9767,-0.0,13.062],[5.3547,-0.0,13.413],[5.9217,-0.0,13.854],[6.1107,-0.0,13.983],[6.5643,-0.0,14.263],[6.8667,-0.0,14.428],[7.4715,-0.0,14.719],[7.8118,-0.0,14.863],[8.3788,-0.0,15.077],[8.7568,-0.0,15.204],[9.5128,-0.0,15.429],[10.6469,3.154,15.705],[12.8633,7.074,15.892]],[[4.9767,-0.0,13.062],[5.3547,-0.0,13.413],[5.9217,-0.0,13.854],[6.1107,-0.0,13.983],[6.5643,-0.0,14.263],[6.8667,-0.0,14.428],[7.4715,-0.0,14.719],[7.8118,-0.0,14.863],[8.3788,-0.0,15.077],[8.7568,-0.0,15.204],[9.5128,-0.0,15.429],[10.6469,-0.0,15.705],[12.915,4.782,16.112]],[[4.9767,-0.0,13.062],[5.3547,-0.0,13.413],[5.9217,-0.0,13.854],[6.1107,-0.0,13.983],[6.5643,-0.0,14.263],[6.8667,-0.0,14.428],[7.4715,-0.0,14.719],[7.8118,-0.0,14.863],[8.3788,-0.0,15.077],[8.7568,-0.0,15.204],[9.5128,-0.0,15.429],[10.6469,-0.0,15.705],[12.915,1.533,16.112]],[[4.9767,-0.0,13.062],[5.3547,-0.0,13.413],[5.9217,-0.0,13.854],[6.1107,-0.0,13.983],[6.5643,-0.0,14.263],[6.8667,-0.0,14.428],[7.4715,-0.0,14.719],[7.8118,-0.0,14.863],[8.3788,-0.0,15.077],[8.7568,-0.0,15.204],[9.5128,-0.0,15.429],[10.6469,-0.0,15.705],[12.915,-0.0,16.112]],[[4.9767,-0.0,13.062],[5.3547,-0.0,13.413],[5.9217,-0.0,13.854],[6.1107,-0.0,13.983],[6.5643,-0.0,14.263],[6.8667,-0.0,14.428],[7.4715,-0.0,14.719],[7.8118,-0.0,14.863],[8.3788,-0.0,15.077],[8.7568,-0.0,15.204],[9.5128,-0.0,15.429],[10.6469,-0.0,15.705],[12.915,-0.0,16.112]],[[4.9767,-0.0,13.062],[5.3547,-0.0,13.413],[5.9217,-0.0,13.854],[6.1107,-0.0,13.983],[6.5643,-0.0,14.263],[6.8667,-0.0,14.428],[7.4715,-0.0,14.719],[7.8118,-0.0,14.863],[8.3788,-0.0,15.077],[8.7568,-0.0,15.204],[9.5128,-0.0,15.429],[10.6469,-0.0,15.705],[12.915,-0.0,16.112]],[[4.9767,-0.0,13.062],[5.3547,-0.0,13.413],[5.9217,-0.0,13.854],[6.1107,-0.0,13.983],[6.5643,-0.0,14.263],[6.8667,-0.0,14.428],[7.4715,-0.0,14.719],[7.8118,-0.0,14.863],[8.3788,-0.0,15.077],[8.7568,-0.0,15.204],[9.5128,-0.0,15.429],[10.6469,-0.0,15.705],[12.915,-0.0,16.112]],[[4.9767,-0.0,13.062],[5.3547,-0.0,13.413],[5.9217,-0.0,13.854],[6.1107,-0.0,13.983],[6.5643,-0.0,14.263],[6.8667,-0.0,14.428],[7.4715,-0.0,14.719],[7.8118,-0.0,14.863],[8.3788,-0.0,15.077],[8.7568,-0.0,15.204],[9.5128,-0.0,15.429],[10.6469,-0.0,15.705],[12.915,-0.0,16.112]]];   // TB[i][j] = [s, a, b] for width WL[i], height HL[j]
+  var applied = null, S = window.__POSTER355__ = { applied: function () { return applied; }, mode: '' };
+  function seg(L, v) { var i = 0; while (i < L.length - 2 && v > L[i + 1]) i++; var t = (v - L[i]) / (L[i + 1] - L[i]); return [i, t < 0 ? 0 : t > 1 ? 1 : t]; }
+  function live(w, h) {
+    var phone = !!(window.__CB353__ && window.__CB353__.phone);
+    if (phone && w <= 600 && w / h <= 0.75) { S.mode = 'P'; var s = (w - 32) / 104.536227; return { s: s, a: 5.298864357537, b: 12.342204 + 1564.40013 / (w - 32) }; }
+    if (w >= 900) {
+      S.mode = 'D'; var p = seg(WL, w), q = seg(HL, h), r = [0, 0, 0];
+      for (var k = 0; k < 3; k++) { var v00 = TB[p[0]][q[0]][k], v10 = TB[p[0] + 1][q[0]][k], v01 = TB[p[0]][q[0] + 1][k], v11 = TB[p[0] + 1][q[0] + 1][k]; r[k] = (v00 * (1 - p[1]) + v10 * p[1]) * (1 - q[1]) + (v01 * (1 - p[1]) + v11 * p[1]) * q[1]; }
+      return { s: r[0], a: r[1], b: r[2] };
+    }
+    S.mode = ''; return null;
+  }
+  function css(spec, L, w, h) { var k = L.s / spec.SP; return { bw: k * spec.W, bh: k * spec.H, left: w / 2 - k * spec.W / 2 - L.s * (L.a - AP), top: h / 2 - k * spec.H / 2 + L.s * (L.b - BP) }; }
+  function put(c, spec) { el.style.backgroundImage = 'url(' + spec.url + ')'; el.style.backgroundRepeat = 'no-repeat'; el.style.backgroundSize = c.bw + 'px ' + c.bh + 'px'; el.style.backgroundPosition = c.left + 'px ' + c.top + 'px'; applied = c; }
+  function place() {
+    if (!el.parentNode) return;
+    var w = innerWidth, h = innerHeight, spec = w > h ? SPEC.wide : SPEC.tall, L = live(w, h);
+    if (!L) { applied = null; el.style.backgroundSize = ''; el.style.backgroundPosition = ''; el.style.backgroundImage = ''; return; }
+    put(css(spec, L, w, h), spec);
+  }
+  place(); window.addEventListener('resize', place);
+  S.place = place;
+  S.settle = function (go) {
+    try {
+      var C = window.__CB__; if (!C || !C.camera || !C.controls || !el.parentNode) return false;
+      var w = innerWidth, h = innerHeight, spec = w > h ? SPEC.wide : SPEC.tall, c = C.camera, T = C.controls.target, dv = [c.position.x - T.x, c.position.y - T.y, c.position.z - T.z], n = Math.sqrt(dv[0] * dv[0] + dv[1] * dv[1] + dv[2] * dv[2]);
+      var az = Math.atan2(dv[2], dv[0]), el_ = Math.asin(dv[1] / n);
+      var rr = [Math.sin(az), 0, -Math.cos(az)], f = [-Math.cos(az) * Math.cos(el_), -Math.sin(el_), -Math.sin(az) * Math.cos(el_)], u = [rr[1] * f[2] - rr[2] * f[1], rr[2] * f[0] - rr[0] * f[2], rr[0] * f[1] - rr[1] * f[0]];
+      var L = { s: h * c.zoom / 108, a: T.x * rr[0] + T.y * rr[1] + T.z * rr[2], b: T.x * u[0] + T.y * u[1] + T.z * u[2] };
+      if (Math.abs(az - Math.PI / 4) > 0.02 || Math.abs(el_ - Math.atan(1 / Math.SQRT2)) > 0.02) return false;   // not the Overview rig (the user already moved): nothing to match
+      var want = css(spec, L, w, h), cur = applied, err = cur ? Math.max(Math.abs(cur.left - want.left), Math.abs(cur.top - want.top), Math.abs(cur.left + cur.bw - want.left - want.bw), Math.abs(cur.top + cur.bh - want.top - want.bh)) : 1e9;
+      S.err = err; S.want = want;
+      if (err < 1.0) return false;
+      var reduce = false; try { reduce = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+      if (reduce) { put(want, spec); return false; }
+      el.style.transition = 'background-size .5s ease, background-position .5s ease';
+      el.style.backgroundImage = 'url(' + spec.url + ')'; el.style.backgroundRepeat = 'no-repeat';
+      requestAnimationFrame(function () { put(want, spec); setTimeout(function () { el.style.transition = ''; go(); }, 560); });
+      return true;
+    } catch (e) { return false; }
+  };
+})();
+</script>
+<div id="veil288s" class="panel" role="status" aria-live="polite"><h1>Waking the block</h1><p data-say="Loading the city">Loading the city</p><div class="track"><i></i></div></div>
 
 <div id="stats" class="panel">
   <div class="row"><span>fps</span><span id="s-fps">0</span></div>
@@ -204,6 +357,7 @@
     <button id="view-district" type="button" title="Focus inner northwest district (D)">District</button>
     <button id="view-cinema" type="button" title="Inspect Orbit cinema (C)">Cinema</button>
     <button id="focus-junction" type="button" title="Focus junction (J)">Junction</button>
+    <button id="tour355" type="button" aria-pressed="false" title="Cinematic tour (T)">Tour</button>
     <button id="toggle-motion" type="button" aria-pressed="false" title="Pause or resume (Space)">Pause</button>
     <button id="toggle-quality" type="button" title="Toggle quality (Q)">Quality: high</button>
   </div>
@@ -237,7 +391,10 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';   /* RUN353A */
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';   /* RUN353A */
 
+const M353 = !/[?&]m=0(&|$)/.test(location.search);   /* RUN353A: ?m=0 serves the uncompressed asset sets and skips the compressed-asset block */
 /* RUN352M_PHONE_BEGIN: PHONE TIER (candidate). Same page, same city, a lighter memory footprint for iOS Safari, which reloads the tab at 2 GB of graphics memory.
    Activation: ?tier=phone forces it, ?tier=full forces it off. AUTO_PHONE_TIER decides the no-parameter case: iOS, or a coarse pointer with the short screen side
    under 820 px. With the tier off NOTHING below runs (PH352 is null, every hook in the page is a PHONE352 test), so the desktop path is the old path.
@@ -327,7 +484,7 @@ const PH352 = PHONE352 ? (() => {
     if (a.origin !== location.origin) return u;
     const i = a.pathname.lastIndexOf('/assets/');
     if (i < 0) return u;
-    a.pathname = a.pathname.slice(0, i) + '/assets-phone/' + a.pathname.slice(i + 8);
+    a.pathname = a.pathname.slice(0, i) + '/assets-phone' + (M353 ? '-m' : '') + '/' + a.pathname.slice(i + 8);   /* RUN353A */
     st.routed++; return a.href;
   };
   THREE.DefaultLoadingManager.setURLModifier(route);
@@ -335,7 +492,7 @@ const PH352 = PHONE352 ? (() => {
   window.fetch = (r, o) => fetch0(typeof r === 'string' ? route(r) : (r instanceof URL ? route(r.href) : r), o);
   // The page checks the SHA-256 of four prepared GLBs byte for byte (corner31, market32, midrise34, landmark48). Their phone copies have other bytes, so the digest of a
   // known phone copy is answered with the digest the page expects; any other bytes still get their real digest and still fail the check. Needs https or localhost, like the page.
-  const DIGEST352 = {"ACFACAA8250DCA06C759BD38E9A21D0F24192CF18B331F29B4237699E2494387": "4E51E2999C9AC1DDD0357990CB8987B40D055E5F117FBE7E93845849D34B2D10", "1F392A4A38C532EE566BEC510D1C76C124DA7A2B354D11A3B192A5DAB3883A88": "0C290E17D1F07597023C3C67652696842AA61A2C17222112806036E5595D5E97", "9711497F52F04861F3F7D45210A50B1CB0DF3A7BF0D103AC9F6247467361E19E": "45D081426697F73924F9ED1DA786F9794ACE7743FE4CDD63FBDF39D3833D2E86", "A1FAA445D9B97ECC7A755C1D0C88E1EC06B6E0CF9296527D6127EF6228B083CF": "A61B0BC60AA42FF9396321E7B1B0FC106ED6B8C5A6F7C704E75D6543571AC386"};
+  const DIGEST352 = {};   /* RUN353A: the digest map lives in the RUN353A block (both tiers) */
   if (window.crypto && crypto.subtle) {
     const digest0 = crypto.subtle.digest.bind(crypto.subtle);
     crypto.subtle.digest = async (alg, data) => {
@@ -427,7 +584,7 @@ const PH352 = PHONE352 ? (() => {
   }
   // estimate of the scene texture memory (RGBA8 + mips), one entry per Source: the same arithmetic as cc-work/r352m/memprobe.py
   function estimate(scene, cb) {
-    collect(scene, bySrc => { let b = 0; for (const [s, l] of bySrc) { const t = l[0], px = srcPx(s); const mip = (t.generateMipmaps !== false && t.minFilter !== THREE.LinearFilter && t.minFilter !== THREE.NearestFilter) ? 1.333 : 1; b += px * 4 * mip; } cb(b / 1048576); });
+    collect(scene, bySrc => { let b = 0; for (const [s, l] of bySrc) { const t = l[0], px = srcPx(s); if (t.isCompressedTexture && t.mipmaps) { for (const mm of t.mipmaps) b += mm.data.byteLength; continue; }   /* RUN353A: KTX2 textures count their compressed bytes */ const mip = (t.generateMipmaps !== false && t.minFilter !== THREE.LinearFilter && t.minFilter !== THREE.NearestFilter) ? 1.333 : 1; b += px * 4 * mip; } cb(b / 1048576); });
   }
   function scale(k, ...ts) { for (const t of ts) { t.source.__phScale = k; t.source.__phCap = 1; st.scaled++; } }
   function halveTarget(rt) {
@@ -442,6 +599,94 @@ const PH352 = PHONE352 ? (() => {
   return { route, start, scale, arm, estimate, halveTarget, drain, st };
 })() : null;
 /* RUN352M_PHONE_END */
+/* RUN353A_BEGIN: compressed assets + instant first view (candidate).
+   (1) ASSET SETS. build/assets-m (full tier) and build/assets-phone-m (phone tier) mirror the 123 files the page loads: GLB geometry is EXT_meshopt_compression (POSITION /
+       TEXCOORD / NORMAL go through the meshopt exponent filter, so they decode back to Float32: every CPU reader of the geometry sees the same types and order), GLB textures
+       and six standalone textures are KTX2 Basis (UASTC for signage, normal maps and alpha decals, ETC1S for big diffuse), everything else is a byte copy.
+       One place routes them: the loading manager's URL modifier and a fetch wrapper rewrite the last /assets/ segment of a same-origin URL (full tier: /assets-m/, phone tier:
+       /assets-phone-m/, see RUN352M). ?m=0 turns the whole block off and serves the uncompressed sets (A/B and debugging).
+   (2) DECODERS. Every GLTFLoader gets MeshoptDecoder and one shared KTX2Loader (transcoder files from the same pinned three base as the importmap; the loader is initialised
+       with the renderer right after it is created). KTX2Loader transcodes to ASTC (iPhone) or BC7 / BC3 (desktop); with neither it falls back to RGBA.
+   (3) STANDALONE TEXTURES. TextureLoader.load is intercepted for the files in KTX_PNG353 only (the audit of every use site: loadAsync only, no CPU read of .image, one flipY
+       convention per file; the pixels were flipped at encode time for the default flipY = true sites). Anything else, and any KTX2 failure, takes the normal PNG path.
+       Compressed textures cannot generate mipmaps: generateMipmaps is pinned to false (the file carries the chain).
+   (4) DIGESTS. The page checks four GLBs by SHA-256 (corner31, market32, midrise34, landmark48). Those constants now hold the digests of the build/assets-m files; a known
+       file of another set (the uncompressed ones for ?m=0, the phone ones) is answered with the expected digest, any other bytes still hash to themselves and fail.
+   (5) LIVE. K353.live() waits for real composer frames after the startup block, then fades the poster out (window.__POSTER353__, early script). */
+const K353 = (() => {
+  const st = window.__K353__ = { m: M353, ktxLoads: 0, ktxFallbacks: 0, routed: 0, formats: null, error: null, tLive: 0 };
+  const KTX_PNG = {"airship323/ad323.png": true, "backside309/glyph-atlas.png": true, "backside309/plaque.png": true, "capsule341/sign.png": true, "commercial-interior-atlas-v2.png": true, "screens322/kanji-atlas.png": true};
+  const DIGEST = {"4E51E2999C9AC1DDD0357990CB8987B40D055E5F117FBE7E93845849D34B2D10": "5737CCF7F62E593EE9E01B43306A6423419F2C1F750AAB35809A09225E8105B7", "ACFACAA8250DCA06C759BD38E9A21D0F24192CF18B331F29B4237699E2494387": "5737CCF7F62E593EE9E01B43306A6423419F2C1F750AAB35809A09225E8105B7", "A2552150042A4186B72A336A55F364CB9BA737E8156CDA2056AF8C55032305EA": "5737CCF7F62E593EE9E01B43306A6423419F2C1F750AAB35809A09225E8105B7", "0C290E17D1F07597023C3C67652696842AA61A2C17222112806036E5595D5E97": "13251923B6F1773FD0889FFCE61578FC5CBFA7425DAEA185707AEEF80E48A3CC", "1F392A4A38C532EE566BEC510D1C76C124DA7A2B354D11A3B192A5DAB3883A88": "13251923B6F1773FD0889FFCE61578FC5CBFA7425DAEA185707AEEF80E48A3CC", "9C17044D1B4C176298484355571798F9A7EBCFE3B2B4CF7BFE0C0A66A61CBA1B": "13251923B6F1773FD0889FFCE61578FC5CBFA7425DAEA185707AEEF80E48A3CC", "45D081426697F73924F9ED1DA786F9794ACE7743FE4CDD63FBDF39D3833D2E86": "B376F083DD979D6DBF1A9BEE75EB1D0FAEC0D8B04FC14FE2C5F32BE163C4E853", "9711497F52F04861F3F7D45210A50B1CB0DF3A7BF0D103AC9F6247467361E19E": "B376F083DD979D6DBF1A9BEE75EB1D0FAEC0D8B04FC14FE2C5F32BE163C4E853", "F4BDDBC8F335F1CA61E12735CF50F99879C8DFB44DA43ED94419FE1026946827": "B376F083DD979D6DBF1A9BEE75EB1D0FAEC0D8B04FC14FE2C5F32BE163C4E853", "A61B0BC60AA42FF9396321E7B1B0FC106ED6B8C5A6F7C704E75D6543571AC386": "565E5279A59B30B3FAF26877BAAE4F0A70FAA69EF8008DAEF19077EA853E1F7D", "A1FAA445D9B97ECC7A755C1D0C88E1EC06B6E0CF9296527D6127EF6228B083CF": "565E5279A59B30B3FAF26877BAAE4F0A70FAA69EF8008DAEF19077EA853E1F7D", "AE98D3B6CC37B58298DFA29EB1BC87601F7623D76555B235C16A449603D280AA": "565E5279A59B30B3FAF26877BAAE4F0A70FAA69EF8008DAEF19077EA853E1F7D"};
+  let ktx2 = null;
+  const base = (() => { try { return import.meta.resolve('three/addons/libs/basis/'); } catch (e) { return 'https://unpkg.com/three@0.170.0/examples/jsm/libs/basis/'; } })();
+  function init(rend) {
+    try {
+      ktx2 = new KTX2Loader().setTranscoderPath(base).setWorkerLimit(PHONE352 ? 2 : 4).detectSupport(rend);
+      const c = ktx2.workerConfig; st.formats = c ? Object.keys(c).filter(k => c[k]).join(',') : null;
+    } catch (e) { st.error = String(e && e.message || e); console.warn('[ktx2] unavailable', e); }
+  }
+  // meshopt + KTX2 on every GLTFLoader (parse is the one entry point of load, loadAsync and parseAsync); outermost wrapper, after the RUN352M one
+  const gp = GLTFLoader.prototype.parse;
+  GLTFLoader.prototype.parse = function (data, path, onLoad, onError) {
+    if (!this.meshoptDecoder) this.meshoptDecoder = MeshoptDecoder;
+    if (!this.ktx2Loader && ktx2) this.ktx2Loader = ktx2;
+    return gp.call(this, data, path, onLoad, onError);
+  };
+  const assetsRel = u => {   // path below the last /assets/ segment of a same-origin url, or null
+    try { const a = new URL(u, document.baseURI); if (a.origin !== location.origin) return null; const i = a.pathname.lastIndexOf('/assets/'); return i < 0 ? null : a.pathname.slice(i + 8); } catch (e) { return null; }
+  };
+  const ktxUrl = u => u.replace(/[.]png((?:[?#].*)?)$/, '.ktx2$1');
+  const TLp = THREE.TextureLoader.prototype, tl0 = TLp.load;
+  TLp.load = function (url, onLoad, onProgress, onError) {
+    const rel = (M353 && ktx2 && typeof url === 'string') ? assetsRel(url) : null;
+    if (rel === null || !KTX_PNG[rel]) return tl0.call(this, url, onLoad, onProgress, onError);
+    ktx2.load(ktxUrl(url), tex => {
+      Object.defineProperty(tex, 'generateMipmaps', { get: () => false, set: () => {}, configurable: true });
+      st.ktxLoads++; if (onLoad) onLoad(tex);
+    }, onProgress, err => { st.ktxFallbacks++; console.warn('[ktx2] ' + rel + ' failed, using the png', err); tl0.call(this, url, onLoad, onProgress, onError); });
+  };
+  // routing for the full tier (the phone tier routes inside the RUN352M block with the same rule): last /assets/ segment -> /assets-m/
+  const route = u => {
+    if (typeof u !== 'string' || u.startsWith('data:') || u.startsWith('blob:')) return u;
+    let a; try { a = new URL(u, document.baseURI); } catch (e) { return u; }
+    if (a.origin !== location.origin) return u;
+    const i = a.pathname.lastIndexOf('/assets/');
+    if (i < 0) return u;
+    a.pathname = a.pathname.slice(0, i) + '/assets-m/' + a.pathname.slice(i + 8);
+    st.routed++; return a.href;
+  };
+  const fetch1 = window.fetch.bind(window);
+  if (!PHONE352 && M353) {
+    THREE.DefaultLoadingManager.setURLModifier(route);
+    window.fetch = (r, o) => fetch1(typeof r === 'string' ? route(r) : (r instanceof URL ? route(r.href) : r), o);
+  }
+  // the head prefetch asks for the literal ./assets/*.png urls: the KTX2 ones must be warmed as .ktx2, not downloaded twice
+  if (M353) {
+    const fetch2 = window.fetch.bind(window);
+    window.fetch = (r, o) => { const s = typeof r === 'string' ? r : (r instanceof URL ? r.href : null); const rel = s ? assetsRel(s) : null; return fetch2(rel !== null && KTX_PNG[rel] ? ktxUrl(s) : r, o); };
+  }
+  // SHA-256 identity check of the four prepared GLBs (see the header)
+  if (window.crypto && crypto.subtle) {
+    const digest0 = crypto.subtle.digest.bind(crypto.subtle);
+    crypto.subtle.digest = async (alg, data) => {
+      const r = await digest0(alg, data);
+      const want = DIGEST[Array.from(new Uint8Array(r), n => n.toString(16).padStart(2, '0')).join('').toUpperCase()];
+      return want ? new Uint8Array(want.match(/../g).map(x => parseInt(x, 16))).buffer : r;
+    };
+  }
+  // the poster fades out once real frames have been drawn: the startup block compiles without rendering, so renderer.info.render.frame counts only drawn frames
+  function live(rend) {
+    const P = window.__POSTER353__; if (!P) return;
+    const f0 = rend.info.render.frame, t0 = performance.now();
+    const tick = () => {
+      if (rend.info.render.frame >= f0 + 24 || performance.now() - t0 > 8000) { requestAnimationFrame(() => { st.tLive = Math.round(performance.now()); P.fade(); }); return; }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+  return { init, live, st };
+})();
+/* RUN353A_END */
 /* RUN288S_VEIL_BEGIN: startup veil (companion to RUN288S_STARTUP; must run first so something is on screen while the scene builds) + parallel asset prefetch.
    Veil: one .panel (the title panel's own surface, border, radius, blur, mono font and text tokens), centred, no new colours: #ffd9a0 heading as #title h1,
    #8b93a7 body as #title p, #8ef0ff accent as the HUD values, track = the panel border colour. Removed by the RUN288S_STARTUP block once the shaders are
@@ -450,23 +695,34 @@ const PH352 = PHONE352 ? (() => {
    source text is scanned for the page's literal './assets/...' URLs and each is fetched once, in parallel, to warm the HTTP cache. No URL is listed here, so the
    portable embed (which inlines the literals in the page body) is unaffected: with data: URIs the scan finds nothing (and a source over 8 MB is not scanned), so it is a no-op. */
 const veil288s = (() => {
+  /* RUN353A: the veil is plain HTML now (it is on screen before this module has loaded) and its rules are static in the head; this element only keeps the removal below unchanged.
+     The text line also carries the asset progress (MB / percent) from the early script; once everything is fetched the bar goes back to the indeterminate sweep. */
   const css = document.createElement('style');
-  css.textContent = '#veil288s{left:50%;top:50%;transform:translate(-50%,-50%);min-width:232px;max-width:calc(100vw - 32px);z-index:5}' +
-    '#veil288s h1{margin:0 0 3px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#ffd9a0}' +
-    '#veil288s p{margin:0 0 9px;color:#8b93a7;font-size:11px}' +
-    '#veil288s .track{height:2px;border-radius:1px;background:rgba(120,140,180,.18);overflow:hidden}' +
-    '#veil288s .track i{display:block;height:100%;width:38%;background:#8ef0ff;animation:veil288s 1.5s ease-in-out infinite}' +
-    '@keyframes veil288s{0%{transform:translateX(-100%)}100%{transform:translateX(265%)}}' +
-    '@media (prefers-reduced-motion:reduce){#veil288s .track i{animation:none;width:100%;opacity:.5}}';
   document.head.appendChild(css);
-  const el = document.createElement('div');
-  el.id = 'veil288s'; el.className = 'panel'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite');
-  el.innerHTML = '<h1>Waking the block</h1><p></p><div class="track"><i></i></div>';
-  const line = el.querySelector('p'); line.textContent = 'Loading the city';
-  document.body.appendChild(el);
-  const done = () => { css.remove(); el.remove(); };
-  addEventListener('error', done); addEventListener('unhandledrejection', done);
-  return { say(t) { line.textContent = t; }, done };
+  let el = document.getElementById('veil288s');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'veil288s'; el.className = 'panel'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite');
+    el.innerHTML = '<h1>Waking the block</h1><p></p><div class="track"><i></i></div>';
+    document.body.appendChild(el);
+  }
+  const line = el.querySelector('p'), track = el.querySelector('.track'), bar = el.querySelector('.track i');
+  let said = 'Loading the city';
+  const paint = () => {
+    let t = said, pct = -1;
+    const pr = window.__CB353__ && window.__CB353__.progress ? window.__CB353__.progress() : null;
+    if (pr && pr.n > 0 && pr.totalBytes) {
+      pct = Math.min(100, Math.round(pr.b / pr.totalBytes * 100));
+      if (pct < 100) t += '  \u00b7  ' + (pr.b / 1048576).toFixed(1) + ' / ' + (pr.totalBytes / 1048576).toFixed(1) + ' MB  \u00b7  ' + pct + '%';
+    }
+    line.textContent = t; line.setAttribute('data-say', said);
+    if (pct >= 0 && pct < 100) { track.classList.add('det353'); bar.style.width = pct + '%'; } else { track.classList.remove('det353'); bar.style.width = ''; }
+  };
+  const iv = setInterval(paint, 250); paint();
+  const done = () => { clearInterval(iv); css.remove(); el.remove(); };
+  const fail = () => { done(); if (window.__POSTER353__) window.__POSTER353__.drop(); };
+  addEventListener('error', fail); addEventListener('unhandledrejection', fail);
+  return { say(t) { said = t; paint(); }, done };
 })();
 {
   const own = document.querySelector('script[type="module"]'), src = own ? own.textContent : '', seen = new Set();
@@ -547,6 +803,7 @@ renderer.toneMappingExposure = 1.30; /* RUN83 night grade (was 1.24) */
 renderer.info.autoReset = false;   // accumulate across composer passes so the HUD reports the real scene cost
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 app.appendChild(renderer.domElement);
+K353.init(renderer);   /* RUN353A */
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x05060a);
@@ -2754,12 +3011,12 @@ function hotel21Build(g,w,d,H){
 
 /* RUN31_CORNER_IMPORT_BEGIN */
 window.__CORNER31_READY__=false;
-const CORNER31_URL=new URL('./assets/corner31/corner31.glb?sha=4E51E2999C9AC1DDD0357990CB8987B40D055E5F117FBE7E93845849D34B2D10',document.baseURI).href;
+const CORNER31_URL=new URL('./assets/corner31/corner31.glb?sha=5737CCF7F62E593EE9E01B43306A6423419F2C1F750AAB35809A09225E8105B7',document.baseURI).href;
 window.__CORNER31_PROMISE__=(async()=>{
   const response=await fetch(CORNER31_URL);if(!response.ok)throw Error('Corner31 asset HTTP '+response.status);
   const bytes=await response.arrayBuffer();
   const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),n=>n.toString(16).padStart(2,'0')).join('').toUpperCase();
-  if(digest!=='4E51E2999C9AC1DDD0357990CB8987B40D055E5F117FBE7E93845849D34B2D10')throw Error('Corner31 served asset identity mismatch');
+  if(digest!=='5737CCF7F62E593EE9E01B43306A6423419F2C1F750AAB35809A09225E8105B7')throw Error('Corner31 served asset identity mismatch');
   return{gltf:await new GLTFLoader().parseAsync(bytes,new URL('.',document.baseURI).href),sha256:digest};
 })();
 const CORNER31_LOADED=await window.__CORNER31_PROMISE__;
@@ -7094,10 +7351,10 @@ await installArcade25();
 /* RUN32_MARKET_GROUND_END */
 
 /* RUN32_BAKED_LIGHT_BEGIN */
-const MARKET32_URL=new URL('./assets/market32/market32.glb?sha=0C290E17D1F07597023C3C67652696842AA61A2C17222112806036E5595D5E97',document.baseURI).href;
+const MARKET32_URL=new URL('./assets/market32/market32.glb?sha=13251923B6F1773FD0889FFCE61578FC5CBFA7425DAEA185707AEEF80E48A3CC',document.baseURI).href;
 const market32Response=await fetch(MARKET32_URL);if(!market32Response.ok)throw Error('Market32 HTTP '+market32Response.status);
 const market32Bytes=await market32Response.arrayBuffer();
-const market32Digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',market32Bytes)),n=>n.toString(16).padStart(2,'0')).join('').toUpperCase();if(market32Digest!=='0C290E17D1F07597023C3C67652696842AA61A2C17222112806036E5595D5E97')throw Error('Market32 asset mismatch');
+const market32Digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',market32Bytes)),n=>n.toString(16).padStart(2,'0')).join('').toUpperCase();if(market32Digest!=='13251923B6F1773FD0889FFCE61578FC5CBFA7425DAEA185707AEEF80E48A3CC')throw Error('Market32 asset mismatch');
 const market32Loaded=await new GLTFLoader().parseAsync(market32Bytes,new URL('.',document.baseURI).href);
 for(const r of window.__MARKET32_RECORDS__.parts)if(r.mesh.geometry.type!=='PlaneGeometry'&&!r.mesh.material.transparent&&r.purpose!=='small-interior-luminaire'){r.mesh.visible=false;r.mesh.userData.market32BakedReplacement=true;}
 market32Loaded.scene.name='market32-baked-frontage';scene.add(market32Loaded.scene);market32Loaded.scene.updateMatrixWorld(true);
@@ -7203,10 +7460,10 @@ run33CornerPlot({min:14.1,max:21.25,chamfer:.95,buildingCenter:18.5,buildingHalf
 window.__CORNER33_READY__=true;
 
 /* RUN34_BAKED_LIGHT_BEGIN */
-const MIDRISE34_URL=new URL('./assets/midrise34/midrise34.glb?sha=45D081426697F73924F9ED1DA786F9794ACE7743FE4CDD63FBDF39D3833D2E86',document.baseURI).href;
+const MIDRISE34_URL=new URL('./assets/midrise34/midrise34.glb?sha=B376F083DD979D6DBF1A9BEE75EB1D0FAEC0D8B04FC14FE2C5F32BE163C4E853',document.baseURI).href;
 const midrise34Response=await fetch(MIDRISE34_URL);if(!midrise34Response.ok)throw Error('Midrise34 HTTP '+midrise34Response.status);
 const midrise34Bytes=await midrise34Response.arrayBuffer();
-const midrise34Digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',midrise34Bytes)),n=>n.toString(16).padStart(2,'0')).join('').toUpperCase();if(midrise34Digest!=='45D081426697F73924F9ED1DA786F9794ACE7743FE4CDD63FBDF39D3833D2E86')throw Error('Midrise34 asset mismatch');
+const midrise34Digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',midrise34Bytes)),n=>n.toString(16).padStart(2,'0')).join('').toUpperCase();if(midrise34Digest!=='B376F083DD979D6DBF1A9BEE75EB1D0FAEC0D8B04FC14FE2C5F32BE163C4E853')throw Error('Midrise34 asset mismatch');
 const midrise34Loaded=await new GLTFLoader().parseAsync(midrise34Bytes,new URL('.',document.baseURI).href);
 for(const r of window.__MIDRISE34__.records)if(!r.mesh.material.transparent&&!r.mesh.userData.midrise34Retired){r.mesh.visible=false;r.mesh.userData.midrise34BakedReplacement=true;}
 midrise34Loaded.scene.name='midrise34-baked-architecture';scene.add(midrise34Loaded.scene);midrise34Loaded.scene.updateMatrixWorld(true);
@@ -7889,7 +8146,7 @@ async function loadLandmark48WorldShell() {
     const bytes = await response.arrayBuffer();
     const digest = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)),
       value => value.toString(16).padStart(2, '0')).join('').toUpperCase();
-    if (digest !== 'A61B0BC60AA42FF9396321E7B1B0FC106ED6B8C5A6F7C704E75D6543571AC386') throw new Error('landmark48.glb served bytes do not match the prepared asset SHA256');
+    if (digest !== '565E5279A59B30B3FAF26877BAAE4F0A70FAA69EF8008DAEF19077EA853E1F7D') throw new Error('landmark48.glb served bytes do not match the prepared asset SHA256');
 
     const loaded = await new GLTFLoader().parseAsync(bytes, new URL('./', document.baseURI).href);
     const root = loaded.scene;
@@ -18595,7 +18852,7 @@ async function run323aSky() {
   }
   scene.add(root); hide(root); res.draws = 4;
   // ---- path: smooth closed stadium loop in the screen frame (u = screen right, q = toward the camera), nose follows the tangent; scratch objects only
-  const A = 72, RR = 22, Q0 = 5, HALT = 90, V = 3.4, S0 = 46.3, SL = 2 * A, AL = Math.PI * RR, TOT = 2 * SL + 2 * AL, R2 = Math.SQRT1_2;
+  const A = 10, RR = 12, Q0 = 44, HALT = 90, V = 3.0, S0 = 7, SL = 2 * A,   /* RUN355T: was A 72, RR 22, Q0 5, V 3.4, S0 46.3 (partly cut or out of frame 35-48 percent of the lap); now fully inside every default view */ AL = Math.PI * RR, TOT = 2 * SL + 2 * AL, R2 = Math.SQRT1_2;
   const U2 = [0, 0], WP = [0, 0, 0, 0, 0, 0], POSE = { x: 0, y: 0, z: 0, yaw: 0, roll: 0, pitch: 0 };
   const uqInto = (s, out) => {
     s = ((s % TOT) + TOT) % TOT;
@@ -21181,6 +21438,541 @@ void main() {
   R.ok = R.errors.length === 0;
 })();
 /* RUN350S_SURROUND_END */
+/* RUN355T_TOUR_BEGIN: cinematic tour (button "Tour" in the title panel / phone Menu, key T). Camera only: it never touches the simulation (sim hashes unchanged), nothing is added to the scene.
+   MODEL. The page camera is orthographic on the iso rig: position = target + 230 m * dir(az, el), zoom sets the scale. A shot is a list of keys {t, P, az, el, hw, hh}: the subject point P, the camera angles, and the half
+   extents (screen metres) the subject must fit inside. Per viewport each key is solved to a camera state: scale s = min(usable width / 2hw, usable height / 2hh) (so a portrait phone keeps the subject inside the
+   narrow frame), and the target is offset so P lands on the centre of the USABLE rectangle (below the compact header and above the signal bar on a phone; whole frame on desktop). The channels
+   (target xyz, az, el, ln s) run through a monotone cubic Hermite spline (PCHIP, zero speed at both ends, no overshoot, C1): every transition is eased, there are no cuts, and each shot keeps a slow drift.
+   CLEARANCE. The camera always sits 230 m from its target (like every preset), so it is never inside geometry; what could hide a subject is something in front of it, so each shot looks outward from its subject
+   (static shots over the open plinth edge, the dragon from outside its ring, the airship from the side) and the build checks the sight lines with ray casts (cc-work/r355t).
+   SCHEDULE. Live subjects are pure functions of the visual clock (TV318): the dragon (path table), the airship (its pose function) and the train (Run331S service legs: T331.legAt / pos). At start the planner reads the
+   train's own timetable, finds the next docking (arrival leg end) and orders / stretches the shots so the train shot covers the approach and the docking; the dragon shot is placed where the head is on the visible side of its
+   ring. If no docking fits, an orbit filler (3-18 s) is inserted before the train shot; if that still does not reach it within the 56 s cap, the train shot is dropped. Paused sim: live subjects are frozen, the tour runs on the wall clock.
+   INPUT. Any pointer, wheel, touch or key press stops the tour and hands the controls back where the camera is (Esc and a second press of the button too); a tap on a view button stops it first, then the view runs. A natural
+   end calls overviewView(). prefers-reduced-motion: the Tour button is hidden and T does nothing (decision: hidden, no stills). */
+(function run355tTour() {
+  const API = window.__TOUR355 = { ok: false, active: false };
+  try {
+  const btn = document.getElementById('tour355'); if (!btn) throw new Error('no tour button');
+  const V3 = THREE.Vector3, DEG = Math.PI / 180, R = ISO_D, TWO_PI = Math.PI * 2;
+  const clamp = (x, a, b) => x < a ? a : x > b ? b : x;
+  const rmq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const TV = () => (window.__TV318 ? window.__TV318() : sim.t);
+  const RING = { x: 4.08, z: -10.93 };   /* centre of the dragon ring (Run330F): the reference for which side of the city the head is on */
+  const wrapPi = a => { a = (a + Math.PI) % TWO_PI; if (a < 0) a += TWO_PI; return a - Math.PI; };
+  const S = { active: false, manual: null, tau: 0, tv0: 0, frozen: false, plan: null, L: null, ch: null, lastWall: 0, total: 0 };
+  API.S = S;
+
+  /* ------------------------------------------------------------------ spline (monotone cubic Hermite, zero end speeds) */
+  function makeSpline(xs, ys) {
+    const n = xs.length, h = new Array(n - 1), d = new Array(n - 1), m = new Array(n);
+    for (let i = 0; i < n - 1; i++) { h[i] = Math.max(1e-6, xs[i + 1] - xs[i]); d[i] = (ys[i + 1] - ys[i]) / h[i]; }
+    m[0] = 0; m[n - 1] = 0;
+    for (let i = 1; i < n - 1; i++) {
+      if (d[i - 1] * d[i] <= 0) m[i] = 0;
+      else { const w1 = 2 * h[i] + h[i - 1], w2 = h[i] + 2 * h[i - 1]; m[i] = (w1 + w2) / (w1 / d[i - 1] + w2 / d[i]); }
+    }
+    return t => {
+      if (t <= xs[0]) return ys[0]; if (t >= xs[n - 1]) return ys[n - 1];
+      let lo = 0, hi = n - 1; while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (xs[mid] <= t) lo = mid; else hi = mid; }
+      const u = (t - xs[lo]) / h[lo], u2 = u * u, u3 = u2 * u;
+      return (2 * u3 - 3 * u2 + 1) * ys[lo] + (u3 - 2 * u2 + u) * h[lo] * m[lo] + (-2 * u3 + 3 * u2) * ys[lo + 1] + (u3 - u2) * h[lo] * m[lo + 1];
+    };
+  }
+
+  /* ------------------------------------------------------------------ layout and key solving */
+  const titleEl = document.getElementById('title'), sigEl = document.getElementById('signals'), hintEl = document.getElementById('hint');
+  const layout = () => {
+    const w = innerWidth, h = innerHeight, narrow = w < 900;
+    let x0 = narrow ? 12 : 24, y0 = 24, y1 = h - 24;
+    if (narrow) {
+      const tr = titleEl && getComputedStyle(titleEl).display !== 'none' ? titleEl.getBoundingClientRect() : null;
+      const sr = sigEl && getComputedStyle(sigEl).display !== 'none' ? sigEl.getBoundingClientRect() : null;
+      y0 = tr && tr.height > 0 ? tr.bottom + 10 : 12; y1 = sr && sr.height > 0 ? sr.top - 10 : h - 12;
+      if (y1 - y0 < h * .3) { y0 = Math.min(y0, h * .3); y1 = Math.max(y1, h * .7); }
+    }
+    return { w, h, x0, x1: w - x0, y0, y1 };
+  };
+  const _r = new V3(), _u = new V3(), _f = new V3();
+  const basis = (az, el) => { _f.set(-Math.cos(az) * Math.cos(el), -Math.sin(el), -Math.sin(az) * Math.cos(el)); _r.set(Math.sin(az), 0, -Math.cos(az)); _u.crossVectors(_r, _f); };
+  const solveKey = (k, L, ov) => {
+    if (k.ov) { const z = ov.zoom * (k.push || 1); return { T: ov.T.clone(), az: ov.az, el: ov.el, lns: Math.log(z * L.h / 108) }; }
+    if (k.raw) return { T: k.raw.T.clone(), az: k.raw.az, el: k.raw.el, lns: Math.log(k.raw.s) };
+    const uw = L.x1 - L.x0, uh = L.y1 - L.y0;
+    let s = Math.min(uw / (2 * k.hw), uh / (2 * k.hh)); s = Math.min(s, 7.5 * L.h / 108);   /* zoom stays inside the page's own maxZoom 8 */
+    basis(k.az, k.el);
+    const cx = (L.x0 + L.x1) / 2, cy = (L.y0 + L.y1) / 2;
+    const T = k.P.clone().addScaledVector(_r, -(cx - L.w / 2) / s).addScaledVector(_u, -(L.h / 2 - cy) / s);
+    return { T, az: k.az, el: k.el, lns: Math.log(s) };
+  };
+
+  /* ------------------------------------------------------------------ live subjects (pure functions of the visual clock) */
+  const dragonObj = (() => { let d = null; scene.traverse(o => { if (o.name === 'dragon160-hologram') d = o; }); return d; })();
+  const dragonHead = (tv, out) => {
+    const U = dragonObj.material.uniforms, N = U.uN.value, D = U.uPT.value.image.data;
+    let u = (U.uQ0.value + U.uV.value * tv) / U.uL.value; u -= Math.floor(u);
+    const f = u * N, i0 = Math.floor(f) % N, fr = f - Math.floor(f), i1 = (i0 + 1) % N;
+    return out.set(D[i0 * 4] + (D[i1 * 4] - D[i0 * 4]) * fr, D[i0 * 4 + 1] + (D[i1 * 4 + 1] - D[i0 * 4 + 1]) * fr, D[i0 * 4 + 2] + (D[i1 * 4 + 2] - D[i0 * 4 + 2]) * fr);
+  };
+  const dragonOK = () => !!(dragonObj && dragonObj.material && dragonObj.material.uniforms && dragonObj.material.uniforms.uPT && window.__DRAGON_ON__ !== false);
+  const AB = () => window.__AIRSHIP323A__;
+  const airOK = () => { const a = AB(); return !!(a && a.pose && a.root) && CFG.quality !== 'low'; };   /* Quality low hides the airship */
+  const _ap = { x: 0, y: 0, z: 0, yaw: 0, roll: 0, pitch: 0 };
+  const T331 = () => { const T = window.__TRAIN331; return T && T.legAt && T.pos ? T : null; };
+  const tvOf = t => S.frozen ? S.tv0 : S.tv0 + t;
+
+  /* ------------------------------------------------------------------ shot catalogue. keys(S0, hold): S0 = shot start, trans = time to the arrival key, hold = drift time after it */
+  const E = DEG;
+  const stat = (id, trans, hold, a, b) => ({ id, trans, hold, keys: (S0, hd) => [Object.assign({ t: S0 + trans }, a, { P: new V3(...a.P) }), Object.assign({ t: S0 + trans + hd }, b, { P: new V3(...(b.P || a.P)) })] });
+  const sampled = (id, trans, hold, step, fn) => ({ id, trans, hold, keys: (S0, hd) => { const out = [], t0 = S0 + trans, t1 = S0 + trans + hd, n = Math.max(2, Math.round((t1 - t0) / step)); for (let i = 0; i <= n; i++) { const t = t0 + (t1 - t0) * i / n; out.push(Object.assign({ t }, fn(t, (t - t0) / (t1 - t0)))); } return out; } });
+  const smoothAt = (t, win, fn) => { const acc = new V3(), p = new V3(); let n = 0; for (let k = -win; k <= win + 1e-9; k += win / 4) { fn(t + k, p); acc.add(p); n++; } return acc.multiplyScalar(1 / n); };
+  const SHOTS = {
+    kuro: stat('kuro', 3.0, 1.8, { P: [12.5, 4, 13], az: 36 * E, el: .30, hw: 21, hh: 11.5 }, { az: 52 * E, el: .33, hw: 19, hh: 10.5 }),
+    ramen: stat('ramen', 2.0, 1.6, { P: [-10.5, 3.2, 21], az: 74 * E, el: .32, hw: 18, hh: 10 }, { az: 58 * E, el: .35, hw: 16.5, hh: 9 }),
+    train: stat('train', 2.6, 6.6, { P: [-12, 21, -6.6], az: 46 * E, el: .52, hw: 44, hh: 19 }, { az: 56 * E, el: .47, hw: 38, hh: 16.5 }),
+    cinema: stat('cinema', 2.2, 1.4, { P: [19.3, 9.5, 1], az: 28 * E, el: .50, hw: 17, hh: 14 }, { az: 42 * E, el: .50, hw: 15.5, hh: 13 }),
+    crown: stat('crown', 2.4, 1.4, { P: [3, 40, -20], az: 52 * E, el: .28, hw: 22, hh: 13 }, { az: 38 * E, el: .32, hw: 19.5, hh: 11.5 }),
+    dragon: sampled('dragon', 2.8, 2.4, .7, t => {
+      const P = smoothAt(t, .9, (tt, out) => dragonHead(tvOf(tt), out)), a = smoothAt(t + 1, .9, (tt, out) => dragonHead(tvOf(tt), out)), b = smoothAt(t - 1, .9, (tt, out) => dragonHead(tvOf(tt), out));
+      const dx = a.x - b.x, dz = a.z - b.z, dl = Math.hypot(dx, dz) || 1; P.x -= dx / dl * 6; P.z -= dz / dl * 6;   /* the body trails the head: centre the shot a little behind it */
+      const az = 45 * E + clamp(wrapPi(Math.atan2(P.z - RING.z, P.x - RING.x) + 8 * E - 45 * E), -80 * E, 80 * E);
+      return { P, az, el: .34, hw: 19, hh: 11 };
+    }),
+    airship: sampled('airship', 2.4, 2.2, .6, (t, u) => {
+      const p = AB().pose(tvOf(t), _ap);
+      return { P: new V3(p.x, p.y - .5, p.z), az: (48 + 10 * u) * E, el: .20 + .06 * u, hw: 26, hh: 13 };
+    }),
+    block: { id: 'block', trans: 1.6, hold: .8, keys: (S0, hd) => [{ t: S0 + 1.6, ov: 1 }, { t: S0 + 1.6 + hd, ov: 1, push: 1.03 }] },
+    end: { id: 'end', trans: 3.0, hold: .8, keys: (S0, hd) => [{ t: S0 + 3.0, ov: 1, push: 1.03 }, { t: S0 + 3.0 + hd, ov: 1, push: 1.0 }] }
+  };
+  const orbitShot = F => sampled('orbit', 2.4, F, 1.5, (t, u) => { const e = u * u * (3 - 2 * u); return { P: new V3(0, 14, 0), az: (45 + 110 * e) * E, el: .50 - .06 * e, hw: 64, hh: 34 }; });
+
+  /* ------------------------------------------------------------------ planner */
+  const PREFERRED = ['dragon', 'kuro', 'ramen', 'train', 'crown', 'cinema', 'airship'];
+  const perms = (arr, f) => { const a = arr.slice(), c = new Array(a.length).fill(0); f(a.slice()); let i = 0; while (i < a.length) { if (c[i] < i) { const j = i % 2 ? c[i] : 0; const t = a[j]; a[j] = a[i]; a[i] = t; f(a.slice()); c[i]++; i = 0; } else { c[i] = 0; i++; } } };
+  const STEP = .5, HORIZON = 150;
+  const buildTables = (trainT) => {
+    const n = Math.ceil(HORIZON / STEP) + 1, tabs = { Qt: new Float32Array(n), Qd: new Float32Array(n), Qa: new Float32Array(n), docks: [] };
+    const LW = SHOTS.train.trans + SHOTS.train.hold, tv0 = S.tv0;
+    if (trainT) {
+      for (let t = tv0; t < tv0 + HORIZON + LW + 10; t += .5) { const g = trainT.legAt(t); if (!g.jump && g.to && g.to.id === 'station' && g.t1 > tv0 && tabs.docks.indexOf(g.t1) < 0) tabs.docks.push(g.t1); }
+      for (let i = 0; i < n; i++) {
+        const t0 = i * STEP; let inR = 0, cnt = 0; for (let k = 0; k <= LW; k += .25) { const x = trainT.pos(tvOf(t0 + k)); cnt++; if (x > -60 && x < 52) inR++;   /* the part of the track the train shot frames */ }
+        let dock = false; if (!S.frozen) for (const d of tabs.docks) if (d - tv0 > t0 + 2.2 && d - tv0 < t0 + LW - .6) dock = true;
+        tabs.Qt[i] = .65 * inR / cnt + (dock ? .35 : 0);
+      }
+    }
+    const dOK = dragonOK(), aOK = airOK(), p = new V3();
+    for (let i = 0; i < n; i++) {
+      const t0 = i * STEP;
+      if (dOK) { let ok = 0, cnt = 0; const hd = SHOTS.dragon; for (let k = hd.trans; k <= hd.trans + hd.hold; k += .4) { dragonHead(tvOf(t0 + k), p); const a = Math.atan2(p.z - RING.z, p.x - RING.x); cnt++; if (Math.abs(wrapPi(a - 45 * DEG)) <= 90 * DEG) ok++; } tabs.Qd[i] = ok / cnt; }
+      if (aOK) { let ok = 0, cnt = 0; const sh = SHOTS.airship; for (let k = sh.trans; k <= sh.trans + sh.hold; k += .4) { const pp = AB().pose(tvOf(t0 + k), _ap); cnt++; if (Math.abs(wrapPi(pp.yaw - 45 * DEG)) <= 65 * DEG) ok++; } tabs.Qa[i] = ok / cnt; }
+    }
+    return tabs;
+  };
+  const EXT = [0, 1, 2, 3, 4, 5, 6];
+  const evalOrder = (units, tabs, trainOK) => {
+    /* units: arrays of shot ids that stay together. Extension seconds before the dragon / train shot lengthen the PREVIOUS shot's drift (its hold). Returns the best choice. */
+    const flat = []; units.forEach(u => u.forEach(id => flat.push(id)));
+    let inv = 0; const pos = id => PREFERRED.indexOf(id); for (let i = 0; i < flat.length; i++) for (let j = i + 1; j < flat.length; j++) if (pos(flat[i]) >= 0 && pos(flat[j]) >= 0 && pos(flat[i]) > pos(flat[j])) inv++;
+    let best = null;
+    for (const eD of EXT) for (const eT of EXT) {
+      let t = SHOTS.block.trans + SHOTS.block.hold, seq = [], Qt = 1, Qd = 1, Qa = 1, ext = 0, blockExtra = 0;
+      for (let i = 0; i < flat.length; i++) {
+        const id = flat[i], sh = SHOTS[id]; let e = 0;
+        if (id === 'dragon') e = eD; if (id === 'train') e = eT;
+        if (e) { if (seq.length) seq[seq.length - 1].hold += e; else blockExtra += e; t += e; ext += e; }
+        const idx = Math.min(tabs.Qt.length - 1, Math.round(t / STEP));
+        if (id === 'train') Qt = trainOK ? tabs.Qt[idx] : 1;
+        if (id === 'dragon') Qd = tabs.Qd[idx]; if (id === 'airship') Qa = tabs.Qa[idx];
+        seq.push({ id, S: t, hold: sh.hold }); t += sh.trans + sh.hold;
+      }
+      const total = t + SHOTS.end.trans + SHOTS.end.hold;
+      const score = 100 * Qt + 20 * Qd + 8 * Qa - 1.0 * ext - .8 * inv - .35 * Math.max(0, total - 42);
+      if (!best || score > best.score) best = { score, seq, total, Qt, Qd, Qa, ext, inv, blockExtra, endS: t };
+    }
+    return best;
+  };
+  const FMAX = 18, TMAX = 56;   /* longest orbit filler / longest accepted tour: if the train is still out of reach within them, the train shot is dropped instead of stretching the tour */
+  const plan = () => {
+    const trainT = T331(), tabs = buildTables(trainT), trainOK = !!trainT && !S.frozen;
+    const base = PREFERRED.filter(id => (id !== 'dragon' || dragonOK()) && (id !== 'airship' || airOK()));
+    const run = units => { let best = null; perms(units, u => { const r = evalOrder(u, tabs, trainOK); if (!best || r.score > best.score) best = r; }); return best; };
+    let best = run(base.map(id => [id])); best.filler = 0;
+    if (trainOK && best.Qt < .6) {
+      for (let F = 3; F <= FMAX; F += 3) {
+        SHOTS.orbit = orbitShot(F);
+        const units = base.filter(id => id !== 'train').map(id => [id]); units.push(['orbit', 'train']);
+        const r = run(units); r.filler = F;
+        if (r.Qt >= .6 && r.total <= TMAX) { best = r; break; }
+      }
+      if (best.Qt < .6 || best.total > TMAX) { const r = run(base.filter(id => id !== 'train').map(id => [id])); r.filler = 0; r.trainSkipped = true; best = r; }
+    }
+    best.tabs = tabs;
+    return best;
+  };
+
+  /* ------------------------------------------------------------------ overview framing (dry run of the page's own overviewView, state restored) */
+  const dryOverview = () => {
+    const was = S.active; S.active = false;
+    const keep = { pos: camera.position.clone(), tgt: controls.target.clone(), zoom: camera.zoom, minZ: controls.minZoom, minP: controls.minPolarAngle, maxP: controls.maxPolarAngle, av: activeView };
+    overviewView();
+    const T = controls.target.clone(), dv = camera.position.clone().sub(T), zoom = camera.zoom;
+    const el = Math.asin(dv.y / dv.length()), az = Math.atan2(dv.z, dv.x);
+    camera.position.copy(keep.pos); controls.target.copy(keep.tgt); camera.zoom = keep.zoom; camera.updateProjectionMatrix();
+    controls.minZoom = keep.minZ; controls.minPolarAngle = keep.minP; controls.maxPolarAngle = keep.maxP; activeView = keep.av;
+    const d0 = controls.enableDamping; controls.enableDamping = false; controls.update(); controls.enableDamping = d0;
+    if (keep.av !== 'tour') syncViewPresentation(); else setCopy(COPY);
+    S.active = was;
+    return { T, az, el, zoom };
+  };
+
+  /* ------------------------------------------------------------------ materialise the plan for the current viewport */
+  const channelsOf = (specs, L, ov) => {
+    const ts = specs.map(k => k.t), sol = specs.map(k => solveKey(k, L, ov));   /* ts / sol grow below (mid keys) while specs keeps its length */
+    for (let i = 1; i < sol.length; i++) sol[i].az += TWO_PI * Math.round((sol[i - 1].az - sol[i].az) / TWO_PI);
+    /* long moves get a pull-back in the middle: a key half way with the zoom lowered in proportion to the on-screen distance travelled, so the screen speed stays moderate (fly out, cross, push in) */
+    for (let i = specs.length - 2; i >= 0; i--) {
+      const a = sol[i], b = sol[i + 1], gap = ts[i + 1] - ts[i]; if (gap < 1.3) continue;
+      const dist = a.T.distanceTo(b.T), sMin = Math.exp(Math.min(a.lns, b.lns)), px = dist * sMin, dls = Math.abs(a.lns - b.lns); if (px < 450) continue;   /* short or zoom-only moves stay a single eased curve */
+      const delta = clamp(.5 * Math.log(1 + px / 700), 0, .9);
+      ts.splice(i + 1, 0, ts[i] + gap / 2); sol.splice(i + 1, 0, { T: a.T.clone().add(b.T).multiplyScalar(.5), az: (a.az + b.az) / 2, el: (a.el + b.el) / 2, lns: Math.min(a.lns, b.lns) - delta });
+    }
+    const col = f => sol.map(f);
+    return { x: makeSpline(ts, col(s => s.T.x)), y: makeSpline(ts, col(s => s.T.y)), z: makeSpline(ts, col(s => s.T.z)), az: makeSpline(ts, col(s => s.az)), el: makeSpline(ts, col(s => s.el)), lns: makeSpline(ts, col(s => s.lns)) };
+  };
+  const startKey = L => {
+    const dv = camera.position.clone().sub(controls.target), el = Math.asin(dv.y / dv.length()), az = Math.atan2(dv.z, dv.x);
+    return { t: 0, raw: { T: controls.target.clone(), az, el, s: camera.zoom * L.h / 108 } };
+  };
+  const materialise = keepStart => {
+    S.L = layout(); S.ov = dryOverview();
+    const P = S.plan, specs = [keepStart || startKey(S.L)]; S.start = specs[0];
+    for (const k of SHOTS.block.keys(0, SHOTS.block.hold + P.blockExtra)) specs.push(k);
+    for (const s of P.seq) for (const k of SHOTS[s.id].keys(s.S, s.hold)) specs.push(k);
+    for (const k of SHOTS.end.keys(P.endS, SHOTS.end.hold)) specs.push(k);
+    S.specs = specs; S.total = specs[specs.length - 1].t; S.ch = channelsOf(specs, S.L, S.ov);
+  };
+
+  /* ------------------------------------------------------------------ apply + per-frame step (wraps controls.update, which the page calls once per frame before it renders) */
+  const _T = new V3();
+  const applyAt = tau => {
+    const c = S.ch, T = _T.set(c.x(tau), c.y(tau), c.z(tau)), az = c.az(tau), el = c.el(tau), s = Math.exp(c.lns(tau));
+    camera.position.set(T.x + R * Math.cos(az) * Math.cos(el), T.y + R * Math.sin(el), T.z + R * Math.sin(az) * Math.cos(el));
+    controls.target.copy(T);
+    const z = s * 108 / innerHeight; if (Math.abs(camera.zoom - z) > 1e-7) { camera.zoom = z; camera.updateProjectionMatrix(); }
+  };
+  const upd0 = controls.update.bind(controls);
+  controls.update = function () {
+    if (S.active) {
+      const now = performance.now(), wallDt = Math.min(.1, Math.max(0, (now - S.lastWall) / 1000)); S.lastWall = now;
+      let tau;
+      if (S.manual !== null) tau = S.manual;
+      else if (simPaused || S.frozen) { S.tau += wallDt; tau = S.tau; }
+      else { tau = TV() - S.tv0; S.tau = tau; }
+      if (tau >= S.total) { finish(); return upd0.apply(null, arguments); }
+      applyAt(Math.max(0, tau));
+    }
+    return upd0.apply(null, arguments);
+  };
+
+  /* ------------------------------------------------------------------ start / stop */
+  const setCopy = txt => { const p = titleEl && titleEl.querySelector('p'); if (p) p.textContent = txt; if (hintEl) hintEl.textContent = txt; };
+  const COPY = 'Tour running. Drag, scroll, touch or press any key to take control (Esc stops).';
+  const markButtons = on => {
+    if (on) for (const id of ['view-overview', 'view-district', 'view-cinema', 'focus-junction']) { const b = document.getElementById(id); if (b) b.setAttribute('aria-pressed', 'false'); }
+    btn.setAttribute('aria-pressed', String(on)); btn.textContent = on ? 'Stop' : 'Tour'; document.body.classList.toggle('tour355', on);
+  };
+  const start = opts => {
+    opts = opts || {};
+    if (S.active || rmq.matches) return false;
+    const mb = document.getElementById('menu352'); if (mb && document.body.classList.contains('menu352')) mb.click();   /* the phone Menu must be closed before the usable frame is measured */
+    settleOrbitBeforePreset58();
+    S.manual = opts.manual ? (opts.tau || 0) : null; S.frozen = opts.assumeRunning ? false : !!simPaused;
+    S.tv0 = opts.tv0 !== undefined ? opts.tv0 : TV(); S.tau = 0; S.lastWall = performance.now();
+    const t0 = performance.now(); S.plan = plan(); S.planMs = performance.now() - t0;
+    materialise();
+    S.active = true; API.active = true; activeView = 'tour';
+    controls.minPolarAngle = .05; controls.maxPolarAngle = 1.55; controls.minZoom = .05; controls.enabled = false;
+    markButtons(true); setCopy(COPY);
+    applyAt(0);
+    return true;
+  };
+  const handBack = () => {
+    const dv = camera.position.clone().sub(controls.target), polar = Math.acos(clamp(dv.y / dv.length(), -1, 1));
+    controls.enabled = true; controls.minPolarAngle = clamp(polar - .2, .05, 1.5); controls.maxPolarAngle = clamp(polar + .2, .1, 1.55);
+    controls.minZoom = Math.min(.55, camera.zoom * .55); controls.maxZoom = Math.max(8, camera.zoom);
+    activeView = 'overview'; syncViewPresentation();
+  };
+  const stop = reason => {
+    if (!S.active) return;
+    S.active = false; API.active = false; markButtons(false); API.last = reason;
+    if (reason === 'done') { controls.enabled = true; overviewView(); } else handBack();
+  };
+  const finish = () => stop('done');
+  API.start = start; API.stop = stop;
+  API.relayout = () => { if (!S.active) return; const tau = S.manual !== null ? S.manual : S.tau; materialise(S.start); setCopy(COPY); applyAt(clamp(tau, 0, S.total)); };
+  API.apply = tau => { applyAt(tau); };
+  API.timeline = () => { const P = S.plan || {}; return { total: S.total, seq: P.seq, Qt: P.Qt, Qd: P.Qd, Qa: P.Qa, filler: P.filler, ext: P.ext, blockExtra: P.blockExtra, docks: P.tabs && P.tabs.docks, tv0: S.tv0, frozen: S.frozen, planMs: S.planMs }; };
+
+  /* ------------------------------------------------------------------ input */
+  const startSoon = () => requestAnimationFrame(() => requestAnimationFrame(() => start()));
+  btn.addEventListener('click', () => { if (S.active) stop('button'); else startSoon(); });
+  const onInput = e => { if (!S.active || S.manual !== null) return; if (e.target && e.target.closest && e.target.closest('#tour355')) return; stop(e.type); };
+  window.addEventListener('pointerdown', onInput, { capture: true, passive: true });
+  window.addEventListener('touchstart', onInput, { capture: true, passive: true });
+  window.addEventListener('wheel', onInput, { capture: true, passive: true });
+  window.addEventListener('keydown', e => {
+    if (e.isComposing || (e.target && (e.target.isContentEditable || /input|textarea/i.test(e.target.tagName)))) return;
+    if (/^(Shift|Control|Alt|Meta|CapsLock)$/.test(e.key || '')) return;
+    const isT = (e.key || '').toLowerCase() === 't' && !e.ctrlKey && !e.metaKey && !e.altKey;
+    if (S.active && S.manual === null) { stop(e.key === 'Escape' ? 'esc' : isT ? 'key-t' : 'key'); return; }
+    if (isT && !e.repeat && !S.active) startSoon();
+  }, { capture: true });
+  const reduceSync = () => { btn.hidden = rmq.matches; if (rmq.matches && S.active) stop('reduced-motion'); };
+  if (rmq.addEventListener) rmq.addEventListener('change', reduceSync); else if (rmq.addListener) rmq.addListener(reduceSync);
+  reduceSync();
+  API.ok = true;
+  } catch (e) { API.error = String(e && e.message || e); console.error('[tour355] failed', e); const b = document.getElementById('tour355'); if (b) b.hidden = true; }
+})();
+/* RUN355T_TOUR_END */
+/* RUN358J_JS_BEGIN: per-frame JavaScript cost, sim- and pixel-identical. Switch: ?perf358=0 (block not installed), window.__PERF358J__.setOn(false/true) for same-page A/B.
+   (1) STATIC SUBTREES SKIP THE MATRIX WALK. renderer.render calls scene.updateMatrixWorld() once per frame. The scene graph has about 17,000 nodes, only about 190 of which ever move (cars, drones, train,
+   flyers, airship, koi, a few animated parts); about 9,000 are hidden static-batch sources that Run261 already short-circuits one call at a time, and about 1,500 are visible. Three still walks every node
+   every frame (a call, a compare of the ten transform inputs for each matrixAutoUpdate node, a loop over the children), about 1 ms per frame. This block records, over OBS_SAMPLES samples after the
+   graph is final (static batching, Run261 and Run336 installed), which nodes change their local transform inputs; every maximal subtree without a mover becomes a frozen root, and
+   Object3D.updateMatrixWorld (same body as three r170) skips frozen roots in the child loop of their parent unless the walk is forced (force=true still recomputes everything, so fitCityView and
+   every explicit scene.updateMatrixWorld(true) behave as before). A frozen subtree keeps the matrices the walk would recompute to the same bits.
+   (2) SAFETY NET, no result depends on the learning window being complete: BEFORE each walk, a slice of the frozen members (all of them every SWEEP_WALKS frames, every SWEEP_MOVE frames while the
+   camera moves, and all of them on each of the first CAM_LEARN camera-moving frames, which finds nodes that follow the camera) has its inputs (position, quaternion, scale for matrixAutoUpdate nodes;
+   the 16 matrix elements for manual nodes; child count) compared with the record. A mismatch marks that node (and every other member of its root that differs) a mover, thaws the root and
+   re-partitions it, all before the walk of the same frame, so only the mover ancestors are walked again; Object3D.add / remove on a frozen member, and any rotation written to one (its
+   quaternion change callback), do the same at once. Monotonic: a node
+   that ever moved is walked from then on. More than MAX_TRIPS thaws switches the feature off for the page. Nodes created after the freeze are never frozen.
+   Exclusions, movers by definition: lights, cameras, any node with its own onBeforeRender / onAfterRender / onBeforeShadow / onAfterShadow hook, any node whose updateMatrixWorld is not the stock
+   one (skinned meshes, custom overrides). Visibility is not part of the inputs: a hidden node that is shown again keeps the matrix it already had, and a change made while it was hidden is caught
+   by the sweep like any other.
+   Data: one flat pre-order list of the graph (index, parent index, subtree end), typed arrays for the records, cached references to each node position / quaternion / scale / matrix elements / children
+   (those cannot be replaced on an Object3D), so the compare loops are monomorphic and a thaw costs time proportional to the thawed subtree only.
+   Stats: window.__PERF358J__.dump(). */
+(function run358jJs() {
+  const J = window.__PERF358J__ = { on: true, disabled: false, phase: "wait", error: null, roots: 0, frozen: 0, movers: 0, samples: 0, trips: 0, qtrips: 0, adds: 0, sweeps: 0, camMoves: 0, buildMs: 0, freezeMs: 0, tripMs: 0, tripMaxMs: 0, walks: 0, tripLog: [], setOn() {}, dump() { return null; } };
+  if (/[?&]perf358=0(&|$)/.test(location.search)) { J.disabled = true; J.on = false; J.phase = "disabled"; return; }
+  const T = THREE, OP = T.Object3D.prototype, hasOwn = Object.prototype.hasOwnProperty;
+  const OBS_STRIDE = 6, OBS_SAMPLES = 40, SWEEP_WALKS = 30, SWEEP_MOVE = 6, CAM_LEARN = 12, MAX_TRIPS = 300, SW = 18;
+  const FZ = new Set();
+  let off = false, N = 0, nodes = [], pidx = null, endI = null, idxOf = null, sig = null, kind = null, cPos = null, cQua = null, cScl = null, cEl = null, cCh = null;
+  let mark = null, np = null, dynB = null, rootI = null, sweepL = null, sweepN = 0, cursor = 0, nMovers = 0;
+  // three r170 Object3D.updateMatrixWorld, plus: frozen roots are skipped by the child loop of their parent while the walk is not forced
+  const UW = function (force) {
+    if (this.matrixAutoUpdate) this.updateMatrix();
+    if (this.matrixWorldNeedsUpdate || force) {
+      if (this.matrixWorldAutoUpdate === true) {
+        if (this.parent === null) this.matrixWorld.copy(this.matrix); else this.matrixWorld.multiplyMatrices(this.parent.matrixWorld, this.matrix);
+      }
+      this.matrixWorldNeedsUpdate = false; force = true;
+    }
+    const ch = this.children, l = ch.length;
+    if (force || FZ.size === 0) { for (let i = 0; i < l; i++) ch[i].updateMatrixWorld(force); }
+    else { for (let i = 0; i < l; i++) { const c = ch[i]; if (!FZ.has(c)) c.updateMatrixWorld(force); } }
+  };
+  const UW0 = OP.updateMatrixWorld;
+  if (UW0.length !== 1 || !/matrixWorldNeedsUpdate/.test(UW0.toString())) { J.error = "unexpected updateMatrixWorld"; J.phase = "off"; J.on = false; return; }
+  OP.updateMatrixWorld = UW;
+  const P261 = () => window.__PERF261P__, P336 = () => window.__PERF336P__;
+  const OBR = OP.onBeforeRender, OAR = OP.onAfterRender, OBSH = OP.onBeforeShadow, OASH = OP.onAfterShadow;
+  const plain = o => {
+    if (o.isLight || o.isCamera || o.onBeforeRender !== OBR || o.onAfterRender !== OAR || o.onBeforeShadow !== OBSH || o.onAfterShadow !== OASH) return false;
+    const f = o.updateMatrixWorld; return f === UW || (f !== undefined && hasOwn.call(o, "updateMatrixWorld") && Object.getPrototypeOf(o).updateMatrixWorld === UW && !!P261() && P261().hooked > 0);
+  };
+  // ---- records: the inputs the walk reads for one node, through cached references
+  function sigWrite(i) {
+    const a = sig, b = i * SW;
+    if (kind[i] === 1) { const p = cPos[i], q = cQua[i], s = cScl[i];
+      a[b] = p.x; a[b + 1] = p.y; a[b + 2] = p.z; a[b + 3] = q._x; a[b + 4] = q._y; a[b + 5] = q._z; a[b + 6] = q._w; a[b + 7] = s.x; a[b + 8] = s.y; a[b + 9] = s.z; }
+    else { const e = cEl[i]; for (let k = 0; k < 16; k++) a[b + k] = e[k]; }
+    a[b + 16] = cCh[i].length;
+  }
+  function same(i) {
+    const a = sig, b = i * SW;
+    if (a[b + 16] !== cCh[i].length) return false;
+    if (kind[i] === 1) { const p = cPos[i], q = cQua[i], s = cScl[i];
+      return a[b] === p.x && a[b + 1] === p.y && a[b + 2] === p.z && a[b + 3] === q._x && a[b + 4] === q._y && a[b + 5] === q._z && a[b + 6] === q._w && a[b + 7] === s.x && a[b + 8] === s.y && a[b + 9] === s.z; }
+    const e = cEl[i]; for (let k = 0; k < 16; k++) if (a[b + k] !== e[k]) return false;
+    return true;
+  }
+  const label = o => { const path = []; for (let n = o; n && path.length < 5; n = n.parent) path.push((n.name || n.type) + (n.matrixAutoUpdate ? "" : "(m)")); return path.join("<"); };
+  function markMover(i, why) {
+    if (mark[i]) return; mark[i] = 1; nMovers++; J.movers = nMovers;
+    if (J.phase === "frozen" && J.tripLog.length < 40) J.tripLog.push({ walk: J.walks, cam: J.camMoves, path: label(nodes[i]), why: why || "" });
+  }
+  // ---- build the flat graph (two steps, two frames, to keep each under a few ms)
+  let b1 = null;
+  function build1() {
+    const t0 = performance.now(), nd = [], pi = [], ei = [];
+    const dfs = (o, p) => { const i = nd.length; nd.push(o); pi.push(p); ei.push(0); const ch = o.children; for (let k = 0; k < ch.length; k++) dfs(ch[k], i); ei[i] = nd.length; };
+    dfs(scene, -1);
+    nodes = nd; N = nd.length; pidx = Int32Array.from(pi); endI = Int32Array.from(ei); idxOf = new Map(); for (let i = 0; i < N; i++) idxOf.set(nd[i], i);
+    J.buildMs += performance.now() - t0;
+  }
+  function build2() {
+    const t0 = performance.now();
+    sig = new Float64Array(N * SW); kind = new Uint8Array(N); cPos = new Array(N); cQua = new Array(N); cScl = new Array(N); cEl = new Array(N); cCh = new Array(N);
+    mark = new Uint8Array(N); np = new Uint8Array(N); dynB = new Uint8Array(N); rootI = new Int32Array(N).fill(-1); nMovers = 0;
+    for (let i = 0; i < N; i++) { const o = nodes[i]; kind[i] = o.matrixAutoUpdate ? 1 : 0; cPos[i] = o.position; cQua[i] = o.quaternion; cScl[i] = o.scale; cEl[i] = o.matrix.elements; cCh[i] = o.children; sigWrite(i); }
+    J.buildMs += performance.now() - t0;
+  }
+  // ---- learning window
+  let walks = 0, readyAt = -1, plainAt = 0;
+  const ready = () => {
+    if (typeof staticBatchStats === "undefined" || !(staticBatchStats.batches > 0)) return false;
+    const a = P261(), b = P336(); if (a && !a.installed) return false; if (b && !b.disabled && !b.installed) return false;
+    return renderer.info.render.frame > 120;
+  };
+  function observe() {
+    for (let i = 1; i < N; i++) if (!same(i)) { markMover(i, "obs"); sigWrite(i); }
+    const per = Math.ceil(N / OBS_SAMPLES), end = Math.min(N, plainAt + per);   // the exclusion test is spread over the samples
+    for (let i = plainAt; i < end; i++) np[i] = plain(nodes[i]) ? 0 : 1;
+    plainAt = end >= N ? 0 : end; J.samples++;
+  }
+  function freeze() {
+    const t0 = performance.now();
+    for (let i = 1; i < N; i++) { if (!same(i)) { markMover(i, "freeze"); sigWrite(i); } }
+    for (let i = 0; i < N; i++) dynB[i] = (mark[i] || np[i] || (i === 0)) ? 1 : 0;
+    for (let i = N - 1; i > 0; i--) if (dynB[i]) dynB[pidx[i]] = 1;
+    FZ.clear(); rootI.fill(-1);
+    for (let i = 1; i < N; i++) if (!dynB[i] && dynB[pidx[i]]) { FZ.add(nodes[i]); const e = endI[i]; for (let k = i; k < e; k++) rootI[k] = i; }
+    sweepRebuild(); cursor = 0; J.roots = FZ.size; J.frozen = sweepN; hookQuats();
+    J.freezeMs = performance.now() - t0; J.phase = "frozen"; camChanged();
+  }
+  // a rotation written to a frozen node (quaternion.set / copy / setFromUnitVectors, rotation.set ...) thaws its root at once, without waiting for the sweep; translation-only and scale-only
+  // changes are left to the sweep
+  let hooked = null;
+  function hookQuats() {
+    if (hooked === null) hooked = new Uint8Array(N);
+    for (let i = 1; i < N; i++) {
+      if (rootI[i] < 0 || kind[i] !== 1 || hooked[i]) continue;
+      const q = cQua[i], orig = q._onChangeCallback; if (typeof orig !== "function") continue; hooked[i] = 1;
+      q._onChangeCallback = function () { orig.call(this); if (rootI[i] >= 0 && J.on) { J.qtrips++; trip(new Set([rootI[i]]), i); } };
+    }
+  }
+  function sweepRebuild() {
+    let n = 0; for (let i = 0; i < N; i++) if (rootI[i] >= 0) n++;
+    if (sweepL === null || sweepL.length < n) sweepL = new Int32Array(Math.max(n, N));
+    n = 0; for (let i = 0; i < N; i++) if (rootI[i] >= 0) sweepL[n++] = i; sweepN = n;
+  }
+  // ---- thaw roots (indices): every member that differs from its record becomes a mover, then each root is re-partitioned inside its own index range
+  function trip(rs, extra) {
+    const t0 = performance.now(); for (const r of rs) if (rootI[r] !== r) rs.delete(r); if (!rs.size && extra < 0) return;
+    J.trips++;
+    if (extra >= 0) markMover(extra, "hook");
+    for (const r of rs) { const e = endI[r];
+      for (let j = r; j < e; j++) { if (mark[j]) continue; if (!same(j) || (j > r ? nodes[j].parent !== nodes[pidx[j]] : false)) markMover(j, "sweep"); } }
+    if (J.trips > MAX_TRIPS) { setOn(false); J.error = "too many thaws"; return; }
+    for (const r of rs) { const e = endI[r];
+      for (let j = r; j < e; j++) dynB[j] = mark[j];
+      for (let j = e - 1; j > r; j--) if (dynB[j]) dynB[pidx[j]] = 1;
+      FZ.delete(nodes[r]); for (let k = r; k < e; k++) rootI[k] = -1;
+      if (!dynB[r]) { dynB[r] = 1; }   // a trip always thaws the root itself
+      for (let j = r + 1; j < e; j++) if (!dynB[j] && dynB[pidx[j]]) { FZ.add(nodes[j]); const e2 = endI[j]; for (let k = j; k < e2; k++) rootI[k] = j; } }
+    sweepRebuild(); cursor = 0; J.roots = FZ.size; J.frozen = sweepN;
+    J.tripMs = performance.now() - t0; if (J.tripMs > J.tripMaxMs) J.tripMaxMs = J.tripMs;
+  }
+  // ---- Object3D.add / remove on a frozen member: the new child has never been walked, so the root is thawed now
+  const add0 = OP.add, rem0 = OP.remove;
+  const hookThaw = o => { if (idxOf === null || FZ.size === 0) return; const i = idxOf.get(o); if (i !== undefined && rootI[i] >= 0) { J.adds++; trip(new Set([rootI[i]]), i); } };
+  OP.add = function (o) { hookThaw(this); return add0.apply(this, arguments); };
+  OP.remove = function (o) { hookThaw(this); return rem0.apply(this, arguments); };
+  function setOn(on) {
+    if (on === (J.phase === "frozen" || J.phase === "observe")) { J.on = on; return; }
+    J.on = on;
+    if (!on) { FZ.clear(); if (rootI) rootI.fill(-1); sweepN = 0; J.roots = J.frozen = 0; J.phase = "off"; }
+    else if (N > 0 && J.samples > 0) J.phase = "refreeze"; else { J.phase = "wait"; walks = 0; }
+  }
+  // camera state: nodes that follow the camera (sky overlay, billboards) change only when it moves
+  const ck = new Float64Array(12);
+  function camChanged() {
+    const p = camera.position, q = camera.quaternion, a = ck;
+    if (a[0] === p.x && a[1] === p.y && a[2] === p.z && a[3] === q._x && a[4] === q._y && a[5] === q._z && a[6] === q._w && a[7] === camera.zoom && a[8] === camera.left && a[9] === camera.right && a[10] === camera.top && a[11] === camera.bottom) return false;
+    a[0] = p.x; a[1] = p.y; a[2] = p.z; a[3] = q._x; a[4] = q._y; a[5] = q._z; a[6] = q._w; a[7] = camera.zoom; a[8] = camera.left; a[9] = camera.right; a[10] = camera.top; a[11] = camera.bottom; return true;
+  }
+  function pre() {
+    if (J.phase !== "frozen" || sweepN === 0) return;
+    const moved = camChanged(); let c = cursor, end;
+    if (moved && ++J.camMoves <= CAM_LEARN) { c = 0; end = sweepN; } else end = Math.min(sweepN, cursor + Math.ceil(sweepN / (moved ? SWEEP_MOVE : SWEEP_WALKS)));
+    J.sweeps++; let bad = null;
+    for (; c < end; c++) { const i = sweepL[c]; if (!same(i)) { if (bad === null) bad = new Set(); bad.add(rootI[i]); } }
+    cursor = end >= sweepN ? 0 : end;
+    if (bad !== null) trip(bad, -1);
+  }
+  function post() {
+    J.walks++;
+    switch (J.phase) {
+      case "wait": if (ready()) { if (readyAt < 0) readyAt = J.walks; if (J.walks - readyAt > 30) { build1(); J.phase = "build2"; } } break;
+      case "build2": build2(); J.phase = "observe"; walks = 0; J.samples = 0; break;
+      case "observe": if (++walks % OBS_STRIDE === 0) { observe(); if (J.samples >= OBS_SAMPLES) freeze(); } break;
+      case "refreeze": freeze(); break;
+    }
+  }
+  // renderer.render calls scene.updateMatrixWorld() right before the main pass. pre(): frozen members are compared with their records before the walk, so a change made since the last frame is
+  // walked in this very frame. post(): the learning samples and the freeze are taken straight after the walk, when every non-frozen matrix is current
+  scene.updateMatrixWorld = function (force) {
+    if (J.on && !off) { try { pre(); } catch (e) { J.error = String(e && e.message || e); console.error("[perf358j]", e); setOn(false); off = true; } }
+    UW.call(this, force);
+    if (J.on && !off) { try { post(); } catch (e) { J.error = String(e && e.message || e); console.error("[perf358j]", e); setOn(false); off = true; } }
+  };
+  J.setOn = setOn; J.FZ = FZ; J.UW = UW; J.UW0 = UW0;
+  J.dump = () => ({ phase: J.phase, on: J.on, nodes: N, roots: J.roots, frozen: J.frozen, movers: nMovers, samples: J.samples, trips: J.trips, qtrips: J.qtrips, adds: J.adds, sweeps: J.sweeps, camMoves: J.camMoves, buildMs: +J.buildMs.toFixed(2), freezeMs: +J.freezeMs.toFixed(2), tripMaxMs: +J.tripMaxMs.toFixed(2), error: J.error, tripLog: J.tripLog });
+})();
+/* (3) PEDESTRIAN GEOMETRY WITHOUT ALLOCATION. pedSegmentRect / pedSegmentClear / pedSegmentsDistance are pure geometry called for every pedestrian pair on every simulation step; the originals build
+   arrays, destructure them and create closures per call (array-of-array loop, .some callbacks, three temporary vectors). The replacements do the same arithmetic in the same order on scalars, so every
+   result is bit-identical (window.__PERF358J__.pedSelfTest() fuzzes old against new); the simulation hashes cannot change. Switch: ?ped358=0. */
+(function run358jPed() {
+  const J = window.__PERF358J__; J.ped = false;
+  if (/[?&]ped358=0(&|$)/.test(location.search) || /[?&]perf358=0(&|$)/.test(location.search)) return;
+  try {
+    const rect0 = pedSegmentRect, clear0 = pedSegmentClear, dist0 = pedSegmentsDistance;
+    const rect4 = (a, b, r0, r1, r2, r3, pad) => {
+      let lo = 0, hi = 1;
+      { const v = a.x, delta = b.x - a.x, min = r0 - pad, max = r1 + pad;
+        if (Math.abs(delta) < 1e-12) { if (v < min || v > max) return false; }
+        else { const t0 = (min - v) / delta, t1 = (max - v) / delta; lo = Math.max(lo, Math.min(t0, t1)); hi = Math.min(hi, Math.max(t0, t1)); }
+        if (lo > hi) return false; }
+      { const v = a.z, delta = b.z - a.z, min = r2 - pad, max = r3 + pad;
+        if (Math.abs(delta) < 1e-12) { if (v < min || v > max) return false; }
+        else { const t0 = (min - v) / delta, t1 = (max - v) / delta; lo = Math.max(lo, Math.min(t0, t1)); hi = Math.min(hi, Math.max(t0, t1)); }
+        if (lo > hi) return false; }
+      return true;
+    };
+    const rect1 = (a, b, r, pad) => rect4(a, b, r[0], r[1], r[2], r[3], pad);
+    const clear1 = (a, b, allowRoad = false) => {
+      const lim = HALF - .2;
+      if (Math.abs(a.x) > lim || Math.abs(a.z) > lim || Math.abs(b.x) > lim || Math.abs(b.z) > lim) return false;
+      if (!allowRoad) for (let i = 0; i < ROAD_RECTS.length; i++) { const r = ROAD_RECTS[i]; if (rect4(a, b, r[0], r[1], r[2], r[3], NAV_CLEAR)) return false; }
+      for (let i = 0; i < BUILDINGS.length; i++) { const v = BUILDINGS[i]; if (rect4(a, b, v.x - v.w / 2, v.x + v.w / 2, v.z - v.d / 2, v.z + v.d / 2, NAV_CLEAR)) return false; }
+      return true;
+    };
+    const dist1 = (a, b, c, d) => {
+      const rx = b.x - a.x, rz = b.z - a.z, sx = d.x - c.x, sz = d.z - c.z, vx = c.x - a.x, vz = c.z - a.z;
+      const den = rx * sz - rz * sx;
+      if (Math.abs(den) > 1e-12) { const t = (vx * sz - vz * sx) / den, u = (vx * rz - vz * rx) / den; if (t >= 0 && t <= 1 && u >= 0 && u <= 1) return 0; }
+      return Math.min(pedPointSegmentDistance(a, c, d), pedPointSegmentDistance(b, c, d), pedPointSegmentDistance(c, a, b), pedPointSegmentDistance(d, a, b));
+    };
+    J.pedSelfTest = (n = 20000) => {   // old against new on random segments / rectangles / buildings; strict equality of every result
+      let bad = 0, seed = 12345; const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296, P = () => ({ x: (rnd() - .5) * 2 * HALF * 1.1, z: (rnd() - .5) * 2 * HALF * 1.1 });
+      for (let k = 0; k < n; k++) {
+        const a = P(), b = k % 7 === 0 ? { x: a.x, z: P().z } : k % 11 === 0 ? { x: P().x, z: a.z } : P(), c = P(), d = P(), r = [(rnd() - .5) * 20, 0, (rnd() - .5) * 20, 0]; r[1] = r[0] + rnd() * 8; r[3] = r[2] + rnd() * 8;
+        if (!Object.is(rect0(a, b, r, NAV_CLEAR), rect1(a, b, r, NAV_CLEAR))) bad++;
+        const road = k % 3 === 0; if (!Object.is(clear0(a, b, road), clear1(a, b, road))) bad++;
+        if (!Object.is(dist0(a, b, c, d), dist1(a, b, c, d))) bad++;
+      }
+      return { n, bad };
+    };
+    if (J.pedSelfTest(4000).bad !== 0) { J.error = "ped self test failed"; return; }
+    pedSegmentRect = rect1; pedSegmentClear = clear1; pedSegmentsDistance = dist1; J.ped = true;
+  } catch (e) { J.error = "ped:" + String(e && e.message || e); console.error("[perf358j ped]", e); }
+})();
+/* RUN358J_JS_END */
 addStaticBatches();
 
 if (PH352) PH352.start(scene, renderer);   /* RUN352M */
@@ -21262,6 +22054,7 @@ if (PH352) PH352.start(scene, renderer);   /* RUN352M */
 }
 /* RUN288S_STARTUP_END */
 if (PH352) PH352.arm(scene, renderer);   /* RUN352M */
+K353.live(renderer);   /* RUN353A */
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Loop
@@ -21537,7 +22330,8 @@ function onResize() {
   renderer.setSize(w, h);
   if (composer) composer.setSize(w, h);
   if (bloomPass) bloomPass.resolution.set(w, h);
-  if (activeView === 'cinema') focusCinema19();
+  if (window.__TOUR355 && window.__TOUR355.active) window.__TOUR355.relayout();   /* RUN355T */
+  else if (activeView === 'cinema') focusCinema19();
   else if (activeView === 'junction') focusJunction();
   else if (activeView === 'district') fitDistrictView();
   else overviewView();
