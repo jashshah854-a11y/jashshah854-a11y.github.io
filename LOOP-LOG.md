@@ -197,3 +197,9 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Fix: closed Sources panel and hidden part panel are inert (toggled with their open state); the shared hallpill.js takes the late pill out of the Tab order and the accessibility tree until it shows; home #pins gets role="group" so its label is valid. No visual change.
 - After: focus-check 0 lost stops on all 17 pages; axe: only color-contrast left; Perpetua inspect opens, its close button is reachable when open and the panel goes inert on close; the cyberpunk pill is tabbable once scrolled into view. Checker fix on the way: a skip link that slides in on focus is judged after its 300 ms transition (it was a false positive).
 - check-all now runs 8 checks, including focus. Next: color contrast (59 elements), with design review per page.
+
+### Round 31 (2026-10-11): text contrast, near-misses
+- Measured (contrast.cjs: axe color-contrast with colors, ratio and size per element): four tokens sat just under WCAG AA 4.5:1 for normal text: fieldfold --accent 4.45, round-and-round --muted 4.24, houthis-saudi-pipeline --red 4.32, workbench --muted 3.87.
+- Change: each token darkened along its own hue just enough to reach 4.6:1 (small margin): #ad4a29 -> #a94828 (lightness 42.0 -> 41.0%), #746c62 -> #6e665d (42.0 -> 39.8%), #c8321c -> #c0301b (44.7 -> 42.9%), #756d61 -> #686156 (42.0 -> 37.4%). One line per page; no new colors.
+- After: those four pages have no contrast failures at desktop or phone. check-all PASS (8 checks).
+- Left on purpose for separate rounds: workbench --orange on beige (3.2 to 3.7; reaching 4.5 needs lightness 47.8 -> 38.2%, a visible change to the page's signature colour, so it needs a text-only variant and screenshots), and russia-free-hand's phone table (rows at 1.6 to 3.3 look like a "not yet revealed" dimmed state; check intent before touching).
