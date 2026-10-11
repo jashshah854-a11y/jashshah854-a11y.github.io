@@ -6,7 +6,7 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 ## Backlog (top = next)
 - [ ] Vitrine sits at the budget line (100 settled, 102 peak). Next cut: the Perpetua machine is 34 separate meshes in its own vitrine; parts that never move relative to each other can share a draw.
 - [ ] Occasional video-decode hitch in desktop transit between worlds.
-- [ ] Reduced-motion and keyboard paths through the tour.
+- [ ] Reduced motion: wheel and swipe do not step stops (bar hint says swipe); OS setting read once at load. Launchboard has no prefers-reduced-motion rule.
 - [ ] Resume link: add resume.pdf ONLY when Jash hands over the approved file.
 
 ## Rounds
@@ -43,3 +43,9 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - Change: one universe.css block for (orientation:landscape) and (max-height:500px): tighter header, card as a compact right column above the arrows, seven decks behind the existing toggle, panels get the existing sheet head with Close. Existing tokens only.
 - After: zero overlaps and zero off-screen overlays at all 14 stops at 844x390 and 740x360; portrait overlay rects identical before/after.
 - Gate: PASS at all three sizes. Reviewed screenshots: decks wing, hall, Worlds panel.
+
+### Round 6 (2026-10-11): keyboard and reduced-motion tour (worker C, reviewed and merged)
+- Audit: reduced motion already cuts between stills with zero idle renders; skip link first; dialogs open with Enter, close with Escape, focus returns.
+- Fixed: Left/Right arrows did nothing (copy says "the arrows"); Home/End did nothing in reduced motion; focus fell to BODY when an end arrow disabled itself; the stop live region sat inside a display:none bar on desktop so it was never announced.
+- Verified independently: Right, Right, Left, End, Home walk vitrine, hall, vitrine, end, start in both normal and reduced motion.
+- Gate: PASS at all three sizes.
