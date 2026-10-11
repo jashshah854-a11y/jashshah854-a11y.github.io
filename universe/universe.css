@@ -75,6 +75,14 @@ body[data-mode=world] .brand{opacity:0;pointer-events:none}
 .copy[data-copy=inside]{left:56px;bottom:64px;max-width:640px;display:flex;flex-direction:column;gap:16px}
 .copy p.who{font-family:var(--serif);font-style:italic;font-size:24px;line-height:1.25;color:#f7f6f0;text-wrap:balance}
 .copy[data-copy=inside] h1{font-size:clamp(54px,6.4vw,92px);line-height:.95;letter-spacing:-.02em}
+/* While the veil is up, the headline and the line on what Jash does sit above it from the first paint, so a cold
+   desktop visit (about 5 s of shader warm-up) is not 5 s of nothing. The drag hint waits until the machine can turn.
+   z-index drops 0.9 s after the veil starts its 0.8 s fade, so the text never slips behind it. */
+body:has(#veil:not(.done):not(.fail):not(.dead)) .copy[data-copy=inside]{opacity:1;visibility:visible;transform:none;z-index:210;transition-delay:0s}
+body:has(#veil:not(.done):not(.fail):not(.dead)) .copy[data-copy=inside] p:not(.who){opacity:0}
+.copy[data-copy=inside]{transition:opacity .5s var(--ease-out),transform .6s var(--ease-out),visibility 0s .5s,z-index 0s .9s}
+.copy[data-copy=inside].on{transition-delay:0s,0s,0s,.9s}
+.copy[data-copy=inside] p{transition:opacity .5s var(--ease-out)}
 #stepback{right:56px;bottom:64px}
 .copy[data-copy=vitrine]{right:64px;top:168px;max-width:520px;display:flex;flex-direction:column;gap:18px;text-align:right}
 .copy[data-copy=vitrine] h2{font-size:clamp(40px,4.5vw,64px);line-height:1;letter-spacing:-.015em;color:#f2efe6}
@@ -192,6 +200,8 @@ dialog#renders img{width:100%;height:auto;border-radius:12px;display:block}
 #veil.slow #veilBar{opacity:1}
 #veil.fail #veilBar{display:none}
 #veil.fail{align-items:flex-start;padding-top:18dvh}
+/* Short screens: the first-screen text sits above the veil at the bottom, so the loading line and bar move up out of its way. */
+@media (max-height:760px){#veil:not(.fail):not(.dead){align-items:flex-start;padding-top:14dvh}#veil:not(.fail):not(.dead) #veilBar{top:calc(14dvh + 52px)}}
 #veil.dead>span,#veil.dead #veilBar{display:none}
 #plain{position:fixed;left:0;right:0;top:18dvh;bottom:0;overflow-y:auto;z-index:250;padding:0 56px 40px;font-size:18px}
 #plain p+ul+p{margin-top:28px}
