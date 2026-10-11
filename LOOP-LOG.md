@@ -6,7 +6,6 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 ## Backlog (top = next)
 - [ ] Vitrine sits at the budget line (100 settled, 102 peak). Next cut: the Perpetua machine is 34 separate meshes in its own vitrine; parts that never move relative to each other can share a draw.
 - [ ] Occasional video-decode hitch in desktop transit between worlds.
-- [ ] Landscape phone layout (never designed).
 - [ ] Reduced-motion and keyboard paths through the tour.
 - [ ] Resume link: add resume.pdf ONLY when Jash hands over the approved file.
 
@@ -38,3 +37,9 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - Change: modulepreload links for main.js, three.module/core, gsap and lenis, placed AFTER the import map (placed before it, a cached second visit resolved "three" before the map existed and the page never booted; caught by the gate, never pushed).
 - Phone, 4G throttle, cold cache, median of 5: veil 2527 -> 2235 ms. Live median before this round was 2447 ms, so the phone first-content target (3 s) is met; item closed.
 - Gate: PASS at all three sizes; all 14 stops reachable.
+
+### Round 5 (2026-10-11): landscape phone layout (worker B, reviewed and merged)
+- Before (844x390): the decks-wing card ran 189 px above the screen and covered Contact (95x44) and Worlds (84x44); Cyberpunk card covered the header; hall copy overlapped both arrows (28x12); Worlds and Contact panels had no Close in landscape.
+- Change: one universe.css block for (orientation:landscape) and (max-height:500px): tighter header, card as a compact right column above the arrows, seven decks behind the existing toggle, panels get the existing sheet head with Close. Existing tokens only.
+- After: zero overlaps and zero off-screen overlays at all 14 stops at 844x390 and 740x360; portrait overlay rects identical before/after.
+- Gate: PASS at all three sizes. Reviewed screenshots: decks wing, hall, Worlds panel.
