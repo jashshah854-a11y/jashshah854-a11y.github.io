@@ -7,7 +7,7 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - [ ] Reduced motion: the OS setting is read once at load (a mid-session change needs a reload). Launchboard has no prefers-reduced-motion rule.
 - [ ] Resume link: add resume.pdf ONLY when Jash hands over the approved file.
 
-- [ ] Launchboard source: launchboard/ is a static export of outputs/launchboard (Next.js 15 + Tailwind v4). phone-fixes.css rules PORTED to the source app/globals.css (outputs/launchboard commit c0afb9f, local repo), so a rebuild keeps them. Owner-level source fixes: launch-bar titles truncate on phones (list view or two-line bar), scroll containers have no scroll cue and open at the left edge (latest data off screen), nav wrap is a stand-in for a phone menu, ?note=restricted sticks after switching roles.
+- [ ] Launchboard: in the All launches window 17 of 19 bars are 50-97 px wide, so titles still cut at two lines (the List tab shows them in full); a label-outside layout would fix it. Pipeline deal links (18 px) and the Automations draft link (23 px) are short tap targets.
 
 - [ ] Cyberpunk page (owned by the Corner Block chat, report only): "How I made it" link is 105x20 on phones; in landscape 844x390 the hero video is 718 px tall.
 
@@ -99,3 +99,9 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - Change: one <style id=phone-fixes> block per page (+31, +41 lines). My review fix: the worker moved the orbit hint to the top of the stage, where it crossed the machine; hidden on phones instead (no free spot; touch users drag by default).
 - After: 0 short tap targets; toast clear of the pill; page height stays put; touch orbit, pinch, scrub, step, speed, inspect all work. Desktop geometry and frozen-frame pixels identical.
 - Still open: inspect panel covers most of the machine on phones (needs a camera offset in the app script); some labels 9-11 px.
+
+### Round 15 (2026-10-11): Launchboard source fixes, rebuilt and redeployed (worker J, reviewed and merged)
+- Source: outputs/launchboard commit 3b66336 (local repo). typecheck clean, 231/231 tests, NDA gate OK, before and after.
+- Fixed: launch titles in full on phones (Today 4/6 -> 6/6, Launches 6 weeks 3/6 -> 6/6, quarter 4/6 -> 6/6, client 0/2 -> 2/2); timelines and the revenue chart open on today / the latest week with an edge-fade scroll cue (new ScrollRegion component replaces TimelineScroller); section nav is one scrollable row that centres the active tab (replaces the two-row wrap); ?note=restricted is cleared on role change.
+- Deploy: launchboard/ replaced with the new out/; phone-fixes.css and its 194 links removed (the build now carries the rules; keeping the old file would have re-applied the wrap). Diff vs old export: no other post-export patches existed.
+- Verified: 60 page-and-role loads with 0 console errors and 0 failed requests; desktop 1440 PNGs byte-identical on 6 pages; gate PASS; Launches tab shows the active tab in view.
