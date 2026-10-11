@@ -13,7 +13,33 @@
     .instruction{position:absolute;z-index:3;left:56px;bottom:174px;width:240px;border-left:2px solid var(--orange);padding-left:13px;pointer-events:none}.instruction small{display:block;color:var(--orange);font:9px var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}.instruction strong{font:normal 22px var(--display)}.instruction p{margin:6px 0 0;color:var(--muted);font-size:11px;line-height:1.5}.hud{position:absolute;z-index:4;left:40px;right:40px;bottom:37px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 0;display:grid;grid-template-columns:220px 1fr auto;align-items:center;gap:28px;background:linear-gradient(90deg,rgba(234,223,205,.92),rgba(234,223,205,.52))}.state{font:10px var(--mono);letter-spacing:.08em;text-transform:uppercase}.state b{display:block;font:normal 15px var(--display);letter-spacing:0;text-transform:none;margin-top:5px}.jobs{display:flex;gap:7px;justify-content:center}.job{min-width:102px;padding:8px 10px;border:1px solid var(--line);background:rgba(255,255,255,.25);text-align:left;font:9px var(--mono);line-height:1.35;text-transform:uppercase}.job i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--chip);margin-right:7px}.job[aria-pressed=true]{border-color:var(--orange);background:#f8eee1;color:var(--orange)}.job:disabled{opacity:.42;cursor:not-allowed}.actions{display:flex;align-items:center;gap:7px}.action{border:1px solid var(--line);background:transparent;min-width:42px;height:37px;padding:0 11px;font:10px var(--mono);text-transform:uppercase}.action.primary{background:var(--ink);color:#f8eee1;border-color:var(--ink);min-width:72px}.action[aria-pressed=true]{background:var(--orange);border-color:var(--orange);color:white}.hint{position:absolute;z-index:3;bottom:136px;right:40px;color:var(--muted);font:9px var(--mono);letter-spacing:.07em}.fallback{display:none;position:absolute;z-index:8;left:50%;top:50%;transform:translate(-50%,-50%);max-width:330px;padding:22px;background:var(--panel);border:1px solid var(--line);line-height:1.5}.hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
     @media(max-width:800px){body{overflow:auto}main{min-height:max(100svh,820px)}#stage{inset:245px 0 275px}header{left:20px;right:20px;top:19px;padding-bottom:13px;font-size:8px}.intro{left:22px;top:86px;width:calc(100% - 44px)}h1{font-size:43px;max-width:235px}.lede{position:absolute;right:0;top:29px;width:115px;font-size:11px}.mechanic-label{top:207px;right:22px;font-size:8px;max-width:142px}.instruction{left:22px;bottom:192px;width:205px}.instruction strong{font-size:18px}.instruction p{font-size:10px}.hud{left:20px;right:20px;bottom:28px;padding:11px 0;grid-template-columns:1fr auto;gap:9px}.state{display:none}.jobs{grid-column:1/3;grid-row:1;justify-content:stretch;gap:4px}.job{flex:1;min-width:0;padding:7px 5px;font-size:7px}.actions{grid-column:1/3;grid-row:2;justify-content:flex-end}.action{height:33px;font-size:8px;min-width:36px}.hint{right:21px;bottom:166px;font-size:8px}.backlink{font-size:8px}}
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
-  </style>
+  </style><style id="phone-fixes">
+@media(max-width:800px){
+main{background:var(--paper);min-height:max(100svh,740px)}
+#stage{inset:245px 0 311px}
+.instruction{bottom:228px}.instruction small{font-size:10px}
+.hint{bottom:202px;font-size:9px}
+.hud{bottom:64px}
+header,.backlink{font-size:9px}
+.mechanic-label,.mechanic-label strong{font-size:9px}.mechanic-label{max-width:175px}
+.job{min-height:40px;font-size:9px}
+.action{height:40px;min-width:40px;font-size:10px}
+}
+@media(orientation:landscape) and (max-height:520px) and (max-width:960px) and (pointer:coarse){
+body{overflow:auto}
+main{display:grid;grid-template-columns:205px minmax(0,1fr) 190px;grid-template-areas:"head head head" "intro stage label" "intro stage instr" ". hint hint" "hud hud hud";column-gap:16px;row-gap:12px;padding:0 24px 72px;min-height:0;align-items:start;background:var(--paper)}
+header,.intro,#stage,.mechanic-label,.instruction,.hud,.hint{position:static;inset:auto;left:auto;right:auto;top:auto;bottom:auto;width:auto}
+header{grid-area:head;margin-top:20px}
+.intro{grid-area:intro}.intro h1{font-size:34px;max-width:none}.lede{max-width:none}
+#stage{grid-area:stage;position:relative;height:310px}
+.mechanic-label{grid-area:label;max-width:none;font-size:9px}
+.instruction{grid-area:instr}
+.hint{grid-area:hint;text-align:right;justify-self:end}
+.hud{grid-area:hud;grid-template-columns:150px 1fr auto;gap:16px}
+.job{min-width:96px;min-height:40px}
+.action{height:40px;min-width:40px}
+}
+</style>
 <!-- Bundled Three.js 0.170.0 license:
 The MIT License
 

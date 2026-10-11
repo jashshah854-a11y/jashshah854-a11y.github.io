@@ -7,6 +7,40 @@
 @media(max-width:900px) and (min-width:701px){.intro{left:30px;width:190px}.intro .description{max-width:165px}.parts{right:26px;width:138px}.detail{left:30px;width:205px}.controls{gap:20px;grid-template-columns:170px 1fr 166px}.views{right:26px}}
 @media(max-width:700px){header{left:20px;right:20px;top:20px;padding-bottom:16px;font-size:9px}.edition{font-size:8px;letter-spacing:.04em}main{min-height:844px;height:100svh}.intro{left:23px;top:90px;width:calc(100% - 46px)}h1{font-size:43px;letter-spacing:-.065em;max-width:220px}.intro .description{position:absolute;right:0;top:24px;width:113px;font-size:11px;line-height:1.6}.intro .eyebrow{font-size:9px;margin-bottom:13px}.intro .index{display:none}#stage{inset:211px 0 auto;height:330px}.parts{top:555px;left:20px;right:20px;width:auto;display:flex;gap:0}.parts h2{display:none}.part{flex:1;min-height:44px;font-size:9px;gap:0;justify-content:center;flex-direction:column;border-bottom:1px solid #c4c6bd;border-top:1px solid #c4c6bd;padding:6px 0;line-height:1.4}.part span{font-size:8px}.part[aria-pressed=true]:after{display:none}.part[aria-pressed=true]{border-bottom:2px solid var(--accent)}.detail{left:23px;right:23px;top:615px;bottom:auto;width:auto;display:grid;grid-template-columns:112px 1fr;gap:0 17px}.detail small{font-size:8px}.detail h2{font-size:19px;margin:6px 0}.detail p{grid-column:2;grid-row:1 / 3;font-size:10px;line-height:1.6;max-width:none;padding-top:1px}.views{right:20px;bottom:auto;top:512px;gap:3px}.views button{font-size:8px;padding:7px 9px;min-height:32px}.hint{left:23px;transform:none;bottom:auto;top:524px;font-size:8px}.controls{left:20px;right:20px;bottom:42px;grid-template-columns:1fr 143px;gap:12px;padding:15px 0 11px}.control-title{display:none}.range-label{font-size:8px;margin-bottom:5px}.actions #toggle{min-width:91px;padding:0 11px;font-size:10px}.actions button{height:37px;min-width:37px}.actions{gap:6px}.footer{left:20px;right:20px;bottom:18px;font-size:7px;letter-spacing:.03em}.footer span:last-child{max-width:140px;text-align:right}#fallback{inset:215px 20px auto;font-size:12px}.controls{background:var(--paper)}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style><style id="phone-fixes">
+@media(max-width:700px){
+.part{font-size:10px}.part span{font-size:9px}
+.range-label{font-size:9px}.detail small{font-size:9px}.edition{font-size:9px}
+.views button{font-size:9px;min-height:40px;min-width:40px;padding:8px}.views #reset{min-width:40px}
+input[type=range]{height:40px}
+.actions button{height:40px;min-width:40px}
+.footer{left:154px;right:20px;bottom:14px;flex-direction:column;align-items:flex-end;gap:3px;text-align:right}
+.footer span:last-child{max-width:none}
+}
+@media(max-width:700px) and (min-height:680px) and (max-height:843px){
+main{min-height:0}
+#stage{height:calc(330px + 100svh - 844px)}
+.views{top:calc(512px + 100svh - 844px)}
+.hint{top:calc(524px + 100svh - 844px)}
+.parts{top:calc(555px + 100svh - 844px)}
+.detail{top:calc(615px + 100svh - 844px)}
+}
+@media(orientation:landscape) and (max-height:520px) and (max-width:960px) and (pointer:coarse){
+main{display:grid;grid-template-columns:205px minmax(0,1fr) 190px;grid-template-areas:"head head head" "intro stage parts" "intro hint parts" "detail detail views" "ctl ctl ctl" "foot foot foot";column-gap:16px;row-gap:10px;padding:0 24px 72px;min-height:0;height:auto;align-items:start}
+header,.intro,.parts,.detail,.views,.hint,.controls,.footer,#stage{position:static;inset:auto;transform:none;width:auto;left:auto;right:auto;top:auto;bottom:auto}
+header{grid-area:head;margin-top:20px}
+.intro{grid-area:intro}.intro h1{font-size:34px;max-width:none}.intro .description{max-width:none}.intro .index{display:none}
+#stage{grid-area:stage;position:relative;height:300px}
+.parts{grid-area:parts}
+.detail{grid-area:detail;width:auto}.detail p{max-width:none}
+.hint{grid-area:hint;justify-self:center;white-space:normal}
+.views{grid-area:views;justify-self:end}
+.views button{min-height:40px;min-width:40px}
+.controls{grid-area:ctl;margin-top:6px}
+.footer{grid-area:foot}
+.actions button{height:40px;min-width:40px}
+input[type=range]{height:40px}
+}
 </style><!--
 Bundled Three.js 0.170.0 license:
 The MIT License
