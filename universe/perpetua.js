@@ -162,7 +162,9 @@ export function buildPerpetua({lite=false} = {}){
   const stats = {triangles:0, drawCalls:0};
   const MAT = Object.fromEntries(Object.keys(PALETTE).map(k => [k, k]));
   const fixed = new Part('frame'), a = new Part('flywheel'), b = new Part('counterwheel'),
-        crank = new Part('crank'), rod = new Part('linkage'), slider = new Part('slider');
+        // The crank is keyed to the flywheel's axle: same origin, same angle. On phones it is built into the
+        // flywheel's group so the two share their brass, steel and charcoal draws (3 fewer, same pixels).
+        crank = lite ? a : new Part('crank'), rod = new Part('linkage'), slider = new Part('slider');
   const cache = new Map(), geo = (key, fn) => { if (!cache.has(key)) cache.set(key, fn()); return cache.get(key); };
   const segs = lite ? 36 : 64;
   function box(p,w,h,d,m,at,r=0.03,rot=[0,0,0]){ p.add(roundedBox(w,h,d,r,lite?2:3), m, at, rot); }
@@ -266,7 +268,8 @@ export function buildPerpetua({lite=false} = {}){
   for (const x of [-.18,.18]) bolt(slider,[x,.128,1.35],'y',.034);
 
   const g = {fixed:finish(fixed,materials,stats), a:finish(a,materials,stats), b:finish(b,materials,stats),
-             crank:finish(crank,materials,stats), rod:finish(rod,materials,stats), slider:finish(slider,materials,stats)};
+             rod:finish(rod,materials,stats), slider:finish(slider,materials,stats)};
+  g.crank = lite ? g.a : finish(crank,materials,stats);
   const root = new THREE.Group(); root.name = 'perpetua';
   Object.values(g).forEach(p => { p.matrixAutoUpdate = true; root.add(p); });
   const parts = {frame:g.fixed, flywheel:g.a, counterwheel:g.b, crank:g.crank, linkage:g.rod, slider:g.slider};

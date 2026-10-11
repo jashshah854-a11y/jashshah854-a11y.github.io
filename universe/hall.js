@@ -136,7 +136,9 @@ export function buildHall({scene, lite, perpetua, video = true}){
   shell.add(backdrop);
   const setBackdrop = v => { paperMat.opacity = v; backdrop.visible = v > 0.01; };
   const lampMat = new THREE.MeshBasicMaterial({color:'#fff2d6'});
-  for (const x of [-3.6, 3.2]) { const l = new THREE.Mesh(new THREE.CircleGeometry(0.34, 20), lampMat); l.rotation.x = Math.PI/2; l.position.set(x, L.PY + 13.9, 0.8); shell.add(l); }
+  const lampGeos = [-3.6, 3.2].map(x => new THREE.CircleGeometry(0.34, 20).rotateX(Math.PI/2).translate(x, L.PY + 13.9, 0.8));
+  shell.add(new THREE.Mesh(mergeGeometries(lampGeos), lampMat));      // both lamps share a material: one draw
+  lampGeos.forEach(g => g.dispose());
   const pad = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), additive(glow, '#ffcf90', 0.5));
   pad.rotation.x = -Math.PI/2; pad.position.set(-0.05, 0.05, 0.62 + 2); root.add(pad);
   anchors.push({id:'perp', label:'Perpetua', kind:'perp', pos:new THREE.Vector3(-0.05, L.PY + 8, 0.62), normal:new THREE.Vector3(0, 0, 1)});
@@ -238,6 +240,10 @@ export function buildHall({scene, lite, perpetua, video = true}){
   }
 
   const reflect = [];        // what the phone tier's stand-in mirror draws below the floor (ground.js)
+  /* Phone-tier culls (see cullView): draws that put no pixel on screen. `backs` are single-sided planes
+     (a portal, a picture wall): from behind the GPU discards every face, but the CPU has paid for the draw.
+     `thins` are floor reflections that foreshorten to a hairline from a distant, level camera. */
+  const backs = [], thins = [];
   const shaftRatios = [1, -1.5, 2, -1, 1.5, -2, 1, -1.5, 1, -2];
   const axles = [];     // {L:Vector3, R:Vector3} world, per standard station in order
   function standardStation(slot, i){
@@ -261,14 +267,14 @@ export function buildHall({scene, lite, perpetua, video = true}){
     if (cfg) {
       const portal = new Portal({...cfg, video:video ? cfg.video : undefined, plane:L.PORTAL.w/L.PORTAL.h, phase:i*1.7});
       const pm = new THREE.Mesh(new THREE.PlaneGeometry(L.PORTAL.w, L.PORTAL.h), portal.material);
-      pm.position.set(0, cy, pz); g.add(pm);
+      pm.position.set(0, cy, pz); g.add(pm); backs.push({obj:pm, z:0});
       const frame = new THREE.Mesh(new THREE.BoxGeometry(L.PORTAL.w + 0.7, L.PORTAL.h + 0.7, 0.4), M.brassDk); frame.position.set(0, cy, pz - 0.28); g.add(frame);
       const halo = new THREE.Mesh(new THREE.PlaneGeometry(L.PORTAL.w*1.7, L.PORTAL.h*2.1), additive(glow, cfg.tint || '#ffd9a0', 0.32));
       halo.position.set(0, cy, pz - 0.03); g.add(halo);
       const stage = new THREE.Mesh(new THREE.PlaneGeometry(L.VIT.w - 0.6, L.VIT.d - 0.6), additive(glow, cfg.tint || '#ffd9a0', 0.26));
       stage.rotation.x = -Math.PI/2; stage.position.set(0, 0.05, 0); g.add(stage);
       const rf = new THREE.Mesh(new THREE.PlaneGeometry(L.PORTAL.w, 4.2).rotateX(Math.PI/2), portal.reflectionMaterial);
-      rf.position.set(0, 0.07, pz + 2.1); g.add(rf);
+      rf.position.set(0, 0.07, pz + 2.1); g.add(rf); thins.push({obj:rf});
       portal.worldPos = slot.portal.clone(); portal.slot = slot.id; portals.push(portal);
       reflect.push({kind:'std', pos:slot.pos.clone(), yaw:slot.yaw, deckH:L.DECK.h, pw:L.PORTAL.w, ph:L.PORTAL.h, cy, cz:pz, tint:new THREE.Color(cfg.tint || '#ffd9a0').lerp(new THREE.Color('#fff4e0'), 0.55)});
     }
@@ -328,7 +334,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
     for (let k = 0; k < 6; k++) {
       const m = new THREE.MeshBasicMaterial({color:'#ffffff', toneMapped:false, map:blank, polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-4});
       variants.push({mesh:new THREE.InstancedMesh(picGeo, m, 4), n:0, mat:m});
-      g.add(variants[k].mesh);
+      g.add(variants[k].mesh); backs.push({obj:variants[k].mesh, z:-2.05});      // the pictures hang at z -2.05 on the wall
     }
     singularLoad = () => ['media/sing-cabinet.jpg', 'media/sing-museum.jpg', 'media/sing-weather.jpg'].forEach((u, j) => {
       texLoader.load(u, t => {
@@ -533,9 +539,37 @@ export function buildHall({scene, lite, perpetua, video = true}){
     }
   }
 
+  /* ---------- phone-tier culls ---------- */
+  const _bp = new THREE.Vector3(), THIN_PX = 1;
+  root.updateMatrixWorld(true);
+  for (const b of backs) { b.pt = new THREE.Vector3(0, 0, b.z).applyMatrix4(b.obj.matrixWorld); b.n = new THREE.Vector3(0, 0, 1).transformDirection(b.obj.matrixWorld); }
+  for (const t of thins) {
+    t.obj.geometry.computeBoundingBox();
+    const bb = t.obj.geometry.boundingBox;
+    t.pts = [];
+    for (const x of [bb.min.x, bb.max.x]) for (const z of [bb.min.z, bb.max.z]) t.pts.push(new THREE.Vector3(x, bb.min.y, z).applyMatrix4(t.obj.matrixWorld));
+  }
+  /* Hides what cannot show. A back-facing plane is exact: no pixel changes. A reflection strip is hidden
+     only while its screen box is under THIN_PX buffer pixels in either direction (about a hairline). */
+  function cullView({camera, h}){
+    for (const b of backs) b.obj.visible = _bp.subVectors(camera.position, b.pt).dot(b.n) > 0;
+    const hw = h*camera.aspect/2, hh = h/2;
+    for (const t of thins) {
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, ok = true;
+      for (const c of t.pts) {
+        _bp.copy(c).applyMatrix4(camera.matrixWorldInverse);
+        if (_bp.z > -camera.near) { ok = false; break; }       // a corner at or behind the lens: leave it to the frustum
+        _bp.applyMatrix4(camera.projectionMatrix);
+        if (_bp.x < x0) x0 = _bp.x; if (_bp.x > x1) x1 = _bp.x; if (_bp.y < y0) y0 = _bp.y; if (_bp.y > y1) y1 = _bp.y;
+      }
+      t.obj.visible = !ok || Math.min((x1 - x0)*hw, (y1 - y0)*hh) >= THIN_PX;
+    }
+  }
+
   /* ---------- per-frame ---------- */
-  function update({spin, time, dt, reflect, rackOn = true, rackLive = true, camPos = null}){
+  function update({spin, time, dt, reflect, rackOn = true, rackLive = true, camPos = null, view = null}){
     if (camPos) applyShafts(camPos);
+    if (view) cullView(view);
     reflWant = !!reflect && mirrorOn;
     if (reflector) { reflFade += ((reflWant ? 1 : 0) - reflFade)*Math.min(1, dt*3); reflector.material.uniforms.uStrength.value = reflFade*0.4; }
     rackActive = rackOn; rack.setLive(rackLive);
