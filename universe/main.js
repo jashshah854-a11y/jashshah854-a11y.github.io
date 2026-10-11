@@ -61,6 +61,7 @@ if (renderer) {
 }
 let dprCap = tier === 'mobile-low' ? 1 : mobile ? 1.25 : 1.5, pixelScale = 1, shadowEvery = 4;   // pixelScale is the quality ladder's second rung
 window.__booting = true;                           // tells the watchdog in index.html the module graph did start
+document.getElementById('plain').hidden = true; document.getElementById('veil').classList.remove('dead');   // a slow CDN can land after the 15 s backstop
 const camera = new THREE.PerspectiveCamera(32, innerWidth/innerHeight, 0.1, 1000);
 const scene = new THREE.Scene();
 scene.add(camera);

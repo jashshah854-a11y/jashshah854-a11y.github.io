@@ -151,21 +151,24 @@
 
 <div id="veil" role="status"><span>Assembling the machine</span><i id="veilBar" role="progressbar" aria-label="Loading the gallery" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><b></b></i></div>
 <nav id="plain" aria-label="Worlds (plain list)" hidden><p>The 3D view could not start here. The worlds are plain links:</p>
-<ul><li><a href="perpetua/">Perpetua</a></li><li><a href="cyberpunk/">Cyberpunk City</a></li><li><a href="launchboard/">Launchboard</a></li><li><a href="mgmtio/index.html">MGMTIO</a></li><li><a href="round-and-round/">Round &amp; Round</a></li><li><a href="fieldfold/">Fieldfold</a></li><li><a href="workbench/">Robot Workbench</a></li><li><a href="jev/">Jev in Motion</a></li><li><a href="https://www.linkedin.com/in/jashshah-analytics" rel="noopener noreferrer">LinkedIn</a></li></ul></nav>
+<ul><li><a href="perpetua/">Perpetua</a></li><li><a href="cyberpunk/">Cyberpunk City</a></li><li><a href="launchboard/">Launchboard</a></li><li><a href="mgmtio/index.html">MGMTIO</a></li><li><a href="round-and-round/">Round &amp; Round</a></li><li><a href="fieldfold/">Fieldfold</a></li><li><a href="workbench/">Robot Workbench</a></li><li><a href="jev/">Jev in Motion</a></li><li><a href="https://www.linkedin.com/in/jashshah-analytics" rel="noopener noreferrer">LinkedIn</a></li><li><a href="mailto:jashshah854@gmail.com">Email</a></li></ul>
+<p>The decks:</p><ul><li><a href="decks/russia-free-hand/index.html">Russia has a free hand. In the air.</a></li><li><a href="decks/houthis-saudi-pipeline/index.html">The bypass is under fire at both ends.</a></li><li><a href="decks/pakistan-india/index.html">Two gates. One river.</a></li><li><a href="decks/right-question/index.html">Ask better. The answer gets simple.</a></li><li><a href="decks/agents-internet/index.html">The internet is getting a second user.</a></li><li><a href="decks/over-engineering/index.html">Everything is possible. That is the problem.</a></li><li><a href="decks/posting-backfires/index.html">Posting about it can kill the sale.</a></li></ul></nav>
 <script>
 // If the module graph never boots (offline CDN, blocked WebGL): say so and show plain links.
 setTimeout(function(){ var v = document.getElementById('veil'); if (!v.classList.contains('done')) v.classList.add('slow'); }, 2000);
-setTimeout(function(){ if (!window.__universe && !window.__booting) { document.getElementById('veil').classList.add('fail'); document.getElementById('plain').hidden = false; } }, 25000);
+function plainLinks(){ if (window.__universe || window.__booting) return; document.getElementById('veil').classList.add('dead'); document.getElementById('plain').hidden = false; }
+setTimeout(plainLinks, 15000);   // a hung CDN fetch never errors, so this is the backstop; a failed one calls plainLinks at once (below)
 </script>
 <div id="ink" aria-hidden="true"></div>
 <div id="ink2" aria-hidden="true"></div>
 
 <noscript><div class="noscript"><p>This page is a 3D gallery and needs JavaScript. The worlds are also here as plain links.</p>
-<ul><li><a href="perpetua/">Perpetua</a></li><li><a href="cyberpunk/">Cyberpunk City</a></li><li><a href="launchboard/">Launchboard</a></li><li><a href="mgmtio/index.html">MGMTIO</a></li><li><a href="round-and-round/">Round &amp; Round</a></li><li><a href="fieldfold/">Fieldfold</a></li><li><a href="workbench/">Robot Workbench</a></li><li><a href="jev/">Jev in Motion</a></li></ul></div></noscript>
+<ul><li><a href="perpetua/">Perpetua</a></li><li><a href="cyberpunk/">Cyberpunk City</a></li><li><a href="launchboard/">Launchboard</a></li><li><a href="mgmtio/index.html">MGMTIO</a></li><li><a href="round-and-round/">Round &amp; Round</a></li><li><a href="fieldfold/">Fieldfold</a></li><li><a href="workbench/">Robot Workbench</a></li><li><a href="jev/">Jev in Motion</a></li><li><a href="https://www.linkedin.com/in/jashshah-analytics" rel="noopener noreferrer">LinkedIn</a></li><li><a href="mailto:jashshah854@gmail.com">Email</a></li></ul>
+<p>The decks:</p><ul><li><a href="decks/russia-free-hand/index.html">Russia has a free hand. In the air.</a></li><li><a href="decks/houthis-saudi-pipeline/index.html">The bypass is under fire at both ends.</a></li><li><a href="decks/pakistan-india/index.html">Two gates. One river.</a></li><li><a href="decks/right-question/index.html">Ask better. The answer gets simple.</a></li><li><a href="decks/agents-internet/index.html">The internet is getting a second user.</a></li><li><a href="decks/over-engineering/index.html">Everything is possible. That is the problem.</a></li><li><a href="decks/posting-backfires/index.html">Posting about it can kill the sale.</a></li></ul></div></noscript>
 
 <script>
 // The host runs vite build on this page; a module script tag would make vite try to bundle a public file and fail.
-(function () { var s = document.createElement('script'); s.type = 'module'; s.src = 'universe/main.js'; document.body.appendChild(s); })();
+(function () { var s = document.createElement('script'); s.type = 'module'; s.src = 'universe/main.js'; s.onerror = plainLinks; document.body.appendChild(s); })();
 </script>
 </body>
 </html>

@@ -121,3 +121,15 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - Change: press : or / on desktop to open a jump bar; type to filter worlds, decks, Worlds and Contact; Enter goes there (universe/command.js, wired through ui.js and a goStop action in main.js). The Worlds sheet carries a one-line "Press : to jump anywhere" hint. Hidden on touch and coarse pointers, so phones are unchanged.
 - Verified: cmd-verify PASS in motion and reduced motion (open, filter, click, Enter, Escape, hint, hidden on phone); keyboard walk across all 14 stops unchanged; gate PASS twice on the new Node test server (serve.cjs, replaces python http.server, which dropped connections under Launchboard load).
 - Next: Greybeard item 1, one plain sentence on the first screen saying what Jash does.
+
+### Round 19 (2026-10-11): the home says what Jash does (Greybeard item 1)
+- Before: the first screen, the last stop and the share description never said what Jash does ("You are inside a machine." then "Drag to turn it.").
+- Change: one line, "Growth marketer who builds working tools, not just reports.", under the headline and under "Built by Jash Shah", in the site serif italic (24 px, 20 px on phones, balanced wrap). Meta, og and twitter descriptions now lead with what he does. Line picked by an Opus counsel pass against the runner-up "builds marketing apps, research decks and 3D machines with AI" (a list, and "with AI" has no proof on screen).
+- Verified: screenshots at 390, 360, 844 landscape, 1366 and the end stop; gate PASS; live HTML carries the line (commit 56cdd6d).
+
+### Round 20 (2026-10-11): CDN failure fallback (Greybeard item 2)
+- Before: if three.js failed to load, the visitor waited 25 s, then saw "Assembling the machine" above a list with no email and no decks; noscript had no LinkedIn, email or decks.
+- Change: the module script's error event shows the plain list at once; the hung-fetch backstop is 15 s (was 25); a new "dead" veil state hides the stale text and bar (the no-WebGL path keeps "fail" and is untouched); plain list and noscript now carry 8 worlds, LinkedIn, Email and the 7 decks, scrollable on short screens; if the module lands after the backstop, main.js takes the list back down.
+- After (fallback-verify.cjs, CDN blocked): list shown in 445 ms on phone and 293 ms on desktop, no stale text, 17 links, last deck reachable; noscript 17 links.
+- Test tool: gate.cjs now ignores only ERR_ABORTED on Next.js _rsc prefetches (the gate leaves Launchboard while it prefetches; the files serve 200 local and live; the pushed state failed the same way, so not caused by this change). Real 4xx/5xx still fail.
+- Next: Greybeard item 3, og image and description on every sub-page.

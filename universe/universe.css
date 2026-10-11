@@ -192,11 +192,15 @@ dialog#renders img{width:100%;height:auto;border-radius:12px;display:block}
 #veil.slow #veilBar{opacity:1}
 #veil.fail #veilBar{display:none}
 #veil.fail{align-items:flex-start;padding-top:18dvh}
-#plain{position:fixed;left:0;right:0;top:34dvh;z-index:250;padding:0 56px;font-size:18px}
+#veil.dead>span,#veil.dead #veilBar{display:none}
+#plain{position:fixed;left:0;right:0;top:18dvh;bottom:0;overflow-y:auto;z-index:250;padding:0 56px 40px;font-size:18px}
+#plain p+ul+p{margin-top:28px}
+#plain p+ul+p+ul{flex-direction:column;gap:6px}
+#plain p+ul+p+ul a{line-height:1.3;padding:6px 0}
 #plain[hidden]{display:none!important}
 #plain ul{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px 22px}
 #plain a{display:inline-flex;align-items:center;min-height:44px;color:#efeee8;text-decoration:underline;text-underline-offset:4px}
-.noscript{position:fixed;inset:0;z-index:300;background:var(--night);padding:56px;font-size:18px}
+.noscript{position:fixed;inset:0;z-index:300;background:var(--night);padding:56px;font-size:18px;overflow-y:auto}
 .noscript li{margin:10px 0}
 
 /* phone */
