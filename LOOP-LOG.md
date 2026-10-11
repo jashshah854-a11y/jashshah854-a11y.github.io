@@ -5,7 +5,6 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 
 ## Backlog (top = next)
 - [ ] Vitrine sits at the budget line (100 settled, 102 peak). Next cut: the Perpetua machine is 34 separate meshes in its own vitrine; parts that never move relative to each other can share a draw.
-- [ ] Phone first content: veil now ~3.1 s on a 4G-throttled phone locally (was ~6 s live). Re-measure live; next lever is the JS module waterfall (three.core + three.module + gsap before first frame).
 - [ ] Occasional video-decode hitch in desktop transit between worlds.
 - [ ] Landscape phone layout (never designed).
 - [ ] Reduced-motion and keyboard paths through the tour.
@@ -31,4 +30,11 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - Change: m/ holds 1024 px copies (q82, progressive) of the 30 pictures the gallery uses, same paths under m/. portal.js loads the copy on the phone tier and falls back to the full picture if a copy is missing.
 - Phone, 4G throttle (9 Mbps, 60 ms): first 15 s download 6274 KB -> 3431 KB. Veil 6078 ms (live, before) -> 3158 ms (local, after; live re-measure below).
 - Gate: PASS at all three sizes. Phone picture stays sharp in the Fieldfold shot.
+- Live after: first 15 s 3282 KB, veil 4288 ms on 4G (first cold run). Commit a936fbc.
 - Note: regenerate m/ when a gallery picture changes (outputs/portfolio/loop/small.py).
+
+### Round 4 (2026-10-11): boot modules preload in parallel
+- Cause: main.js was found only at the end of the body, and three.core.js only after three.module.js arrived: a three-hop chain before the first frame.
+- Change: modulepreload links for main.js, three.module/core, gsap and lenis, placed AFTER the import map (placed before it, a cached second visit resolved "three" before the map existed and the page never booted; caught by the gate, never pushed).
+- Phone, 4G throttle, cold cache, median of 5: veil 2527 -> 2235 ms. Live median before this round was 2447 ms, so the phone first-content target (3 s) is met; item closed.
+- Gate: PASS at all three sizes; all 14 stops reachable.
