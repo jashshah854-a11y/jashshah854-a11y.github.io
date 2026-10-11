@@ -4,7 +4,6 @@ One verified change per round. Numbers are phone tier (390x844, iPhone UA) draw 
 Gate per round: no console errors except resume.pdf 404; deep link, Back restore and back-to-hall pass at 390x844, 1366x768, 1440x900; all 14 stops reachable; live routes 200 after the Pages build.
 
 ## Backlog (top = next)
-- [ ] Desktop transit hitch: NOT video (worker A, 5 paired tours: video off hitched as much as on; 156 play/pause flips line up with hitches at chance; video uploads ~0.2 ms). Stalls are 40-120 ms renderer.render() calls under a busy box. Lead: the first transit (Start to vitrine) hitches in most runs, where hall.startLoading() begins image uploads (17-18 ms texImage2D seen). Re-measure on a QUIET box before changing anything. Scripts: pf/loop-tools/out-a/measure.cjs.
 - [ ] Reduced motion: the OS setting is read once at load (a mid-session change needs a reload). Launchboard has no prefers-reduced-motion rule.
 - [ ] Resume link: add resume.pdf ONLY when Jash hands over the approved file.
 
@@ -81,3 +80,9 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - Change: 9 files in decks/, phone-only CSS plus two phone-only JS branches (houthis label placement and Next realign after scroll settles; agents-internet swipe on touch events). No wording, data, tokens, fonts or colours changed.
 - After: 0 defects on every deck at both sizes (one documented exception: inline footnote markers ~25x41 hit area). Desktop 1440 layout fingerprint identical on 14 of 14 checked slides.
 - Reviewed before/after pairs for over-engineering, right-question, houthis, russia. Gate PASS; sub-page sweep clean (a one-off 9.7 s local load on houthis re-timed at 0.25-0.33 s x4).
+
+### Round 12 (2026-10-11): desktop transit hitch re-measured on a quiet box, no change made
+- Quiet box (no other browsers): 8 full desktop tours at 1440x900. Frames over 50 ms per tour: 0, 3, 15, 22, 0, 26, 14, 9 of about 3,700 frames (under 0.7%). The two early transits that worker A suspected were clean in 6 of 7 runs (worst 32-47 ms); one run had 180-220 ms render stalls there, consistent with first-use shader compiles, but it did not repeat.
+- Mirror off vs on (3 paired tours): 12, 9, 8 vs 26, 14, 9 over-50 frames. A weak trend, inside run-to-run noise. Not enough evidence to change code.
+- Verdict: closed as measured. If it is ever reported by a real visitor, the next test is a one-frame reflector warm-up behind the veil (compile the clipped program variants before the first transit).
+- Watch item: once per page sweep, one random page load takes about 9.6 s (houthis locally, russia live) and re-times at 0.25-0.42 s x4. Likely an external request (fonts/CDN) stalling; not reproducible on demand.
