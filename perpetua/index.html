@@ -99,7 +99,7 @@ dialog .spec{font-size:11px}.spec strong{font-size:10px}.keys{font-size:12px!imp
 <button id="label-linkage" class="hotspot" aria-label="Inspect the connecting rod"><b>03</b>Connecting rod</button>
 <button id="label-slider" class="hotspot" aria-label="Inspect the slider"><b>04</b>Slider</button>
 <button id="label-frame" class="hotspot" aria-label="Inspect the bearing frame"><b>05</b>Bearings</button>
-<div id="partDetail"><button id="closePart" aria-label="Close part description">×</button><h2 id="partTitle"></h2><p id="partCopy"></p></div>
+<div id="partDetail" inert><button id="closePart" aria-label="Close part description">×</button><h2 id="partTitle"></h2><p id="partCopy"></p></div>
 <footer>
  <div class="foot-copy"><div class="eyebrow" id="modeLabel">THE IDEAL WORLD</div><h2 id="principle">One initial push. Nothing is lost.</h2><p id="fineprint">An ideal model with no friction and no load. No energy is created.</p></div>
  <div class="controls" role="group" aria-label="Machine controls">
@@ -666,14 +666,14 @@ function buildMachine(renderer){
   setPause(false);$('push').classList.remove('bump');void $('push').offsetWidth;$('push').classList.add('bump');
   say('A little energy from you. Every part responds.');updateUI();
  }
- function setInspect(on){inspection=on;$('inspect').setAttribute('aria-pressed',String(on));document.body.classList.toggle('inspecting',on);if(!on){selected='';$('partDetail').classList.remove('show');}}
+ function setInspect(on){inspection=on;$('inspect').setAttribute('aria-pressed',String(on));document.body.classList.toggle('inspecting',on);if(!on){selected='';($('partDetail').inert=true,$('partDetail').classList.remove('show'));}}
  function choosePart(name){selected=selected===name?'':name;let descriptions={
   flywheel:['01 · Flywheel','Stores the initial motion. Its shaft also turns the crank.'],
   counterwheel:['02 · Counterwheel','Half the tooth count. Twice the speed. The opposite direction.'],
   linkage:['03 · Connecting rod','A fixed length turns rotation into a repeating stroke.'],
   slider:['04 · Slider','Two rails constrain the carriage. No sideways drift.'],
   frame:['05 · Bearing frame','The shafts run through supported, bored bearings.']
- };if(selected){$('partTitle').textContent=descriptions[selected][0];$('partCopy').textContent=descriptions[selected][1];$('partDetail').classList.add('show');}else $('partDetail').classList.remove('show');}
+ };if(selected){$('partTitle').textContent=descriptions[selected][0];$('partCopy').textContent=descriptions[selected][1];($('partDetail').inert=false,$('partDetail').classList.add('show'));}else ($('partDetail').inert=true,$('partDetail').classList.remove('show'));}
  function updateUI(){
   if(!state)return;
   const stopped=state.energy<1e-10,rpm=Mechanics.omega(state.theta,state.energy)*60/(2*Math.PI),ratio=Math.max(0,Math.min(1,state.energy/refEnergy));
@@ -715,7 +715,7 @@ function buildMachine(renderer){
   $('focus').addEventListener('click',()=>{focused=!focused;document.body.classList.toggle('focused',focused);$('focus').setAttribute('aria-pressed',String(focused));$('focus').title=focused?'Show controls':'Focus on the machine';});
   $('slow').addEventListener('click',()=>{slow=!slow;$('slow').setAttribute('aria-pressed',String(slow));$('slow').textContent=slow?'Normal playback':'Slow playback';$('playback').textContent=slow?'0.25× PLAYBACK':'';});
   for(const name of Object.keys(anchors))$('label-'+name).addEventListener('click',()=>choosePart(name));
-  $('closePart').addEventListener('click',()=>{selected='';$('partDetail').classList.remove('show');});
+  $('closePart').addEventListener('click',()=>{selected='';($('partDetail').inert=true,$('partDetail').classList.remove('show'));});
   canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});down={x:e.clientX,y:e.clientY,time:performance.now()};dragged=false;if(pointers.size===2){let a=[...pointers.values()];lastPinch=Math.hypot(a[1].x-a[0].x,a[1].y-a[0].y);}canvas.classList.add('dragging');});
   canvas.addEventListener('pointermove',e=>{
    if(!pointers.has(e.pointerId))return;const prev=pointers.get(e.pointerId),dx=e.clientX-prev.x,dy=e.clientY-prev.y;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});

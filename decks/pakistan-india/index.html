@@ -223,7 +223,7 @@ body.mob #tglb{padding:0 10px}
     </div>
   </nav>
   <div id="scrim2"></div>
-  <aside id="panel" role="dialog" aria-modal="true" aria-labelledby="ptitle" aria-hidden="true">
+  <aside id="panel" role="dialog" aria-modal="true" aria-labelledby="ptitle" aria-hidden="true" inert>
     <button class="btn" id="pclose" type="button" aria-label="Close sources"><svg viewBox="0 0 16 16"><path d="M3 3l10 10M13 3 3 13"/></svg></button>
     <h2 id="ptitle">Sources</h2>
     <p class="lead">Every number on a slide traces to an entry here. Left gate and left panels are Pakistan, right are India, following the map from west to east. Colour marks a side and nothing else. Claims are labelled as claims and kept apart from what is verified.</p>
@@ -543,13 +543,13 @@ function buildPanel(){
 let lastFocus = null;
 function openPanel(id){
   const p = $('#panel'); lastFocus = document.activeElement;
-  p.classList.add('open'); p.setAttribute('aria-hidden', 'false'); $('#scrim2').classList.add('on');
+  p.inert = false; p.classList.add('open'); p.setAttribute('aria-hidden', 'false'); $('#scrim2').classList.add('on');
   [...p.querySelectorAll('li')].forEach(l => l.classList.remove('hl'));
   if (id){ const li = $('#src-' + id); li.classList.add('hl'); li.scrollIntoView({block: 'center'}); }
   $('#pclose').focus();
 }
 function closePanel(){
-  const p = $('#panel'); p.classList.remove('open'); p.setAttribute('aria-hidden', 'true'); $('#scrim2').classList.remove('on');
+  const p = $('#panel'); p.classList.remove('open'); p.setAttribute('aria-hidden', 'true'); p.inert = true; $('#scrim2').classList.remove('on');
   if (lastFocus) lastFocus.focus();
 }
 
