@@ -75,3 +75,9 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - Cause: with reduced motion there is no scroll camera, so the copy's "Scroll to step back" and "swipe" did nothing.
 - Change: main.js, still mode only: one wheel gesture (quiet 500 ms ends it, so trackpad inertia is one gesture) or one swipe over 48 px steps one still. Ignored inside dialogs, the Worlds and Contact sheets, and the stop bar.
 - Verified: desktop reduced, two wheel bursts and one tick up walk vitrine, hall, vitrine; phone reduced, swipe up, up, down walk vitrine, hall, vitrine. Normal mode: gate PASS, keyboard walk unchanged, all 14 stops and draw calls unchanged.
+
+### Round 11 (2026-10-11): all seven decks on phones (worker D, reviewed and merged)
+- Audit: every slide and step of every deck at 390x844 and 360x740, driven by tap and swipe. 199 defects before (104 at 390, 95 at 360). Most: the Back to the hall pill covered headlines (6 decks); also right-question last-slide button ran off screen (226 to 393 on 390), russia chart labels collided, houthis map labels overlapped or left the canvas (one cut at x -142) and 6.5 px captions, Next landed 74 px past the plate heading, agents-internet swipe did nothing (pointer cancelled by the pan), pakistan-india India label cut and 28x24 source buttons.
+- Change: 9 files in decks/, phone-only CSS plus two phone-only JS branches (houthis label placement and Next realign after scroll settles; agents-internet swipe on touch events). No wording, data, tokens, fonts or colours changed.
+- After: 0 defects on every deck at both sizes (one documented exception: inline footnote markers ~25x41 hit area). Desktop 1440 layout fingerprint identical on 14 of 14 checked slides.
+- Reviewed before/after pairs for over-engineering, right-question, houthis, russia. Gate PASS; sub-page sweep clean (a one-off 9.7 s local load on houthis re-timed at 0.25-0.33 s x4).
