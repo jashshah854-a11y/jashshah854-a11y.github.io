@@ -78,13 +78,18 @@ export function loadTexture(url){
   if (texCache.has(url)) return texCache.get(url);
   const entry = {tex:placeholder, aspect:16/9, ready:false};
   texCache.set(url, entry);
-  queue.push({url, run:done => loader.load(url, t => {
+  const got = (t, done) => {
     capTexture(t);
     t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; t.generateMipmaps = true;
     entry.tex = t; entry.aspect = t.image.width / t.image.height; entry.ready = true; entry.onload?.();
     if (gpu) gpu.initTexture(t);
     done();
-  }, undefined, () => { entry.failed = true; done(); })});
+  };
+  const full = done => loader.load(url, t => got(t, done), undefined, () => { entry.failed = true; done(); });
+  // Phones fetch the 1024 px copy kept under m/ at the same path, instead of the full picture shrunk here.
+  // If the copy is missing, the full picture is fetched.
+  const small = maxSize === 1024 && /^(media|assets)[/][^/]+[.]jpg$/.test(url) ? 'm/' + url : null;
+  queue.push({url, run:done => small ? loader.load(small, t => got(t, done), undefined, () => full(done)) : full(done)});
   pump();
   return entry;
 }
