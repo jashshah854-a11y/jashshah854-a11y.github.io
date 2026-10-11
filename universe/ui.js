@@ -202,7 +202,11 @@ export function createUI({worlds, decks, stops, anchors, actions, contact}){
   const bar = {el:$('#stopbar'), name:$('#stopName'), count:$('#stopCount'), prev:$('#prevStop'), next:$('#nextStop')};
   function setBar(i, n, name){
     bar.name.textContent = name; bar.count.textContent = `${i + 1} of ${n}`;
+    // A button that disables itself under the focus would drop a keyboard user onto the page body: hand focus to its twin.
+    const had = document.activeElement;
     bar.prev.disabled = i <= 0; bar.next.disabled = i >= n - 1;
+    if (had === bar.next && bar.next.disabled) bar.prev.focus();
+    else if (had === bar.prev && bar.prev.disabled) bar.next.focus();
   }
   bar.prev.addEventListener('click', () => actions.step(-1));
   bar.next.addEventListener('click', () => actions.step(1));

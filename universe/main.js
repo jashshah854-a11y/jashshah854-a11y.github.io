@@ -286,10 +286,12 @@ addEventListener('keydown', e => {
   const t = e.target;
   if (t.closest && t.closest('dialog, #worlds, #contact, input, textarea')) return;
   const onControl = t.matches && t.matches('a, button, [tabindex]');
-  if (e.key === 'ArrowDown' || e.key === 'PageDown' || (e.key === ' ' && !onControl)) { e.preventDefault(); stepBy(1); }
-  else if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); stepBy(-1); }
-  else if (e.key === 'Home') { e.preventDefault(); goT(0); }
-  else if (e.key === 'End') { e.preventDefault(); goT(1); }
+  // Left/Right step like Down/Up: the canvas label and the hint copy say "the arrows", and a keyboard user reaches for either pair.
+  if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown' || (e.key === ' ' && !onControl)) { e.preventDefault(); stepBy(1); }
+  else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); stepBy(-1); }
+  // Home/End: goT is a no-op outside the live scene, so the reduced-motion stills go through showStill.
+  else if (e.key === 'Home') { e.preventDefault(); if (mode === 'gl') goT(0); else showStill(0); }
+  else if (e.key === 'End') { e.preventDefault(); if (mode === 'gl') goT(1); else showStill(navStops.length - 1); }
 });
 
 /* ---------------- Perpetua: drag to orbit, tap to give it a push ---------------- */

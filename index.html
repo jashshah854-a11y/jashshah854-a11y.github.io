@@ -122,10 +122,11 @@
 
 <nav id="stopbar" aria-label="Stops" hidden>
   <button id="prevStop" class="arrow" type="button" aria-label="Previous stop"><svg width="12" height="20" viewBox="0 0 12 20" aria-hidden="true"><path d="M10 2L2 10l8 8"/></svg></button>
-  <span id="stopStatus" class="sr" role="status" aria-live="polite"><span id="stopName"></span> <span id="stopCount"></span></span>
   <button id="nextStop" class="arrow" type="button" aria-label="Next stop"><svg width="12" height="20" viewBox="0 0 12 20" aria-hidden="true"><path d="M2 2l8 8-8 8"/></svg></button>
 </nav>
 
+<!-- Outside #stopbar on purpose: the bar is display:none on desktop, and a hidden live region says nothing to a screen reader. -->
+<span id="stopStatus" class="sr" role="status" aria-live="polite"><span id="stopName"></span> <span id="stopCount"></span></span>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <dialog id="renders" aria-label="Cyberpunk City renders">

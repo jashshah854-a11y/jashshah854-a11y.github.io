@@ -145,6 +145,7 @@ body[data-mode=world] .brand{opacity:0;pointer-events:none}
 #stopbar .arrow:focus-visible::before{outline:2px solid var(--gold);outline-offset:2px}
 @media (hover:hover) and (pointer:fine){#stopbar .arrow:hover:not(:disabled)::before{background:rgba(239,238,232,.1)}}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+#stopStatus{position:fixed}
 /* Copy that names the input: scroll wording by default, arrow wording when the arrows are shown. */
 .t-arrows{display:none}
 body.hasbar .t-scroll{display:none}
