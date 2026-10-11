@@ -97,6 +97,47 @@ dialog { color: var(--ink); background: var(--cream); width: min(530px,calc(100%
 }
 
 </style>
+<style id="phone-fixes">
+/* Phone fixes: stage reachable above the fixed console, hint clear of the hall pill, 40px touch targets, type floor, toast above the hall pill. Desktop untouched. */
+@media (max-width:700px) {
+  main { margin-bottom: 0; padding-bottom: calc(168px + env(safe-area-inset-bottom)); }
+  .focused main { padding-bottom: 0; }
+  #stage { overflow: hidden; }
+  #about { width: 40px; }
+  .wordmark { font-size: 10px; }.header-actions button { font-size: 11px; }.header-actions #focus { max-width: none; }
+  .intro .eyebrow { font-size: 10px; }.intro .lede { font-size: 12px; }.metrics { top: 96px; }.metrics span { font-size: 9px; }
+  .inspect-button { min-height: 40px; font-size: 12px; }
+  .viewbar button { font-size: 11px; min-height: 40px; }.viewbar #home { min-width: 40px; }
+  .orbit-hint { top: 56px; bottom: auto; left: 20px; max-width: calc(100% - 40px); font-size: 10px; pointer-events: none; }
+  #rendererNote:not([hidden]) + .orbit-hint { top: 96px; }
+  .highlight { min-height: 40px; font-size: 11px; }
+  #status-kicker { font-size: 10px; }
+  .actions button { font-size: 12px; }.speed button { min-width: 40px; }
+  input[type=range] { height: 40px; }
+  .timeline output { font-size: 10px; }.timeline button { font-size: 10px; min-height: 40px; }
+  .hotspot::before { content: ""; position: absolute; inset: -4px; }
+  .inspector .eyebrow { font-size: 10px; }.inspector-top button { min-width: 40px; min-height: 40px; }
+  .part-tabs button { min-height: 40px; font-size: 12px; }
+  .inspector #partView, .inspector #validate { font-size: 11px; min-height: 40px; }
+  #validationResult { font-size: 12px; }
+  dialog a { font-size: 12px; }
+  #toast { z-index: 2147483001; }
+}
+@media (max-width:700px) and (max-height:760px) { #stage { height: clamp(236px, calc(100svh - 428px - env(safe-area-inset-bottom)), 460px); } }
+@media (max-width:380px) { .wordmark { font-size: 9px; } }
+@media (max-width:365px) { .intro .lede { font-size: 11px; } }
+@media (max-height:500px) and (min-width:701px) and (max-width:1000px) and (pointer:coarse) {
+  .hall-pill { left: 200px !important; top: calc(10px + env(safe-area-inset-top)) !important; bottom: auto !important; }
+  .wordmark { font-size: 11px; }.header-actions button { font-size: 12px; }.intro .eyebrow { font-size: 11px; }
+  .viewbar button { font-size: 12px; min-height: 40px; }.viewbar #home { min-width: 40px; }
+  .orbit-hint { font-size: 11px; }.highlight { font-size: 12px; }
+  #status-kicker { font-size: 10px; }.timeline label { font-size: 11px; }.timeline output, .timeline button { font-size: 11px; }
+  .console .actions button { min-height: 40px; }
+  input[type=range] { height: 40px; }
+  .hotspot::before { content: ""; position: absolute; inset: -4px; }
+  .inspector-top button { min-width: 40px; min-height: 40px; }.part-tabs button { min-height: 40px; }
+}
+</style>
   
 <!-- Bundled Three.js 0.170.0 license:
 The MIT License

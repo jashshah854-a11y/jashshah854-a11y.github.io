@@ -37,6 +37,37 @@ dialog{border:1px solid var(--line);border-radius:18px;background:#f3f2eb;color:
 @media(max-width:690px) and (max-height:730px){.energy-wrap{bottom:178px}.corner-note{bottom:183px}.title{top:88px}.status{top:101px}h1{font-size:57px}.title p{font-size:10px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
+<style id="phone-fixes">
+/* Phone fixes: type floor, 40px touch targets, toast above the hall pill, landscape pill clear of the title. Desktop untouched. */
+@media(max-width:690px){
+.brand{font-size:11px}.tools .icon{width:40px;height:40px}
+.title .eyebrow{font-size:10px}.title p{font-size:12px}
+.state{font-size:9px;max-width:112px}.rpm span:last-child{font-size:9px}#playback{font-size:9px}
+.corner-note{font-size:10px;max-width:calc(100% - 200px)}
+.energy-wrap{width:132px}.energy-top,.energy-sub{font-size:9px}.energy-top{margin-bottom:6px}.energy-sub{margin-top:5px}
+.foot-copy .eyebrow{font-size:9px}#fineprint{font-size:10px}
+.controls .icon{width:40px;height:40px}.pill{height:40px;font-size:11px}
+#toast{z-index:2147483001;font-size:11px}
+.hotspot:before{content:"";position:absolute;inset:-7px}
+#partTitle,#partCopy{font-size:12px}#closePart{top:0;right:0;width:40px;height:40px}
+.dialog-head .icon{width:40px;height:40px}.dialog-head .eyebrow{font-size:10px}
+dialog .spec{font-size:11px}.spec strong{font-size:10px}.keys{font-size:12px!important}kbd{font-size:11px}.sources{font-size:11px!important}
+}
+@media(max-width:690px) and (max-height:730px){.corner-note{bottom:222px}}
+@media(max-width:390px){
+.controls{margin:0 -9px;gap:4px}.divider{display:none}.pill{padding:0 8px;gap:6px}.pill.primary{padding:0 9px}
+}
+@media(max-height:590px) and (min-width:691px) and (max-width:1000px) and (pointer:coarse){
+.hall-pill{--hp-bw:160px!important}
+.tools .icon,.controls .icon{width:40px;height:40px}.pill{font-size:11px}
+.title .eyebrow{font-size:10px}.title p{font-size:11px}
+.state,.rpm span:last-child{font-size:10px}
+.corner-note{max-width:190px;font-size:10px}.energy-top,.energy-sub{font-size:9px}
+.foot-copy .eyebrow,#fineprint{font-size:9px}
+.hotspot:before{content:"";position:absolute;inset:-4px}
+.dialog-head .icon{width:40px;height:40px}
+}
+</style>
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml"><!--hall-pill-css--><link rel="stylesheet" href="../universe/hallpill.css"><!--/hall-pill-css--></head>
 <body>
 <canvas id="stage" aria-label="Interactive 3D kinetic machine. Drag to orbit. Pinch or scroll to zoom. The controls below operate the machine." role="img"></canvas>
