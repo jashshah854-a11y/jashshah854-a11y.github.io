@@ -111,6 +111,7 @@
 
 <nav id="worlds" aria-label="Worlds" hidden>
   <div class="sheethead"><span class="sheettitle">Worlds</span><button id="worldsClose" class="pill ghost-dark" type="button">Close</button></div>
+  <p class="cmdhint">Press : to jump anywhere</p>
   <ul id="worldsList"></ul>
   <div class="contactblock"><h3>Contact</h3><div data-contact></div></div>
 </nav>
@@ -118,6 +119,11 @@
 <div id="contact" role="region" aria-label="Contact" hidden>
   <div class="sheethead"><span class="sheettitle">Contact</span><button id="contactClose" class="pill ghost-dark" type="button">Close</button></div>
   <div data-contact></div>
+</div>
+
+<div id="cmd" role="search" aria-label="Jump to a world" hidden>
+  <input id="cmdInput" type="text" role="combobox" aria-expanded="false" aria-controls="cmdList" aria-autocomplete="list" aria-label="Jump to a world, deck or contact" placeholder="Type a world: fieldfold, decks, contact" autocomplete="off" autocapitalize="off" spellcheck="false">
+  <ul id="cmdList" role="listbox" aria-label="Matches" hidden></ul>
 </div>
 
 <nav id="stopbar" aria-label="Stops" hidden>

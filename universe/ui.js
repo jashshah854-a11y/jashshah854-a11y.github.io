@@ -1,6 +1,7 @@
 /* The HTML layer: copy, hotspot pills, the world card, the Worlds list.
    3D carries character; stable HTML carries content. */
 import * as THREE from 'three';
+import { createCommandBar } from './command.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -72,6 +73,9 @@ export function createUI({worlds, decks, stops, anchors, actions, contact}){
     else if (a.dataset.world && (fullSheet() || a.dataset.walk === undefined)) { e.preventDefault(); openNav(false); actions.goWorld(a.dataset.world); }
     else if (a.dataset.walk !== undefined) { if (actions.walkIn(a.getAttribute('href'), e)) e.preventDefault(); openNav(false); }
   });
+  /* Desktop command bar (":" or "/"). Not while a sheet or the renders dialog is open. */
+  createCommandBar({worlds, decks, stops, goStop:actions.goStop, walkIn:actions.walkIn, openWorlds:() => openNav(true), openContact:() => openContact(true),
+    blocked:() => anySheet() || $('#renders').open});
   $('.skip').addEventListener('click', e => { e.preventDefault(); openNav(true); });
 
   /* ---- hotspot pills ---- */

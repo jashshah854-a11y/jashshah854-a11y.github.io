@@ -282,6 +282,7 @@ function restore(){
 const actions = {
   walkIn,
   goWorld: id => goStopIndex(stopIdxById('world:' + id)),
+  goStop: id => goStopIndex(stopIdxById(id)),
   next: () => stepBy(1),
   step: n => stepBy(n),
   sheet: open => {
