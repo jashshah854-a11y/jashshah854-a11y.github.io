@@ -116,3 +116,8 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - Before -> after, elements the pill covered in the first view across 13 pages: 390x844 4 -> 1, 360x740 2 -> 1. The one left on agents-internet is the headline box edge, not text (checked in a screenshot).
 - Jev: its note line (also used for the 3D-unavailable message, so it stays visible) starts 34 px in on phones to clear the arrow.
 - Gate PASS; sub-page sweep clean.
+
+### Round 18 (2026-10-11): desktop command bar (borrowed from hancore.dev, built in the site's own tokens)
+- Change: press : or / on desktop to open a jump bar; type to filter worlds, decks, Worlds and Contact; Enter goes there (universe/command.js, wired through ui.js and a goStop action in main.js). The Worlds sheet carries a one-line "Press : to jump anywhere" hint. Hidden on touch and coarse pointers, so phones are unchanged.
+- Verified: cmd-verify PASS in motion and reduced motion (open, filter, click, Enter, Escape, hint, hidden on phone); keyboard walk across all 14 stops unchanged; gate PASS twice on the new Node test server (serve.cjs, replaces python http.server, which dropped connections under Launchboard load).
+- Next: Greybeard item 1, one plain sentence on the first screen saying what Jash does.
