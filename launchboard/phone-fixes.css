@@ -1,0 +1,50 @@
+/*
+ * Phone-only overrides for the exported Launchboard (static export, no rebuild).
+ * Everything sits inside one max-width query, so screens wider than 640px are untouched.
+ * Unlayered rules beat the Tailwind layers in the exported stylesheet, so no !important is needed.
+ * Source fixes that would replace these are listed in the audit notes.
+ */
+@media (max-width: 640px) {
+  /* Section nav: wrap instead of scrolling sideways, so all pages are visible and the active tab never sits off screen. */
+  header nav[aria-label="Sections"] {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+  header nav[aria-label="Sections"] > a {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  /* Tighter gaps in the header block to win back part of the height the second nav row adds. */
+  header > div,
+  header > div > div:last-child {
+    row-gap: 0.5rem;
+  }
+
+  /* Text links: grow the tap area to 40px or more without moving anything (padding is cancelled by the negative margin; position keeps the link above the line under it). */
+  main a.font-semibold:not(.min-h-11),
+  main a.w-fit {
+    position: relative;
+    padding-top: 11px;
+    padding-bottom: 11px;
+    margin-top: -11px;
+    margin-bottom: -11px;
+  }
+
+  /* Launch bars: fill the 40px row so the whole bar is a 40px tap target. */
+  main a.absolute.inset-y-1 {
+    top: 0;
+    bottom: 0;
+  }
+
+  /* Text that rendered under 12px. */
+  .text-\[11\.5px\] {
+    font-size: 12px;
+  }
+  /* The revenue chart is drawn in a 720-unit box and shown at 620px, which shrinks its 11px labels to 9.5px. */
+  svg.min-w-\[620px\] {
+    min-width: 800px;
+  }
+}
