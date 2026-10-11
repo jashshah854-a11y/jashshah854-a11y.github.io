@@ -153,3 +153,14 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Change: 404.html in the home's own layout and tokens (links /universe/universe.css, same fonts, pills): "This part of / the machine is missing." with Back to the start, Go to the hall (/#hall) and Email. noindex. Absolute paths, because Pages serves it at any depth.
 - Verified: /no/such/page returns 404 with the page at 390 and 1366, Instrument Serif, night background, 0 px overflow, no console errors; Go to the hall lands on The hall. Test server serve.cjs now serves 404.html the way Pages does.
 - Next: launchboard share tags in source (export is the heavy job; wait for a quiet laptop); item 5 vendored three.js; item 6 shorter desktop veil.
+
+### Round 24 (2026-10-11): the home serves three.js from the site (Greybeard item 5, part 1)
+- Before: the home loaded the non-minified three r186 (module + core, about 418 KB on the wire), gsap and lenis from jsdelivr. A blocked or slow jsdelivr meant no site.
+- Change: vendor/ holds the exact pinned files (three@0.186.1, gsap@3.15.0, lenis@1.3.26) from npm, each minified on its own with esbuild (no bundling, so import paths and license headers stay as published). Only the addons the site imports, plus their own imports, are copied (12 files). Import map and modulepreload links point at ./vendor/. Script: loop-tools/vendor.cjs.
+- After, live, phone on 4G, cold cache: three.core.js done at 584 ms (was 907); veil median 2143 ms (was 2374). three on the wire about 196 KB (was 418 KB). No third-party request left on the home except Google Fonts.
+- Verified: gate PASS local and live; phone draw calls max 89; keyboard walk both motion modes; command bar 33/33; fallback test (now blocks /vendor/) PASS. Lesson: import map values must start with ./ or /; a bare "vendor/..." is ignored and the page never boots.
+
+### Round 25 (2026-10-11): the 7 decks share the same files
+- Change: deck import maps (and the pakistan-india gsap script) point at ../../vendor/; gsap's dist/gsap.min.js added as published. A visitor now downloads three once for the home and every deck.
+- Verified: decks-verify.cjs, each deck stepped through 14 slides: 0 errors, 0 failed requests, 0 CDN requests (live before: 2 to 9 CDN requests per deck); cover renders identical to live; late-slide 3D scenes render in all 7.
+- Next: the 4 world pages (fieldfold, workbench, jev, round-and-round) still embed three r170 as a string, about 300 KB each on the wire. Swap to the shared r186 one page at a time.
