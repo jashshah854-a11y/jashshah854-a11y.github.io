@@ -133,3 +133,10 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - After (fallback-verify.cjs, CDN blocked): list shown in 445 ms on phone and 293 ms on desktop, no stale text, 17 links, last deck reachable; noscript 17 links.
 - Test tool: gate.cjs now ignores only ERR_ABORTED on Next.js _rsc prefetches (the gate leaves Launchboard while it prefetches; the files serve 200 local and live; the pushed state failed the same way, so not caused by this change). Real 4xx/5xx still fail.
 - Next: Greybeard item 3, og image and description on every sub-page.
+
+### Round 21 (2026-10-11): share previews on 13 sub-pages (Greybeard item 3)
+- Before: 13 of 15 sub-pages had no og or twitter tags (a shared link showed no image or title); fieldfold, workbench and jev had no meta description.
+- Change: og + twitter tags (title, description, url, 1200x630 image, alt) on perpetua, round-and-round, fieldfold, workbench, jev, mgmtio and the 7 decks, following the cyberpunk page's pattern. Images are crops of existing stills and deck covers in media/share/ (13 files, 1.4 MB; MGMTIO top-anchored so its header shows). Descriptions reuse each page's own; the three missing ones use the world line from data.js. Script: loop-tools/og.py (skips any page that already has og tags).
+- Not touched: cyberpunk and corner-block (owned by the other chat), launchboard (its head comes from the Next.js source; do it there).
+- Verified: all 13 image URLs 200; sub-page sweep 34/34 ok locally; gate PASS.
+- Next: launchboard share tags in source; then Greybeard item 4, generate #plain and noscript from data.js with --check.
