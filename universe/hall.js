@@ -421,13 +421,40 @@ export function buildHall({scene, lite, perpetua, video = true}){
   });
   addProjector();
 
-  /* shafts between neighbouring stations: one drive line, Perpetua at its root */
-  const linkShafts = [];
+  /* shafts between neighbouring stations: one drive line, Perpetua at its root.
+     Drawn as three InstancedMeshes (bodies, keys, collars) instead of four meshes per shaft:
+     the nine shafts cost 36 draws on every wide view. A hidden shaft's instances collapse to zero scale. */
+  const SR = 0.55, upY = new THREE.Vector3(0, 1, 0);
+  const linkShafts = [], shaftDefs = [];
   for (let i = 0; i < axles.length - 1; i++) {
-    const sh = makeShaft(axles[i].R, axles[i+1].L, M, {r:0.55}); root.add(sh.group); linkShafts.push(sh.group);
-    const ratio = shaftRatios[i];
-    drivers.push(spin => { sh.spin.rotation.y = spin*ratio; });
+    const A = axles[i].R, B = axles[i+1].L, dir = new THREE.Vector3().subVectors(B, A), len = dir.length();
+    shaftDefs.push({mid:A.clone().addScaledVector(dir, 0.5), quat:new THREE.Quaternion().setFromUnitVectors(upY, dir.clone().normalize()),
+      len, n:Math.max(2, Math.floor(len/9)), ratio:shaftRatios[i]});
+    linkShafts.push({visible:true});
   }
+  const keyGeo = new THREE.BoxGeometry(SR*0.7, 1.3, SR*0.7); keyGeo.translate(SR*1.05, 0, 0);
+  const shaftInst = (geo, mat, count) => { const m = new THREE.InstancedMesh(geo, mat, count); m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.frustumCulled = false; root.add(m); return m; };
+  const shaftBodies = shaftInst(new THREE.CylinderGeometry(SR, SR, 1, 6), M.brass, shaftDefs.length);
+  const shaftKeys = shaftInst(keyGeo, M.brassHi, shaftDefs.reduce((s, d) => s + d.n, 0));
+  const shaftCollars = shaftInst(new THREE.CylinderGeometry(SR*1.6, SR*1.6, 0.5, 20), M.steel, shaftDefs.length*2);
+  const _sq = new THREE.Quaternion(), _sp = new THREE.Vector3(), _ss = new THREE.Vector3(), _sm = new THREE.Matrix4(), ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
+  drivers.push(spin => {
+    let k = 0;
+    shaftDefs.forEach((d, i) => {
+      const vis = linkShafts[i].visible;
+      _sq.setFromAxisAngle(upY, spin*d.ratio).premultiply(d.quat);
+      shaftBodies.setMatrixAt(i, vis ? _sm.compose(d.mid, _sq, _ss.set(1, d.len, 1)) : ZERO);
+      for (let j = 0; j < d.n; j++, k++) {
+        _sp.set(0, -d.len/2 + (j + 0.5)*d.len/d.n, 0).applyQuaternion(_sq).add(d.mid);
+        shaftKeys.setMatrixAt(k, vis ? _sm.compose(_sp, _sq, _ss.set(1, 1, 1)) : ZERO);
+      }
+      for (let c = 0; c < 2; c++) {
+        _sp.set(0, (c ? 1 : -1)*(d.len/2 - 0.6), 0).applyQuaternion(d.quat).add(d.mid);
+        shaftCollars.setMatrixAt(i*2 + c, vis ? _sm.compose(_sp, d.quat, _ss.set(1, 1, 1)) : ZERO);
+      }
+    });
+    shaftBodies.instanceMatrix.needsUpdate = shaftKeys.instanceMatrix.needsUpdate = shaftCollars.instanceMatrix.needsUpdate = true;
+  });
 
   /* pools of light under each pillar */
   const poolGeo = new THREE.PlaneGeometry(1, 1); poolGeo.rotateX(-Math.PI/2);
