@@ -153,6 +153,15 @@ dialog { color: var(--ink); background: var(--cream); width: min(530px,calc(100%
   .hotspot::before { content: ""; position: absolute; inset: -4px; }
   .inspector-top button { min-width: 40px; min-height: 40px; }.part-tabs button { min-height: 40px; }
 }
+/* Inspecting on a phone: the card docks over the motion bar and the intro text steps aside, so the part being explained
+   stays in view above its explanation (the card used to cover 77 to 89% of the machine). The pressed "Look a little closer"
+   stays as the way back; the motion bar and the hall pill return when the card closes. */
+@media (max-width:700px){
+  body:has(#inspector:not([hidden])) .intro > :not(#inspect){display:none}
+  body:has(#inspector:not([hidden])) .intro #inspect{margin-top:0}
+  body:has(#inspector:not([hidden])) .console,body:has(#inspector:not([hidden])) .hall-pill,body:has(#inspector:not([hidden])) #highlight{visibility:hidden}
+  body:has(#inspector:not([hidden])) .inspector{bottom:calc(12px + env(safe-area-inset-bottom));max-height:min(410px,45svh);overflow-y:auto}
+}
 </style>
   
 
