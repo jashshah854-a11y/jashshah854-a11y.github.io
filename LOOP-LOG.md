@@ -4,7 +4,6 @@ One verified change per round. Numbers are phone tier (390x844, iPhone UA) draw 
 Gate per round: no console errors except resume.pdf 404; deep link, Back restore and back-to-hall pass at 390x844, 1366x768, 1440x900; all 14 stops reachable; live routes 200 after the Pages build.
 
 ## Backlog (top = next)
-- [ ] Vitrine sits at the budget line (100 settled, 102 peak). Next cut: the Perpetua machine is 34 separate meshes in its own vitrine; parts that never move relative to each other can share a draw.
 - [ ] Desktop transit hitch: NOT video (worker A, 5 paired tours: video off hitched as much as on; 156 play/pause flips line up with hitches at chance; video uploads ~0.2 ms). Stalls are 40-120 ms renderer.render() calls under a busy box. Lead: the first transit (Start to vitrine) hitches in most runs, where hall.startLoading() begins image uploads (17-18 ms texImage2D seen). Re-measure on a QUIET box before changing anything. Scripts: pf/loop-tools/out-a/measure.cjs.
 - [ ] Reduced motion: wheel and swipe do not step stops (bar hint says swipe); OS setting read once at load. Launchboard has no prefers-reduced-motion rule.
 - [ ] Resume link: add resume.pdf ONLY when Jash hands over the approved file.
@@ -49,3 +48,10 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - Fixed: Left/Right arrows did nothing (copy says "the arrows"); Home/End did nothing in reduced motion; focus fell to BODY when an end arrow disabled itself; the stop live region sat inside a display:none bar on desktop so it was never announced.
 - Verified independently: Right, Right, Left, End, Home walk vitrine, hall, vitrine, end, start in both normal and reduced motion.
 - Gate: PASS at all three sizes.
+
+### Round 7 (2026-10-11): phone vitrine under budget (worker F, reviewed and merged)
+- Method: hid each of the 96 drawn objects in turn and diffed the frame, so every cut rests on a measured pixel effect.
+- Changes: Perpetua crank built into the flywheel group on phones (same origin, same theta: verified in perpetua.js), 3 fewer; the two vitrine lamps merged (all tiers), 1 fewer; phone-only per-frame cull of single-sided planes seen from behind (portal planes, Singular picture wall: FrontSide, so exact) and of floor reflection strips under 1 px.
+- Phone calls, before -> after: vitrine 100/103 -> 89/89, hall peak 100 -> 89, start 61 -> 58, end 62 -> 55. No stop worse. Every phone stop now under 100 at peak.
+- Pixel diff in reduced-motion stills: within the noise floor on phone and desktop.
+- Gate: PASS at all three sizes; keyboard walk passes in both motion modes.
