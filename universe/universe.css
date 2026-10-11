@@ -73,6 +73,7 @@ body[data-mode=world] .brand{opacity:0;pointer-events:none}
 .copy em{font-style:italic}
 .copy p{margin:0;font-size:19px;color:#e4e3dc;text-shadow:0 1px 16px rgba(20,30,26,.6)}
 .copy[data-copy=inside]{left:56px;bottom:64px;max-width:640px;display:flex;flex-direction:column;gap:16px}
+.copy p.who{font-family:var(--serif);font-style:italic;font-size:24px;line-height:1.25;color:#f7f6f0;text-wrap:balance}
 .copy[data-copy=inside] h1{font-size:clamp(54px,6.4vw,92px);line-height:.95;letter-spacing:-.02em}
 #stepback{right:56px;bottom:64px}
 .copy[data-copy=vitrine]{right:64px;top:168px;max-width:520px;display:flex;flex-direction:column;gap:18px;text-align:right}
@@ -213,6 +214,7 @@ dialog#renders img{width:100%;height:auto;border-radius:12px;display:block}
   #toast{bottom:calc(28px + env(safe-area-inset-bottom))}
   .copy[data-copy=inside]{left:20px;right:20px;bottom:calc(112px + env(safe-area-inset-bottom))}
   .copy[data-copy=inside] p{font-size:17px}
+  .copy p.who{font-size:20px}
   #stepback{right:20px;bottom:calc(36px + env(safe-area-inset-bottom))}
   .copy[data-copy=vitrine]{left:20px;right:20px;top:auto;bottom:calc(36px + env(safe-area-inset-bottom));text-align:left;max-width:none}
   .copy[data-copy=hall]{left:20px;right:20px;bottom:calc(36px + env(safe-area-inset-bottom));flex-direction:column;align-items:flex-start;gap:12px}
