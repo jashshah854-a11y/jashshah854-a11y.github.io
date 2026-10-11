@@ -92,3 +92,10 @@ Gate per round: no console errors except resume.pdf 404; deep link, Back restore
 - Change: one <style id=phone-fixes> block per page (+80 lines), no inline blobs touched. Touch-landscape grid for fieldfold and workbench; short-phone compression so all controls show (workbench stage about 184 px at 360x740, chosen over hidden controls).
 - After: 0 short tap targets on fieldfold and workbench (jev: one 21 px checkbox with a 44 px label); drag and every button work by touch; load time unchanged; desktop 1440 and 1366 pixel-identical.
 - Still open: decorative caps labels at 7-9 px; the shared hall pill covers bottom-left content on scrolling world pages in the first view (fix belongs in the shared pill).
+
+### Round 14 (2026-10-11): Perpetua and Round & Round on phones (worker H, reviewed, one fix of mine, merged)
+- Perpetua before: 7 phone tap targets under 40 px; the hall pill hid the start of every toast (123x19); landscape pill on "No last turn."; text down to 6 px; 27 px inspect hotspots (1 of 8 edge probes hit).
+- Round & Round before: landscape pill covered "Look a little closer" so a tap left the page; at 375x667 the console covered the stage and Find one marble with no scroll; See this part grew the page from 740 to 1920 px tall at 360 wide; 9-12 short tap targets; text down to 7 px.
+- Change: one <style id=phone-fixes> block per page (+31, +41 lines). My review fix: the worker moved the orbit hint to the top of the stage, where it crossed the machine; hidden on phones instead (no free spot; touch users drag by default).
+- After: 0 short tap targets; toast clear of the pill; page height stays put; touch orbit, pinch, scrub, step, speed, inspect all work. Desktop geometry and frozen-frame pixels identical.
+- Still open: inspect panel covers most of the machine on phones (needs a camera offset in the app script); some labels 9-11 px.
