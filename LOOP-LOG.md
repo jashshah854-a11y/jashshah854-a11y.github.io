@@ -223,3 +223,10 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - After (home-imgs.cjs): full-size files on a phone 3 -> 0; Singular stills 415 -> 283 KB; home phone media 2650 -> 2512 KB. Singular stop screenshot identical to live; phone draw calls max 89; check-all PASS.
 - Unreferenced stills noted, not deleted (visitors never fetch them; the diorama ones belong to the Corner Block chat): media/diorama-*.jpg, n8n.jpg, squeeze.jpg, posting.jpg.
 - Loop rule from this round: any script with a regex is written with the Write tool; sed and inline node -e halve backslashes on this box (third time this session).
+
+### Round 35 (2026-10-11): deck covers are not oversized (measured; no site change; one tool corrected)
+- Hypothesis from round 34's discovery pass: deck covers ship at 1672 px where a phone "needs ~780 px", 150 to 375 KB of waste per deck.
+- Checked before changing (cover-scale.cjs): the covers use object-fit: cover, so on a tall phone they are scaled by height and cropped. Source pixels per screen pixel on a 3x iPhone: 0.37 to 1.6 (houthis 0.37, agents 0.81, posting 0.77, over-engineering 0.88: already below 1). A smaller phone copy would have made the covers blurrier.
+- Decision: no srcset, no smaller copies. The cyberpunk gallery measures 1.6 to 1.7 at 2x, also fine.
+- Tool fix: weight.cjs compared image width with box width and ignored object-fit; it now reports source px per screen px (object-fit aware) and flags only above 2. Re-run: the one flag left is pakistan-india at 2.39 on a 2x phone (1.59 on a 3x iPhone), not worth a second file.
+- Lesson for the loop: a "waste" number is a hypothesis; check it against how the pixels are actually drawn before cutting.
