@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import * as L from './layout.js';
 import { DECKS } from './data.js';
-import { Portal, capTexture, texAniso } from './portal.js';
+import { Portal, capTexture, texAniso, phoneCopy } from './portal.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { makeMaterials, glowTexture, washTexture, beamTexture, gearGeometry, makeShaft, makeVitrine, roundedBox } from './parts.js';
@@ -337,7 +337,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
       g.add(variants[k].mesh); backs.push({obj:variants[k].mesh, z:-2.05});      // the pictures hang at z -2.05 on the wall
     }
     singularLoad = () => ['media/sing-cabinet.jpg', 'media/sing-museum.jpg', 'media/sing-weather.jpg'].forEach((u, j) => {
-      texLoader.load(u, t => {
+      const got = t => {
         capTexture(t);
         t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = texAniso();
         for (const k of [j, j + 3]) {
@@ -345,7 +345,9 @@ export function buildHall({scene, lite, perpetua, video = true}){
           c.repeat.set(0.62, 0.9); c.offset.set(k < 3 ? 0.02 : 0.36, 0.05);
           variants[k].mat.map = c; variants[k].mat.needsUpdate = true;
         }
-      });
+      };
+      const small = phoneCopy(u);
+      texLoader.load(small || u, got, undefined, () => { if (small) texLoader.load(u, got); });
     });
     const frames = new THREE.InstancedMesh(frameGeo, M.brass, 24); g.add(frames);
     const mtx = new THREE.Matrix4(), qq = new THREE.Quaternion(), e = new THREE.Euler();

@@ -51,6 +51,8 @@ let gpu = null, maxSize = 0, aniso = 4;
 /* Textures are uploaded the moment they arrive, not when they first come into view.
    On phones every picture is capped at maxSize px wide (1024): 26 pictures at 1600 px with mipmaps are
    about 190 MB of GPU memory, at 1024 about 80 MB, and a portal never covers more than ~1000 device px. */
+// Phones fetch the 1024 px copy kept under m/ at the same path, instead of the full picture shrunk on the device.
+export const phoneCopy = url => maxSize === 1024 && /^(media|assets)[/][^/]+[.]jpg$/.test(url) ? 'm/' + url : null;
 export function setRenderer(r, opts = {}){ gpu = r; maxSize = opts.maxSize || 0; aniso = opts.aniso || 4; }
 export const texAniso = () => aniso;
 export function capTexture(t){
@@ -86,9 +88,7 @@ export function loadTexture(url){
     done();
   };
   const full = done => loader.load(url, t => got(t, done), undefined, () => { entry.failed = true; done(); });
-  // Phones fetch the 1024 px copy kept under m/ at the same path, instead of the full picture shrunk here.
-  // If the copy is missing, the full picture is fetched.
-  const small = maxSize === 1024 && /^(media|assets)[/][^/]+[.]jpg$/.test(url) ? 'm/' + url : null;
+  const small = phoneCopy(url);      // if the copy is missing, the full picture is fetched
   queue.push({url, run:done => small ? loader.load(small, t => got(t, done), undefined, () => full(done)) : full(done)});
   pump();
   return entry;
