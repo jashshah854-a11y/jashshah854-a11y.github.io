@@ -245,3 +245,10 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - After: exactly the same 50 programs as live (prog-diff: zero added, zero missing), so the rendered pixels come from identical shaders. Median veil 3374 ms (3019, 3374, 3474), worst frame after the veil 33 ms, 0 long frames. A 27-stop walk (journey-progs.cjs) compiles no program after the veil, live and local alike. check-all PASS.
 - New tools: programs.cjs (census), prog-map.cjs (program to materials), prog-keys.cjs (cache-key dump and nearest-sibling diff), prog-diff.cjs (two dumps), journey-progs.cjs (programs and long frames per stop), who-uses.cjs.
 - Lesson for the loop: before cutting programs, diff their cache keys. The "too many programs" problem was really "programs compiled serially"; the count did not need to move.
+
+### Round 38 (2026-10-11): shader error checks stay on (measured; no site change)
+- Live after round 37: median veil 3552 ms over 3 cold runs (3097, 3552, 3948), 50 programs, none compiled during a 27-stop walk, 0 long frames.
+- Profile (boot-profile.cjs): of 2.9 s sampled to the veil, 0.8 s is self time in three.js's program error check. That check makes synchronous GL queries, and each one waits for its program's link.
+- Tried: renderer.debug.checkShaderErrors = false (with ?glcheck to turn it back on). Median veil 3250 ms over 5 runs, inside the 3019 to 3474 ms spread of round 37. The worst frame after the veil rose from 33 to 50 ms in all 5 runs, and 2 runs gained a long frame. The link wait moved past the veil; it did not go away. Reverted.
+- Lesson for the loop: main-thread time in a synchronous GL query is GPU work showing up on the CPU. Removing the query moves the wait. Only less GPU work (fewer or cheaper programs) removes it.
+- Next lever, if wanted: merge screen-variant programs that differ by one material flag (prog-keys.cjs lists them). Each merge saves two programs (screen and mirror) but changes how a material renders, so each one needs a before and after screenshot at its stop.
