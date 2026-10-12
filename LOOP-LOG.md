@@ -230,3 +230,9 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Decision: no srcset, no smaller copies. The cyberpunk gallery measures 1.6 to 1.7 at 2x, also fine.
 - Tool fix: weight.cjs compared image width with box width and ignored object-fit; it now reports source px per screen px (object-fit aware) and flags only above 2. Re-run: the one flag left is pakistan-india at 2.39 on a 2x phone (1.59 on a 3x iPhone), not worth a second file.
 - Lesson for the loop: a "waste" number is a hypothesis; check it against how the pixels are actually drawn before cutting.
+
+### Round 36 (2026-10-11): robots.txt and a sitemap
+- Before: /robots.txt and /sitemap.xml returned 404; search engines could find sub-pages only by following links.
+- Change: robots.txt allows everything and names the sitemap (noindex pages are not blocked on purpose: a crawler that cannot fetch a page never sees its noindex). tools/sitemap.mjs writes sitemap.xml with the 18 public pages (home, 10 worlds and tools incl. corner-block and its story, 7 decks) and refuses any page marked noindex (tested: adding noindex to jev made it exit 1). No lastmod on purpose: a git date would go stale with every page commit and keep the check red.
+- Loop: check-all gains "sitemap current, no noindex" (9 checks); link-check now also requires robots.txt and every sitemap URL to return 200 (73 same-site URLs). check-all PASS.
+- Note: gate and sweep ran at about twice their usual time (175 s vs 90 s) with three other chats busy; timings in this round are not comparable.
