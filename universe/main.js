@@ -79,13 +79,19 @@ if (renderer) {
   renderer.shadowMap.enabled = !mobile;
   renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.shadowMap.autoUpdate = false;
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0).texture;
+  /* The environment map costs 0.5 to 0.8 s on a cold desktop. Its room's materials start linking here, in parallel
+     (KHR_parallel_shader_compile), with a render target bound like the one PMREM draws into, and the map is made once
+     the scene is built, so those links overlap that work: about 60 ms off the veil (12 paired runs). The rest is
+     ANGLE building each shader's D3D code on its first draw, which no early compile reaches. */
+  const room = new RoomEnvironment(), pmrem = new THREE.PMREMGenerator(renderer);
+  const envTarget = new THREE.WebGLRenderTarget(1, 1, {type:THREE.HalfFloatType});
+  renderer.setRenderTarget(envTarget); renderer.compile(room, camera); renderer.setRenderTarget(null); envTarget.dispose();
   scene.fog = new THREE.FogExp2('#14120e', 0.003);
 
   setRenderer(renderer, mobile ? {maxSize:1024, aniso:2} : {});
   perpetua = buildPerpetua({lite});
   hall = buildHall({scene, lite, perpetua, video:!mobile});
+  scene.environment = pmrem.fromScene(room, 0).texture;
   bootTimes.built = performance.now();
   if (mobile) hall.rack.setDensity(2);
 
