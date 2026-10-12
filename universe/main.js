@@ -640,7 +640,7 @@ async function boot(){
   veilAt = Math.max(VEIL_MS, bootTimes.start + 1200);
   const slowTimer = setInterval(() => veilProgress(veilShown), 250);
   // Compile every shader before the first frame, behind the loading veil: no hitch later.
-  if (renderer) { try { place(journey.sample(0), 0); applyLook(journey.sample(0), 0); await Promise.race([renderer.compileAsync(scene, camera), new Promise(r => setTimeout(r, Math.min(mobile ? 2500 : 6000, Math.max(600, remaining() - 600))))]); bootTimes.compiled = performance.now(); warmFirst(); bootTimes.warmFirst = performance.now(); veilProgress(0.15); if (mode === 'gl') { await warmHall(); bootTimes.warmHall = performance.now(); } buildRungs(); } catch (e) { console.warn('compile', e); } }
+  if (renderer) { try { place(journey.sample(0), 0); applyLook(journey.sample(0), 0); await Promise.race([mode === 'gl' ? hall.compileAll(renderer, camera) : renderer.compileAsync(scene, camera), new Promise(r => setTimeout(r, Math.min(mobile ? 2500 : 6000, Math.max(600, remaining() - 600))))]); bootTimes.compiled = performance.now(); warmFirst(); bootTimes.warmFirst = performance.now(); veilProgress(0.15); if (mode === 'gl') { await warmHall(); bootTimes.warmHall = performance.now(); } buildRungs(); } catch (e) { console.warn('compile', e); } }
   clearInterval(slowTimer);
   bootTimes.tier = tier;
   if (mode === 'gl') {

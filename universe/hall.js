@@ -619,6 +619,21 @@ export function buildHall({scene, lite, perpetua, video = true}){
   const pending = () => stageIdx < stages.length;
   const revealNext = () => { const c = stages[stageIdx++]; c.visible = true; return c; };
   const revealAll = () => { while (pending()) revealNext(); };
+  /* The mirror renders into a linear, untoned target, so every program it draws has a second variant. Boot used
+     to compile only the screen variants, and each piece then linked its mirror ones on its warm draw, one at a
+     time. Compiling them here, in parallel (KHR_parallel_shader_compile), cuts about 1.2 s off the cold desktop
+     veil. compile() walks hidden objects too, so it gets only what the mirror draws: the hall pieces and the
+     stand-in, never the floor itself or Perpetua. */
+  function compileAll(renderer, camera){
+    const jobs = [renderer.compileAsync(scene, camera)];
+    if (reflector) {
+      const prev = renderer.getRenderTarget();
+      renderer.setRenderTarget(reflector.getRenderTarget());
+      for (const c of [...stages.filter(c => c !== reflector), proxy]) jobs.push(renderer.compileAsync(c, camera, scene));
+      renderer.setRenderTarget(prev);
+    }
+    return Promise.all(jobs);
+  }
   /* Images are fetched a few at a time once the visitor starts to leave the machine. */
   let loadingStarted = false;
   function startLoading(){
@@ -630,5 +645,5 @@ export function buildHall({scene, lite, perpetua, video = true}){
   }
   /* One clip at a time, behind the loading veil: starting a decoder costs a 50 to 150 ms stall. */
   const prewarmVideos = async () => { for (const p of portals) await p.prewarmVideo(); };
-  return {root, far, vitrineBox, stageCount:() => stages.length, pendingCount:() => stages.length - stageIdx, update, portals, prewarmVideos, axles, gearMeshes, linkShafts, anchors, M, shell, rack, SLOT_INDEX, pending, revealNext, revealAll, startLoading, setBackdrop, focusWorld, setMirror, plainFloor, hasMirror:() => !!reflector, mirrorIsOn:() => mirrorOn};
+  return {root, far, vitrineBox, stageCount:() => stages.length, compileAll, pendingCount:() => stages.length - stageIdx, update, portals, prewarmVideos, axles, gearMeshes, linkShafts, anchors, M, shell, rack, SLOT_INDEX, pending, revealNext, revealAll, startLoading, setBackdrop, focusWorld, setMirror, plainFloor, hasMirror:() => !!reflector, mirrorIsOn:() => mirrorOn};
 }
