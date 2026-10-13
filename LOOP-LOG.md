@@ -383,3 +383,10 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Tried: texture 4096 vs 2048: same look on desktop, but 4096 cost 150 to 1270 ms frames on upload: 2048 for every screen (425 KB). Grade: dark (the city's own albedo is mostly near black), bright (washed out), and a purple ambient with stronger neon (kept: nearest to the Corner Block palette).
 - Verify: 52 programs (the impostor's pair swapped for an unlit pair); phone draw calls peak 85, Cyberpunk stop 34; check-all PASS. The 27-stop walk shows 1 long frame at stop 1 in every run, with the mesh fetch switched off too; the live site shows 2 there today, so it is not this change.
 - Next queue: (1) the block reads small and side-on from the world camera: frame the Cyberpunk stop a little higher so it looks down onto the streets, as the old picture did; (2) phone camera aim at world stops (parked round 54 trials, loop/r54); (3) the dragon, as a separate small mesh circling the block.
+
+### Round 56 (2026-10-13): the Cyberpunk stop looks down onto the block's streets
+- Found (round 55 queue): from the eye-level world camera the new 3D block read as a small wall of facades, and on phones it sat on the card's top edge.
+- Tried on live (frame-try.cjs moves a stop's camera at runtime): A, 8 up and 6 closer, aim 1.5 lower: the whole case in frame, the block a little larger. B, 14 up and 10 closer, aim 2.5 lower: the streets and the plaza read from above, and on phones the block clears the card. Kept B, then eased it back (d 28 to 32) so the case's top bar stays inside the desktop frame.
+- Change: slot('cyber', {d:32, up:19, lookUp:-2.7}). Other worlds unchanged.
+- Verify: same 52 programs as round 55 (that dump is now the baseline; round 52's is kept as prog-keys-base-r52.json); 27-stop walk 1 long frame at stop 1 (in the live site too, see round 55); check-all PASS.
+- Next queue: (1) the dragon, as a small separate mesh circling the block; (2) phone camera aim at the other world stops (parked round 54 trials, loop/r54).
