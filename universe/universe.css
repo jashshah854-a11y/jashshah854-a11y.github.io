@@ -36,6 +36,9 @@ body[data-world=decks] #shade-right{background:linear-gradient(to right,rgba(12,
 /* The opening frame is the one light scene: white type on the cream wall measured 1.4:1 to 2.3:1. The machine's own
    green-black, deeper and taller, brings it past 3:1 without a box behind the copy (copy-contrast.cjs). */
 body[data-mode=inside] #shade-bottom{background:linear-gradient(to top,rgba(20,30,26,.8) 0%,rgba(20,30,26,.55) 30%,rgba(20,30,26,0) 58%)}
+/* The hall headline lands on the lit skyline: its windows behind the letters measured a brightness spread of 23 to 26.
+   A deeper, taller shade in the hall's own near-black calms it to 12 to 14 and leaves the vitrines above untouched. */
+body[data-mode=hall] #shade-bottom{background:linear-gradient(to top,rgba(15,14,11,.88) 0%,rgba(15,14,11,.62) 26%,rgba(15,14,11,0) 52%)}
 
 /* pills */
 .pill{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid transparent;background:none;color:var(--text);font:500 15px/1 var(--sans);cursor:pointer;white-space:nowrap;transition:background .2s var(--ease-out),border-color .2s var(--ease-out),transform .15s var(--ease-out)}

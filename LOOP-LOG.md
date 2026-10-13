@@ -278,3 +278,11 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Tested and rejected: raising the opacity so the beam shows as a shaft (0.18, 0.3). From the front the beam overlaps the picture, so a stronger beam only lays haze over the art. Kept at 0.085; the projector and its spinning reels still say "film".
 - Measurement lesson: the portal is a slideshow, so comparing art brightness between two shots compared two different pictures. Judge such changes on regions the art does not cover, or pause and shoot within 250 ms.
 - New tools: beam-try.cjs and beam-opacity.cjs (runtime material and geometry trials on a live page); tour.cjs gains STOPS=.
+
+### Round 42 (2026-10-13): the hall headline no longer fights the lit skyline
+- Queue check: the round 41 beam on phones (390x844, live) is clean, with no dome.
+- Found: at the hall stop, "One machine. Many worlds inside it." sits on the foreground skyline's lit windows (desktop and phone). Contrast passed (7.0 to 7.6:1), so the fault was clutter. copy-contrast.cjs now also reports "busy", the brightness spread (0 to 255) of the background under the text: 25.9 on desktop and 23.1 on phone under the headline.
+- Tried on live by injected CSS: A, the hall's bottom shade deeper and taller (.88 at the bottom, .62 at 26%, 0 at 52%); B, the old shade plus a soft bottom-left darkening. A: busy 13.6 on desktop and 11.6 on phone, contrast 11.2 and 12.3:1. B: 14.7 and 18.7; it left phones busy because the copy spans the width there.
+- Change: body[data-mode=hall] #shade-bottom uses A, in the hall's own near-black rgba(15,14,11). The vitrines, labels and lights above stay as they were.
+- Verify: contrast sweep with shadows passes at every stop at both sizes (hall headline busy 13.5 desktop, 11.1 phone); 27-stop walk: 50 programs, 0 long frames; check-all PASS.
+- Next queue: (1) the overview stop (s25): the back of the Singular wall reads as a black slab on the left; (2) a fresh tour of every stop at both sizes for the next weakest frame.
