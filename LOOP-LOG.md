@@ -398,3 +398,10 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Tried on live (dragon-try.cjs): A, its own size (length 32, girth 1.55) high above the roofs: a pale spark on phones. B, length 46, girth 2.3, a little lower and faster: reads as a dragon at both sizes. Kept B.
 - Verify: 54 programs at the veil and after the whole walk (2 new: the dragon's shader and its mirror variant; new baseline saved); 27-stop walk 0 long frames; phone draw calls peak 85, Cyberpunk stop 35; check-all PASS twice, one earlier run failed one check I did not capture (next round: run k-flaky.cjs if it recurs).
 - Next queue: (1) phone camera aim at the other world stops (parked round 54 trials, loop/r54); (2) objects for the other worlds that are objects (Round & Round, Robot Workbench, Fieldfold, Dead End Shop), the same Blender route as the city.
+
+### Round 58 (2026-10-13): on phones each world case rises clear of its card
+- Found (round 57 queue, re-shot after rounds 55 to 57): at seven world stops (Launchboard, MGMTIO, Round & Round, Fieldfold, Robot Workbench, Jev, Dead End Shop) a phone showed the case mid-frame with its deck and gears under the card and the top third of the frame empty.
+- Tried on live (aim-try.cjs lowers the aim of listed stops at runtime): 2.5 lower: the screen, deck and gears all sit above the card. 4 lower: the case rises further and a bare white pedestal pole shows between gears and card. Kept 2.5.
+- Change: slot() gives every world a portrait keyframe aiming 2.5 lower (main.js blends it in on portrait only, as it does for the links). pAim:0 keeps the aim where a stop has its own framing: decks, Cyberpunk (round 56), Singular.
+- Verify: same 54 programs; 27-stop walk 0 long frames; check-all PASS; desktop Launchboard frame matches live (mean pixel difference 2.6 of 255, the screen's cycling picture).
+- Next queue: (1) objects for the other worlds that are objects (Round & Round, Robot Workbench, Fieldfold, Dead End Shop), the same Blender route as the city; (2) otherwise a fresh tour at both sizes.
