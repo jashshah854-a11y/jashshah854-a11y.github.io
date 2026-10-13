@@ -352,3 +352,10 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Numbers, quiet machine, old vs new both served locally, 4 interleaved runs: main-thread tasks over 50 ms in the first 6 s 2 to 10 (sum 120 to 592 ms) down to 0 to 1; frames over 40 ms 6 to 8 down to 2 to 5; jank 349 to 466 ms down to 183 to 298 ms. Pictures checked upright (Cyberpunk screen, Singular wall).
 - Verify: same 50 programs; 27-stop walk 1 long frame; phone draw calls peak 84; check-all PASS.
 - Next queue: (1) the one 130 to 156 ms GPU frame as the veil lifts (SkiaOutputSurfaceImplOnGpu::FinishPaintRenderPass at +20 ms, in old and new alike); (2) the city model in the Cyberpunk case.
+
+### Round 51 (2026-10-13): a smaller hitch as the veil lifts
+- Found (round 50 queue): one 100 to 150 ms frame as the veil lifts, in a GPU-process paint (SkiaOutputSurfaceImplOnGpu::FinishPaintRenderPass).
+- Tried on live (start-jank.cjs, worst frame in the first 1.2 to 3 s, interleaved): no veil fade, no shades, no text shadows: no change. Holding the veil until two frames in a row ran under 30 ms (an injected script): no change, so the cost is the veil lifting, not the scene's first frames. A veil at 99.5% opacity until it lifts: worst frame 98 to 129 ms down to 67 to 94 (mean 111 to 77). Fully opaque, the veil hides the 3D canvas, the compositor skips drawing it, and its first composite lands on the frame the veil lifts.
+- Change: #veil:not(.done){opacity:.995}. Nothing shows through: 0.5% of the canvas under the night colour.
+- Verify: same 50 programs; 27-stop walk 2 long frames; check-all PASS.
+- Next queue: (1) the Cyberpunk case holds the real block instead of a flat picture: a view-dependent impostor built from the 36 turntable renders already on the site (cyberpunk/spin), the frame chosen by the camera's angle to the case and the dark ground keyed out; about 1 to 2.5 MB, loaded only near that stop. Rejected for now: the Corner Block models themselves (105 files, about 60 MB even in the light set; 8 to 10 MB for a few key pieces).

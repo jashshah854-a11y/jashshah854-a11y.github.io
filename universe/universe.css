@@ -200,6 +200,9 @@ dialog#renders img{width:100%;height:auto;border-radius:12px;display:block}
 #ink2{background:#14130f;z-index:101}
 #veil{position:fixed;inset:0;z-index:200;background:var(--night);display:flex;align-items:center;justify-content:center;font:italic 30px/1.2 var(--serif);color:#c9c4b6;transition:opacity .8s var(--ease-out),visibility 0s .8s}
 #veil.done{opacity:0;visibility:hidden;pointer-events:none}
+/* Fully opaque, the veil hides the 3D canvas, so the compositor skips it, and the first time it is drawn cost a
+   100 to 150 ms frame just as the veil lifted. At 99.5% it is drawn behind the veil from the start; nothing shows. */
+#veil:not(.done){opacity:.995}
 /* Shown only when the veil holds past 2 s, so a slow phone reads as working, not frozen. */
 #veilBar{position:absolute;left:50%;top:calc(50% + 36px);width:168px;height:2px;margin-left:-84px;background:rgba(239,238,232,.16);border-radius:2px;overflow:hidden;opacity:0;transition:opacity .4s var(--ease-out)}
 #veilBar b{display:block;height:100%;background:var(--gold);transform-origin:left;transform:scaleX(.06);transition:transform .3s var(--ease-out)}
