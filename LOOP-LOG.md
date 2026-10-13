@@ -310,3 +310,12 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Change: B. part() takes an optional fadeLen.
 - Verify: same 50 programs (prog-diff zero); 27-stop walk 0 long frames; phone draw calls peak 88; check-all PASS.
 - Next queue: (1) a fresh tour of every stop at both sizes.
+
+### Round 46 (2026-10-13): the name mark wears the same pill as Contact and Worlds
+- Fresh tour (every stop, both sizes; an Opus counsel ranked the weakest frames). Top pick: on phone link frames the "Jash Shah" mark sat bare on the bright overhead gears, while Contact and Worlds beside it had dark pills; on desktop s05 it sat on lit towers. The header read as two styles.
+- Cause: the mark's pill was scaled by --paper, so it only appeared while the light cyclorama of the first beat was behind it.
+- Measure: copy-contrast now takes SEL (any element; its text and icon strokes are hidden for the background shot). Live, mark vs background: phone s10 4.01:1 and s16 4.25:1 (both under the 4.5 bar), s14 6.34, desktop s05 8.17.
+- Tried on live (injected CSS): A, the ghost-dark pill exactly (.55 fill, .35 rim): s10 4.44, s14 8.59, s16 7.05, desktop s05 8.64, busy behind the mark on s05 42.2 to 24. B, a lighter .4 fill: similar numbers, but the mark then looks unlike its two neighbours. s10 sits right at the bar in both (animation noise of about 0.4 between runs).
+- Change: A. The pill floor is .55; --paper still deepens it to .6 over paper.
+- Verify: same 50 programs (prog-diff zero); 27-stop walk 0 long frames; check-all PASS. Live after deploy (81069e3): phone s14 7.48, s16 7.01, desktop s05 7.62 (busy 42 to 24). s10 4.38: the brightest gear tooth sits right under the pill, the same tooth behind Contact and Worlds. A stronger fill on the name alone would break the match, so it stays.
+- Next queue: (1) desktop s08 decks: empty top 40%, small vitrines, the seventh cut off at the edge; (2) phone s24: the Singular wall reads small.
