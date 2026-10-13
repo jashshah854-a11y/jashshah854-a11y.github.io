@@ -96,16 +96,20 @@ export function dressFloorShader(shader, U){
    One merged mesh, one draw. */
 export function buildVitrineMirror(items){
   const parts = [];
-  const part = (item, geo, lx, ly, lz, color, gain = 1) => {
+  /* fadeLen: a screen's reflection fades from its edge nearest the floor over this many units. Lit flat, the
+     reflected screens read as pale tiles lying on the floor rather than as reflections. */
+  const part = (item, geo, lx, ly, lz, color, gain = 1, fadeLen = 0) => {
     geo.translate(lx, ly + item.pos.y, lz);
     geo.scale(1, -1, 1);
     geo.rotateY(item.yaw);
     geo.translate(item.pos.x, 0, item.pos.z);
     const g = geo.index ? geo.toNonIndexed() : geo;
     const pos = g.attributes.position, col = new Float32Array(pos.count*3);
+    let near = Infinity;
+    if (fadeLen) for (let i = 0; i < pos.count; i++) near = Math.min(near, Math.max(0, -pos.getY(i)));
     for (let i = 0; i < pos.count; i++) {
       const depth = Math.max(0, -pos.getY(i));
-      const k = gain*Math.exp(-depth/26);
+      const k = gain*Math.exp(-depth/26)*(fadeLen ? Math.exp(-(depth - near)/fadeLen) : 1);
       col[i*3] = color.r*k; col[i*3 + 1] = color.g*k; col[i*3 + 2] = color.b*k;
     }
     for (const n of Object.keys(g.attributes)) if (n !== 'position') g.deleteAttribute(n);
@@ -117,12 +121,12 @@ export function buildVitrineMirror(items){
     if (it.kind === 'wall') {
       for (const x of [-9, 9]) part(it, new THREE.CylinderGeometry(1.5, 1.8, it.pos.y - it.deckH, 10), x, -it.deckH - (it.pos.y - it.deckH)/2, 0, marble, 0.7);
       part(it, new THREE.BoxGeometry(30, it.deckH, 8), 0, -it.deckH/2, 0, deckC, 0.8);
-      part(it, new THREE.PlaneGeometry(29, 15.5, 1, 8), 0, 7.75, -2.2, screenC.set('#cdb78a'), 0.85);
+      part(it, new THREE.PlaneGeometry(29, 15.5, 1, 8), 0, 7.75, -2.2, screenC.set('#cdb78a'), 0.85, 5);
     } else {
       const small = it.kind === 'small';
       part(it, new THREE.CylinderGeometry(small ? 0.9 : 1.5, small ? 1.1 : 1.8, it.pos.y - it.deckH, 10), 0, -it.deckH - (it.pos.y - it.deckH)/2, 0, marble, 0.7);
       part(it, new THREE.BoxGeometry(small ? 7.6 : 21, it.deckH, small ? 5.4 : 11), 0, -it.deckH/2, 0, deckC, 0.8);
-      part(it, new THREE.PlaneGeometry(it.pw, it.ph, 1, 6), 0, it.cy, it.cz, screenC.copy(it.tint), 1.0);
+      part(it, new THREE.PlaneGeometry(it.pw, it.ph, 1, 6), 0, it.cy, it.cz, screenC.copy(it.tint), 1.0, 3);
     }
   }
   const geo = mergeGeometries(parts); parts.forEach(g => g.dispose());

@@ -303,3 +303,10 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - After (local, 390x844): the pole is out of all five checked link frames, both vitrines are whole, and the overhead gear ring still crowns the shot.
 - Verify: same 50 programs (prog-diff zero); 27-stop walk 0 long frames; phone draw calls peak 88 (the long-standing 89 ceiling); check-all PASS.
 - Next queue: (1) phone floor: pale grey rectangles under vitrines (the phone stand-in reflections) read as patches on the floor; (2) a fresh tour after that.
+
+### Round 45 (2026-10-13): phone floor reflections read as reflections, not tiles
+- Found (round 44 queue): on phones the floor showed pale, hard-edged grey rectangles. They are the phone tier's stand-in mirror (ground.js buildVitrineMirror): each screen is copied below a see-through floor as a flat rectangle in one tint, faded only gently by depth (exp(-depth/26)), so it reads as a tile lying on the floor.
+- Candidates, shot locally (the stand-in is one merged mesh with baked vertex colours, so it cannot be retinted on a live page): A, the screen copies at 40% strength: the rectangles stay readable, only dimmer. B, each screen copy fades from its edge nearest the floor (screens over 3 units, the Singular wall over 5): the rectangles become a faint glow along the floor line, and the pillars' reflections are untouched.
+- Change: B. part() takes an optional fadeLen.
+- Verify: same 50 programs (prog-diff zero); 27-stop walk 0 long frames; phone draw calls peak 88; check-all PASS.
+- Next queue: (1) a fresh tour of every stop at both sizes.
