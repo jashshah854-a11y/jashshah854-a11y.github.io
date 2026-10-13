@@ -222,7 +222,10 @@ export function buildHall({scene, lite, perpetua, video = true}){
   centreGlow.rotation.x = -Math.PI/2; centreGlow.position.copy(L.RC); centreGlow.position.y = 0.08; root.add(centreGlow);
 
   /* ---------- stations ---------- */
-  let singularLoad = () => {}, cityLoad = () => {}, dragonT = null;
+  let singularLoad = () => {}, dragonT = null;
+  // worlds shown as their object, baked (see modelStation): the file under media/ and the scale into the case
+  const MODELS = {cyber:{file:'cyber-city', S:0.105}, round:{file:'round-machine', S:2.5}};
+  const modelLoads = [];
   const GEAR_M = 0.16;
   /* Gears are instanced (one draw per gear type). Each gear keeps its base matrix in
      the world and only its angle changes per frame. */
@@ -265,7 +268,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
     const cfg = PORTALS[slot.id];
     const cy = L.VIT.h/2 - 0.2;
     const pz = -L.VIT.d/2 + 0.9;
-    if (cfg && slot.id === 'cyber') cityModel(g, cfg);
+    if (cfg && MODELS[slot.id]) modelStation(g, cfg, slot.id);
     else if (cfg) {
       const portal = new Portal({...cfg, video:video ? cfg.video : undefined, plane:L.PORTAL.w/L.PORTAL.h, phase:i*1.7});
       const pm = new THREE.Mesh(new THREE.PlaneGeometry(L.PORTAL.w, L.PORTAL.h), portal.material);
@@ -348,21 +351,44 @@ export function buildHall({scene, lite, perpetua, video = true}){
     #include <colorspace_fragment>
   }`;
 
-  /* Cyberpunk City: the block itself on the case floor. Blender cut the Corner Block scene to one 138k triangle mesh
-     and baked its night lighting and signs into one texture, so it draws unlit in one call. The mesh starts as an
-     empty triangle so its program compiles behind the veil; the real geometry and texture swap in when both arrive. */
-  function cityModel(g, cfg){
+  /* Worlds that are objects stand in their case as the object itself, baked in Blender from the world's own scene:
+     one mesh and one texture with its lighting baked in, so it draws unlit in one call. The mesh starts as an empty
+     triangle so its program compiles behind the veil; the real geometry and texture swap in when both arrive.
+     The file is 'CTY2': u32 verts, u32 indices, f32 box min[3] and size[3]; int16 xyz padded to four (a three-short
+     vertex format costs Direct3D a conversion on every draw), -1..1 across the box; uint16 uv; uint32 index. */
+  function modelStation(g, cfg, id){
     const stage = new THREE.Mesh(new THREE.PlaneGeometry(L.VIT.w - 0.6, L.VIT.d - 0.6), additive(glow, cfg.tint, 0.26));
     stage.rotation.x = -Math.PI/2; stage.position.set(0, 0.05, 0); g.add(stage);
+    const {file, S} = MODELS[id];
     const blank = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1); blank.colorSpace = THREE.SRGBColorSpace; blank.needsUpdate = true;
     const mat = new THREE.MeshBasicMaterial({map:blank});
     const empty = new THREE.BufferGeometry(); empty.setAttribute('position', new THREE.Float32BufferAttribute(9, 3)); empty.setAttribute('uv', new THREE.Float32BufferAttribute(6, 2));
-    const city = new THREE.Mesh(empty, mat); city.userData.keep = true; g.add(city);     // kept out of the static batch: its geometry swaps later
-    const S = 0.105;     // the block is 77 scene units deep; the case is 9
-    /* The dragon from the same scene, 9k of its 91k triangles. Its body is modelled straight; the shader bends it along
-       an oval above the roofs, as the Corner Block page does along its flight path. Units are the block's own; the
-       oval stays inside the case (about 43 either side front to back). The offset puts the block's own origin where
-       cityLoad() puts it (its box: x -37.0 to 38.3, y -8.85 up, z -39.9 to 37.2). */
+    const model = new THREE.Mesh(empty, mat); model.userData.keep = true; g.add(model);     // kept out of the static batch: its geometry swaps later
+    modelLoads.push(() => {
+      const tex = loadTexture(`media/${file}.webp`, {cap:false});
+      let geo = null;
+      const show = () => { if (!geo || !tex.ready) return; mat.map = tex.tex; model.geometry = geo; empty.dispose(); };
+      tex.onload = show;
+      fetch(`media/${file}.bin`).then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(buf => {
+        const dv = new DataView(buf), nv = dv.getUint32(4, true), ni = dv.getUint32(8, true);
+        const size = [0, 1, 2].map(k => dv.getFloat32(24 + k*4, true));
+        const uvAt = 36 + nv*8, idxAt = uvAt + nv*4;
+        geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.InterleavedBufferAttribute(new THREE.InterleavedBuffer(new Int16Array(buf, 36, nv*4), 4), 3, 0, true));
+        geo.setAttribute('uv', new THREE.BufferAttribute(new Uint16Array(buf, uvAt, nv*2), 2, true));
+        geo.setIndex(new THREE.BufferAttribute(new Uint32Array(buf, idxAt, ni), 1));
+        model.scale.set(size[0]/2*S, size[1]/2*S, size[2]/2*S); model.position.y = size[1]/2*S;
+        model.updateMatrixWorld(true);
+        show();
+      }).catch(() => {});
+    });
+    if (id === 'cyber') cityDragon(g, S);
+  }
+  /* The dragon from the Corner Block scene, 9k of its 91k triangles. Its body is modelled straight; the shader bends it
+     along an oval above the roofs, as the Corner Block page does along its flight path. Units are the block's own; the
+     oval stays inside the case (about 43 either side front to back). The offset puts the block's own origin where
+     modelStation() puts it (its box: x -37.0 to 38.3, y -8.85 up, z -39.9 to 37.2). */
+  function cityDragon(g, S){
     const RX = 48, RZ = 30;
     const dEmpty = new THREE.BufferGeometry(); dEmpty.setAttribute('position', new THREE.Float32BufferAttribute(9, 3)); dEmpty.setAttribute('normal', new THREE.Float32BufferAttribute(9, 3)); dEmpty.setAttribute('color', new THREE.Float32BufferAttribute(12, 4));
     const orbit = new THREE.Sphere(new THREE.Vector3(0.634, 54, -1.362), RX + 12);     // where the bent body can be: its straight bounds would cull it wrongly
@@ -373,35 +399,16 @@ export function buildHall({scene, lite, perpetua, video = true}){
         uL:{value:Math.PI*(3*(RX + RZ) - Math.sqrt((3*RX + RZ)*(RX + 3*RZ)))}}});     // the oval's perimeter (Ramanujan)
     const dragon = new THREE.Mesh(dEmpty, dMat); dragon.renderOrder = 5; dragon.userData.keep = true;
     dragon.scale.setScalar(S); dragon.position.set(-0.634*S, 8.85*S, 1.362*S); g.add(dragon);
-    cityLoad = () => {
-      const tex = loadTexture('media/cyber-city.webp', {cap:false});
-      let geo = null;
-      const show = () => { if (!geo || !tex.ready) return; mat.map = tex.tex; city.geometry = geo; empty.dispose(); };
-      tex.onload = show;
-      fetch('media/cyber-dragon.bin').then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(buf => {
-        // 'DRG1', u32 verts, u32 indices; f32 xyz; int8 normal + pad; uint8 region flags (belly, gold, mane, ridge); uint16 index
-        const dv = new DataView(buf), nv = dv.getUint32(4, true), ni = dv.getUint32(8, true), nAt = 12 + nv*12, cAt = nAt + nv*4, iAt = cAt + nv*4;
-        const d = new THREE.BufferGeometry();
-        d.setAttribute('position', new THREE.BufferAttribute(new Float32Array(buf, 12, nv*3), 3));
-        d.setAttribute('normal', new THREE.BufferAttribute(new Int8Array(buf, nAt, nv*4), 4, true));
-        d.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(buf, cAt, nv*4), 4, true));
-        d.setIndex(new THREE.BufferAttribute(new Uint16Array(buf, iAt, ni), 1));
-        d.boundingSphere = orbit; dragon.geometry = d; dEmpty.dispose();
-      }).catch(() => {});
-      fetch('media/cyber-city.bin').then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(buf => {
-        const dv = new DataView(buf), nv = dv.getUint32(4, true), ni = dv.getUint32(8, true);
-        const size = [0, 1, 2].map(k => dv.getFloat32(24 + k*4, true));
-        const uvAt = 36 + nv*8, idxAt = uvAt + nv*4;
-        geo = new THREE.BufferGeometry();
-        // -1..1 across the block's box, padded to four: a three-short vertex format costs Direct3D a conversion on every draw
-        geo.setAttribute('position', new THREE.InterleavedBufferAttribute(new THREE.InterleavedBuffer(new Int16Array(buf, 36, nv*4), 4), 3, 0, true));
-        geo.setAttribute('uv', new THREE.BufferAttribute(new Uint16Array(buf, uvAt, nv*2), 2, true));
-        geo.setIndex(new THREE.BufferAttribute(new Uint32Array(buf, idxAt, ni), 1));
-        city.scale.set(size[0]/2*S, size[1]/2*S, size[2]/2*S); city.position.y = size[1]/2*S;
-        city.updateMatrixWorld(true);
-        show();
-      }).catch(() => {});
-    };
+    modelLoads.push(() => fetch('media/cyber-dragon.bin').then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(buf => {
+      // 'DRG1', u32 verts, u32 indices; f32 xyz; int8 normal + pad; uint8 region flags (belly, gold, mane, ridge); uint16 index
+      const dv = new DataView(buf), nv = dv.getUint32(4, true), ni = dv.getUint32(8, true), nAt = 12 + nv*12, cAt = nAt + nv*4, iAt = cAt + nv*4;
+      const d = new THREE.BufferGeometry();
+      d.setAttribute('position', new THREE.BufferAttribute(new Float32Array(buf, 12, nv*3), 3));
+      d.setAttribute('normal', new THREE.BufferAttribute(new Int8Array(buf, nAt, nv*4), 4, true));
+      d.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(buf, cAt, nv*4), 4, true));
+      d.setIndex(new THREE.BufferAttribute(new Uint16Array(buf, iAt, ni), 1));
+      d.boundingSphere = orbit; dragon.geometry = d; dEmpty.dispose();
+    }).catch(() => {}));
   }
 
   /* Dead End Shop: a projector beam inside the vitrine */
@@ -766,7 +773,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
   let loadingStarted = false;
   function startLoading(){
     if (loadingStarted) return; loadingStarted = true;
-    cityLoad(); singularLoad();
+    modelLoads.forEach(load => load()); singularLoad();
     // every vitrine's lead picture first, then the second and later pictures of the ones that cycle
     portals.forEach((p, i) => setTimeout(() => p.ensureLoaded(false), 60 + i*140));
     portals.forEach((p, i) => setTimeout(() => p.ensureLoaded(true), 60 + (portals.length + i)*140));
