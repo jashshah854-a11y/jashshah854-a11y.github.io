@@ -335,3 +335,12 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Change: A. The Singular stop caps the phone pull-back at 1.4 (as the decks and vitrine stops already cap theirs). Desktop and landscape are unchanged.
 - Verify: same 50 programs (prog-diff zero, 50 after the whole walk); check-all PASS; phone draw calls peak 88 (Singular 46 to 44). Long frames, with the machine loaded by other chats: new code 26, live site 24 in the same run, all at stops 0 to 5; this change only moves the phone camera at stop 24.
 - Next queue: (1) a fresh tour of every stop at both sizes.
+
+### Round 49 (2026-10-13): the decks wing's link bars no longer cross through the gears
+- Found (Jash, from the round 47 frame): the bars joining the seven small cases crossed in an X through every gear.
+- Cause: each bar ran from a case's "right" edge to the next case's "left" edge, but a case's right vector points back toward the previous case on this row. So every bar started on the far side of its own case and ended on the far side of the next one, and neighbouring bars crossed at each gear. The two end axles (the shafts to the next stations) had the same flip.
+- Change: hall.js picks each bar end as the case edge that faces the neighbouring case; the end axles take the outer edges. Each pair of cases now has a short coupling bar across the gap; the gears stand clear.
+- Verify: same 50 programs (also after the whole walk); 27-stop walk 3 long frames; check-all PASS.
+- Also this round, not shipped: the start stutter Jash reported. Measured: a quiet machine shows 7 to 13 frames over 40 ms in the first 6 s after the veil; with another chat's headless browser on the GPU it reaches 60 to 100. Blocking the videos or the pictures each roughly halves it. Tried decoding pictures before upload and uploading one per frame: worse (13 to 17 against 7 to 13, both served locally), reverted. On a settled page, uploading 8 pictures (as <img> or as ImageBitmap) gives no slow frames at all, so uploads alone are not it. Next: a Chrome trace with GPU events over the first 6 s.
+- Storyboard (Claude Design canvas, private): the journey now, and the Cyberpunk City case holding a small model of the real block instead of a flat picture (desktop and phone).
+- Next queue: (1) the start stutter, traced; (2) the city model in the Cyberpunk case, from the Corner Block phone set, loaded only near that stop.

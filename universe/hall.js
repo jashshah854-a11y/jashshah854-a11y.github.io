@@ -412,19 +412,26 @@ export function buildHall({scene, lite, perpetua, video = true}){
       centres.push({pos, inward, yaw, g});
       anchors.push({id:'deck-' + deck.slug, kind:'deck', deck, pos:pos.clone().add(new THREE.Vector3(0, V.h + 0.8, 0)), normal:inward.clone()});
     });
-    // link bars between the small decks
+    /* link bars between the small decks. side(c, toward) is the edge of case c facing that point: a case's own
+       right vector points back toward the previous case on this row, so a fixed sign put each bar across the case
+       it started on and crossed neighbouring bars through every gear. */
+    const side = (c, toward) => {
+      const r = new THREE.Vector3(c.inward.z, 0, -c.inward.x);
+      if (r.dot(toward.clone().sub(c.pos)) < 0) r.negate();
+      return c.pos.clone().addScaledVector(r, 3.4).add(new THREE.Vector3(0, -1.0, 0)).addScaledVector(c.inward, 2.9);
+    };
     for (let k = 0; k < n - 1; k++) {
       const a = centres[k], b = centres[k+1];
-      const A = a.pos.clone().addScaledVector(new THREE.Vector3(a.inward.z, 0, -a.inward.x), 3.4).add(new THREE.Vector3(0, -1.0, 0)).addScaledVector(a.inward, 2.9);
-      const B = b.pos.clone().addScaledVector(new THREE.Vector3(b.inward.z, 0, -b.inward.x), -3.4).add(new THREE.Vector3(0, -1.0, 0)).addScaledVector(b.inward, 2.9);
+      const A = side(a, b.pos), B = side(b, a.pos);
       const sh = makeShaft(A, B, M, {r:0.22}); root.add(sh.group);
       const dirS = k % 2 ? -1 : 1;
       drivers.push(spin => { sh.spin.rotation.y = dirS*spin*1.5; });
     }
     // the wing's end axles (for the shafts to the neighbouring stations)
     const first = centres[0], last = centres[n-1];
-    const wA = first.pos.clone().addScaledVector(new THREE.Vector3(first.inward.z, 0, -first.inward.x), -3.4).add(new THREE.Vector3(0, -1.0, 0)).addScaledVector(first.inward, 2.9);
-    const wB = last.pos.clone().addScaledVector(new THREE.Vector3(last.inward.z, 0, -last.inward.x), 3.4).add(new THREE.Vector3(0, -1.0, 0)).addScaledVector(last.inward, 2.9);
+    // the outer edges: away from the neighbouring case
+    const wA = side(first, first.pos.clone().multiplyScalar(2).sub(centres[1].pos));
+    const wB = side(last, last.pos.clone().multiplyScalar(2).sub(centres[n-2].pos));
     axles.push({L:wA, R:wB, group:wing, small:true});
   }
 
