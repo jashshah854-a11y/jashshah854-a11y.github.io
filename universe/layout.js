@@ -76,7 +76,7 @@ export function resolve(spec){
       if (spec.role === 'look') {
         return s.portal.clone().addScaledVector(s.right, shift).add(new THREE.Vector3(0, up, 0));
       }
-      return s.portal.clone().addScaledVector(s.inward, d).add(new THREE.Vector3(0, up, 0));
+      return s.portal.clone().addScaledVector(s.inward, d).addScaledVector(s.right, spec.side ?? 0).add(new THREE.Vector3(0, up, 0));
     }
   }
   throw new Error('bad spec ' + JSON.stringify(spec));

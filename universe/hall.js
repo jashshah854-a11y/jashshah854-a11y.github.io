@@ -76,14 +76,15 @@ export function buildHall({scene, lite, perpetua, video = true}){
     reflector.material.fog = true; reflector.material.transparent = false;
     reflector.rotation.x = -Math.PI/2; root.add(reflector);
     const orig = reflector.onBeforeRender;
-    // The mirror sees a cheap stand-in for Perpetua (the real machine is 160k triangles).
+    // The mirror sees a cheap stand-in for Perpetua (the real machine is 160k triangles), and not the case's two lamp
+    // discs: too small to read in a reflection, and drawing them there would need one more shader.
     let reflTick = 0;
     reflector.onBeforeRender = function (...a) {
       if (!reflWant) return;
       if (reflFade > 0.95 && (++reflTick & 1)) return;     // the mirror refreshes at half rate once settled
-      proxy.visible = true; perpetua.root.visible = false;
+      proxy.visible = true; perpetua.root.visible = false; lamps.visible = false;
       orig.apply(this, a);
-      proxy.visible = false; perpetua.root.visible = true;
+      proxy.visible = false; perpetua.root.visible = true; lamps.visible = true;
     };
     floor = reflector;
   } else {
@@ -137,7 +138,8 @@ export function buildHall({scene, lite, perpetua, video = true}){
   const setBackdrop = v => { paperMat.opacity = v; backdrop.visible = v > 0.01; };
   const lampMat = new THREE.MeshBasicMaterial({color:'#fff2d6'});
   const lampGeos = [-3.6, 3.2].map(x => new THREE.CircleGeometry(0.34, 20).rotateX(Math.PI/2).translate(x, L.PY + 13.9, 0.8));
-  shell.add(new THREE.Mesh(mergeGeometries(lampGeos), lampMat));      // both lamps share a material: one draw
+  const lamps = new THREE.Mesh(mergeGeometries(lampGeos), lampMat);   // both lamps share a material: one draw
+  shell.add(lamps);
   lampGeos.forEach(g => g.dispose());
   const pad = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), additive(glow, '#ffcf90', 0.5));
   pad.rotation.x = -Math.PI/2; pad.position.set(-0.05, 0.05, 0.62 + 2); root.add(pad);

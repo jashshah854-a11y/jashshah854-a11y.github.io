@@ -60,7 +60,7 @@ export const LOOK = {
 const slot = (id, extra = {}) => ({
   id: 'world:' + id, world: id, look: 'world', hold: extra.hold ?? 3,
   pscale: extra.pscale,
-  pos: {at:'slot', id, d: extra.d ?? 38, up: extra.up ?? 5.0},
+  pos: {at:'slot', id, d: extra.d ?? 38, up: extra.up ?? 5.0, side: extra.side ?? 0},
   target: {at:'slot', role:'look', id, shift: extra.shift ?? 6.2, up: extra.lookUp ?? -0.2},
   pins: id === 'decks' ? 'decks' : 'none'
 });
@@ -101,8 +101,9 @@ export const JOURNEY = [
    portrait:{pos:{at:'hall', p:[3, 22, 188]}, target:{at:'hall', p:[0, 9, 30]}}},
   {id:'hall',    copy:'hall', look:'hall', hold:3.4, label:'The hall of worlds', pins:'hall',
    pos:{at:'hall', p:[-30, 25, 108]}, target:{at:'hall', p:[30, 15, 6]}, pscale:1.3},
-  // pscale 1: this camera already stands across the rotunda; a portrait pull-back would put the far side's vitrines in front of it
-  slot('decks', {d:112, up:5.0, shift:14.0, lookUp:-2.5, hold:3.6, pscale:1.0}),
+  /* Stand off the left end of the row and look along it. Square on from across the rotunda, the seven small cases sat
+     in a thin band with the top 40% of the frame empty. pscale 1: a portrait pull-back would lose the near cases. */
+  slot('decks', {d:42, side:-37, up:8.0, shift:10.0, lookUp:-1.5, hold:3.6, pscale:1.0}),
   slot('cyber'),
   link('cyber', 'launchboard'),
   slot('launchboard'),
