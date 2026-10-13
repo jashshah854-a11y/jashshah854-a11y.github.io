@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import * as L from './layout.js';
 import { DECKS } from './data.js';
-import { Portal, capTexture, texAniso, phoneCopy } from './portal.js';
+import { Portal, capTexture, texAniso, phoneCopy, loadPicture } from './portal.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { makeMaterials, glowTexture, washTexture, beamTexture, gearGeometry, makeShaft, makeVitrine, roundedBox } from './parts.js';
@@ -222,7 +222,6 @@ export function buildHall({scene, lite, perpetua, video = true}){
   centreGlow.rotation.x = -Math.PI/2; centreGlow.position.copy(L.RC); centreGlow.position.y = 0.08; root.add(centreGlow);
 
   /* ---------- stations ---------- */
-  const texLoader = new THREE.TextureLoader();
   let singularLoad = () => {};
   const GEAR_M = 0.16;
   /* Gears are instanced (one draw per gear type). Each gear keeps its base matrix in
@@ -356,7 +355,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
         }
       };
       const small = phoneCopy(u);
-      texLoader.load(small || u, got, undefined, () => { if (small) texLoader.load(u, got); });
+      loadPicture(small || u, got, () => { if (small) loadPicture(u, got); });
     });
     const frames = new THREE.InstancedMesh(frameGeo, M.brass, 24); g.add(frames);
     const mtx = new THREE.Matrix4(), qq = new THREE.Quaternion(), e = new THREE.Euler();

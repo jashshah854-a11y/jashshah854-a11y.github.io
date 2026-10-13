@@ -47,6 +47,15 @@ void main(){
 }`;
 
 const loader = new THREE.TextureLoader();
+/* An <img> texture is decoded inside its load handler, on the main thread: 43 to 55 ms a picture, and 23 of them
+   land in the first second after the veil. createImageBitmap decodes off the main thread. Safari keeps the <img>
+   path: older versions ignore imageOrientation, which would hang every picture upside down. */
+const bitmaps = typeof createImageBitmap === 'function' && !/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+const bmLoader = bitmaps ? new THREE.ImageBitmapLoader().setOptions({imageOrientation:'flipY', premultiplyAlpha:'none'}) : null;
+export function loadPicture(url, ok, fail){
+  if (!bmLoader) return loader.load(url, ok, undefined, fail);
+  bmLoader.load(url, bm => { const t = new THREE.Texture(bm); t.flipY = false; t.needsUpdate = true; ok(t); }, undefined, fail);
+}
 let gpu = null, maxSize = 0, aniso = 4;
 /* Textures are uploaded the moment they arrive, not when they first come into view.
    On phones every picture is capped at maxSize px wide (1024): 26 pictures at 1600 px with mipmaps are
@@ -87,9 +96,9 @@ export function loadTexture(url){
     if (gpu) gpu.initTexture(t);
     done();
   };
-  const full = done => loader.load(url, t => got(t, done), undefined, () => { entry.failed = true; done(); });
+  const full = done => loadPicture(url, t => got(t, done), () => { entry.failed = true; done(); });
   const small = phoneCopy(url);      // if the copy is missing, the full picture is fetched
-  queue.push({url, run:done => small ? loader.load(small, t => got(t, done), undefined, () => full(done)) : full(done)});
+  queue.push({url, run:done => small ? loadPicture(small, t => got(t, done), () => full(done)) : full(done)});
   pump();
   return entry;
 }
