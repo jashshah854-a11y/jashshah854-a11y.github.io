@@ -21946,6 +21946,84 @@ void main() {
   } catch (e) { J.error = "ped:" + String(e && e.message || e); console.error("[perf358j ped]", e); }
 })();
 /* RUN358J_JS_END */
+/* RUN361M_JS_BEGIN: PERF LOOP motion mode. While the camera moves (orbit, zoom, view buttons, Tour) the two planar mirror passes (road + floor) render only every Nth call and the shadow map is not
+   re-rendered; both keep their last image (the mirror keeps its last render target AND its last texture matrix, so the stale reflection stays glued to the ground instead of sliding with the new camera).
+   Camera still for HOLD ms (150) -> one full-quality frame: both mirrors rendered at once with the final camera and the shadow map refreshed on the main pass; from then on the untouched Run331S / Run261P
+   cadence runs, so a resting image is the canonical one. A sim.t jump (scrub, seeded step, capture) counts as not moving. Nothing is allocated; no render target, material or camera is changed.
+   How: (1) composer.render wrapper = motion detector (pose shift of 5 probe points in canvas px, hysteresis ENTER 1.5 / STAY 0.75 px, the Run359D detector) + the stop-frame refresh;
+   (2) renderer.render wrapper: a call with a mirror virtual camera is dropped while moving (its textureMatrix is restored from the last real render); (3) scene.onBeforeRender wrapper (outermost):
+   on the main pass the Run261P cadence request is discarded while moving, and requested on the stop frame.
+   Switches: ?motion361=0 off (block not installed), ?motion361=2..6 sets N; window.__MOTION = { on, n (mirror every nth call), sh (0 = no shadow refresh while moving, k = every kth request), hold, mv, st }. */
+(function run361mMotion() {
+  const M = window.__MOTION = { on: true, n: 2, sh: 1, hold: 150, mv: false, installed: false, error: null, shiftPx: 0, st: { frames: 0, mvFrames: 0, toMove: 0, toStill: 0, mirrorReal: 0, mirrorSkip: 0, shadowSkip: 0, stopRefresh: 0 } };
+  try {
+    const qs = new URLSearchParams(location.search), qv = qs.get('motion361');
+    if (qv === '0') { M.on = false; M.error = 'disabled (?motion361=0)'; return; }
+    const nq = parseInt(qv); if (nq >= 2 && nq <= 6) M.n = nq;
+    const R = reflector, F = window.__FLOOR84__ && window.__FLOOR84__.mesh, sm = renderer.shadowMap;
+    const list = [R, F].filter(m => m && m.mirrorCamera && m.rawBeforeRender && m.material && m.material.uniforms.textureMatrix);
+    if (!composer || list.length < 2) { M.error = 'prerequisites missing (composer / road mirror / floor mirror)'; return; }
+    const T = THREE, ENTER_PX = 1.5, STAY_PX = 0.75;
+    const info = new Map();
+    for (const m of list) info.set(m.mirrorCamera, { m, tm: m.material.uniforms.textureMatrix.value, saved: new T.Matrix4(), have: false, k: 0, forced: -1, force: false });
+    M.info = info;
+
+    const probes = [new T.Vector3(0, 0, 0), new T.Vector3(40, 0, 40), new T.Vector3(-40, 0, -40), new T.Vector3(40, 0, -40), new T.Vector3(-40, 12, 40)];
+    const last = probes.map(() => new T.Vector3()), tmp = new T.Vector3(); let haveLast = false;
+    function shift() {
+      camera.updateMatrixWorld();
+      const el = renderer.domElement, hx = 0.5 * el.width, hy = 0.5 * el.height; let m = 0;
+      for (let i = 0; i < probes.length; i++) {
+        tmp.copy(probes[i]).applyMatrix4(camera.matrixWorldInverse).applyMatrix4(camera.projectionMatrix);
+        if (haveLast) m = Math.max(m, Math.abs(tmp.x - last[i].x) * hx, Math.abs(tmp.y - last[i].y) * hy);
+        last[i].copy(tmp);
+      }
+      haveLast = true; return m;
+    }
+
+    let frame = 0, lastT = sim.t, lastMoveT = -1e9, shadowPending = false, shReq = 0;
+    const prevCR = composer.render;
+    composer.render = function (dt) {
+      frame++; M.st.frames++;
+      const now = performance.now(), px = shift(), jump = Math.abs(sim.t - lastT) > .25; lastT = sim.t; M.shiftPx = px;
+      if (px >= (M.mv ? STAY_PX : ENTER_PX)) lastMoveT = now;
+      const mv = M.on && !jump && (now - lastMoveT) < M.hold, was = M.mv;
+      M.mv = mv;
+      if (mv) { M.st.mvFrames++; if (!was) { M.st.toMove++; for (const i of info.values()) i.k = 0; } }
+      else if (was) {
+        // the full-quality frame: both mirrors with the final camera (what Run331S does before its own pass, with the same matrix update), the shadow map on this frame's main pass
+        M.st.toStill++; M.st.stopRefresh++;
+        scene.updateMatrixWorld();
+        for (const i of info.values()) { i.force = true; try { i.m.rawBeforeRender(renderer, scene, camera); } finally { i.force = false; } i.forced = frame; }
+        shadowPending = true;
+      }
+      return prevCR.call(this, dt);
+    };
+
+    const r0 = renderer.render;
+    renderer.render = function (s, c) {
+      const i = info.get(c);
+      if (i === undefined) return r0.call(renderer, s, c);
+      if (!i.force) {
+        if (i.forced === frame) return;   // already rendered by the stop frame with this very camera
+        if (M.mv && i.have && (i.k++ % M.n) !== 0) { i.tm.copy(i.saved); M.st.mirrorSkip++; return; }
+      }
+      const out = r0.call(renderer, s, c); i.saved.copy(i.tm); i.have = true; M.st.mirrorReal++; return out;
+    };
+
+    const prevSB = scene.onBeforeRender;
+    scene.onBeforeRender = function (...q) {
+      if (q[2] !== camera) return prevSB ? prevSB.apply(this, q) : undefined;
+      const entry = sm.needsUpdate;
+      const out = prevSB ? prevSB.apply(this, q) : undefined;
+      if (shadowPending) { shadowPending = false; sm.needsUpdate = true; }
+      else if (M.mv && sm.needsUpdate && !entry) { if (!(M.sh > 0 && (++shReq % M.sh) === 0)) { sm.needsUpdate = false; M.st.shadowSkip++; } }
+      return out;
+    };
+    M.installed = true;
+  } catch (e) { M.installed = false; M.error = String(e && e.message || e); console.error('[motion361]', e); }
+})();
+/* RUN361M_JS_END */
 addStaticBatches();
 
 if (PH352) PH352.start(scene, renderer);   /* RUN352M */
