@@ -422,3 +422,11 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Tried: scale 2.8 vs 3.2 (13.4 of 17 wide, 5.8 of 9 deep, 8.7 of 11 tall). 3.2 matches the marble lift's presence. Kept 3.2.
 - Verify: same 54 programs; 27-stop walk 0 long frames; phone draw calls peak 84, Robot Workbench stop 35; check-all PASS.
 - Next queue: (1) Fieldfold, half-folded and still (counsel: folding is subtle at phone size); (2) unwrap the marble lift before decimating to cut its 2 MB mesh; (3) light motion for the object in focus (the arm's pick, one marble rolling), only if it stays at 0 long frames.
+
+### Round 61 (2026-10-13): the Fieldfold case holds the instrument itself, half folded
+- Found (round 60 queue): the last of the three object worlds, still a screen.
+- Built: world-export.cjs (now with PRE, a script run before export) posed the instrument through its page's own API (window.fieldfold.deploy) and exported its root group: 189 meshes, 27k triangles, no decimation. Baked under the warm studio rig (its page lights: hemisphere fff6df, key, rim); 628 KB mesh, 311 KB texture.
+- Change: MODELS gains fieldfold (scale 3.1: 13.3 of 17 wide, 6 of 9 deep).
+- Tried: deployed 0.5 vs 1.0. Fully open lifts the arm higher; half folded keeps the arm mid-fold, which reads as the folding the card promises (the counsel's call too). Kept 0.5.
+- Verify: same 54 programs; 27-stop walk 0 long frames; phone draw calls peak 84, Fieldfold stop 34; check-all PASS.
+- Next queue: (1) unwrap the marble lift before decimating to cut its 2 MB mesh; (2) light motion for the object in focus (the arm's pick, one marble rolling, the fold), only if it stays at 0 long frames; (3) otherwise a fresh tour at both sizes.
