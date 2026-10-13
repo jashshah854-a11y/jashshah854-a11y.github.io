@@ -286,3 +286,11 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Change: body[data-mode=hall] #shade-bottom uses A, in the hall's own near-black rgba(15,14,11). The vitrines, labels and lights above stay as they were.
 - Verify: contrast sweep with shadows passes at every stop at both sizes (hall headline busy 13.5 desktop, 11.1 phone); 27-stop walk: 50 programs, 0 long frames; check-all PASS.
 - Next queue: (1) the overview stop (s25): the back of the Singular wall reads as a black slab on the left; (2) a fresh tour of every stop at both sizes for the next weakest frame.
+
+### Round 43 (2026-10-13): Singular hangs on a marble gallery wall
+- Found: from the overview, the back of the Singular wall read as a black slab. From the front, its 24 dark posters sank into the near-black panel (#1a1915, matte).
+- Static batching had baked the panel into world space, so trials matched it by colour and vertex count. trial.cjs (new) runs a JS snippet on a live page and shoots chosen stops.
+- Tried on live: A, the decks' enamel (#1b2924): almost the same as before. B, the pillars' marble (#d6d0c0): the posters read as framed art and the back reads as a pale partition. An Opus counsel picked B: it shows the work, repeats the hall's own cream (pillars, columns), and A "does nothing". Its risks: raw edges, posters overhanging the right edge, a glow hot enough to wash out the centre.
+- Change: the panel uses M.marble; a 0.4 brass edge (M.brass, 0.9 deep) frames it; columns are spaced 4.7 apart instead of 5.0, so the outer frames stay inside the edge (they overhung by up to 0.37); the wall glow is 0.15 instead of 0.22. Everything is an existing hall material.
+- Verify: same 50 programs (prog-diff zero); 27-stop walk 0 long frames; phone draw calls at Singular settle at 46 (max 49), under the 100 budget; check-all PASS.
+- Next queue: (1) a fresh tour of every stop at both sizes for the next weakest frame.

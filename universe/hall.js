@@ -323,8 +323,14 @@ export function buildHall({scene, lite, perpetua, video = true}){
     const ph = slot.pos.y - L.DECK.h;
     for (const x of [-9, 9]) { const pil = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.8, ph, 24), M.marble); pil.position.set(x, -L.DECK.h - ph/2, 0); g.add(pil); }
     const wallH = 15.5;
-    const panel = new THREE.Mesh(new THREE.BoxGeometry(W - 1, wallH, 0.6), new THREE.MeshStandardMaterial({color:'#1a1915', roughness:0.9})); panel.position.set(0, wallH/2, -2.6); g.add(panel);
-    const wallGlow = new THREE.Mesh(new THREE.PlaneGeometry(W + 12, wallH + 8), additive(glow, '#ffd9a0', 0.22)); wallGlow.position.set(0, wallH/2, -2.2); g.add(wallGlow);
+    /* A marble gallery wall with a brass edge: on the old near-black panel the dark posters sank into it, and from
+       the overview its back read as a black slab. Both are the hall's own materials (pillars, frames). */
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(W - 1, wallH, 0.6), M.marble); panel.position.set(0, wallH/2, -2.6); g.add(panel);
+    const edge = 0.4;
+    for (const [w, h, x, y] of [[W - 1 + edge, edge, 0, wallH], [W - 1 + edge, edge, 0, 0], [edge, wallH + edge, -(W - 1)/2, wallH/2], [edge, wallH + edge, (W - 1)/2, wallH/2]]) {
+      const t = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.9), M.brass); t.position.set(x, y, -2.6); g.add(t);
+    }
+    const wallGlow = new THREE.Mesh(new THREE.PlaneGeometry(W + 12, wallH + 8), additive(glow, '#ffd9a0', 0.15)); wallGlow.position.set(0, wallH/2, -2.2); g.add(wallGlow);
     const frameGeo = new THREE.BoxGeometry(1, 1, 0.18);
     const picGeo = new THREE.PlaneGeometry(1, 1);
     // 3 images x 2 crops = 6 instanced meshes, 4 frames each
@@ -356,7 +362,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
     for (let r = 0; r < 4; r++) for (let c = 0; c < 6; c++) {
       const jx = Math.sin(idx*12.9898)*0.28, jy = Math.cos(idx*7.233)*0.22, rot = Math.sin(idx*3.1)*0.025;
       const fw = 3.5 + (idx % 3)*0.2, fh = 2.2 + (idx % 2)*0.15;
-      const x = -12.5 + c*5.0 + jx, y = 2.2 + r*3.55 + jy;
+      const x = -11.75 + c*4.7 + jx, y = 2.2 + r*3.55 + jy;     // the outer frames stay inside the brass edge
       e.set(0, 0, rot); qq.setFromEuler(e);
       mtx.compose(new THREE.Vector3(x, y, -2.2), qq, new THREE.Vector3(fw + 0.28, fh + 0.28, 1)); frames.setMatrixAt(idx, mtx);
       const v = variants[idx % 6];
