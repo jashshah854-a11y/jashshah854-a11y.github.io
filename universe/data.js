@@ -105,7 +105,8 @@ export const JOURNEY = [
   /* Stand off the left end of the row and look along it. Square on from across the rotunda, the seven small cases sat
      in a thin band with the top 40% of the frame empty. pscale 1: a portrait pull-back would lose the near cases. */
   slot('decks', {d:42, side:-37, up:8.0, shift:10.0, lookUp:-1.5, hold:3.6, pscale:1.0}),
-  slot('cyber'),
+  // higher and closer, looking down: the case holds a 3D block now, and from eye level it was a wall of facades
+  slot('cyber', {d:32, up:19, lookUp:-2.7}),
   link('cyber', 'launchboard'),
   slot('launchboard'),
   link('launchboard', 'mgmtio'),
