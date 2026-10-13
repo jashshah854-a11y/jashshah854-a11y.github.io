@@ -59,9 +59,10 @@ body[data-mode=hall] #shade-bottom{background:linear-gradient(to top,rgba(15,14,
 /* header */
 #top{position:fixed;left:0;right:0;top:0;z-index:20;pointer-events:none;height:96px}
 #top>*{pointer-events:auto}
-/* --paper is how much of the light cyclorama is behind the header (set from the 3D scene, 1 on the first beat).
-   The wordmark gets the same dark pill as the Worlds button in proportion, so it reads on paper and vanishes into the dark. */
-.brand{position:absolute;left:44px;top:40px;display:flex;align-items:center;gap:14px;min-height:44px;padding:0 16px 0 12px;border-radius:999px;font-size:16px;font-weight:600;letter-spacing:.01em;background:rgba(12,11,10,calc(var(--paper,0)*.6));border:1px solid rgba(239,238,232,calc(var(--paper,0)*.3));transition:opacity .4s var(--ease-out)}
+/* The wordmark wears the same dark pill as Contact and Worlds. Without it the name sat bare on lit towers and the
+   overhead gears, which made it the one header item hard to read. --paper (how much of the light cyclorama is behind
+   the header, set from the 3D scene) deepens the pill a little over paper. */
+.brand{position:absolute;left:44px;top:40px;display:flex;align-items:center;gap:14px;min-height:44px;padding:0 16px 0 12px;border-radius:999px;font-size:16px;font-weight:600;letter-spacing:.01em;background:rgba(12,11,10,max(.55,calc(var(--paper,0)*.6)));border:1px solid rgba(239,238,232,.35);transition:opacity .4s var(--ease-out)}
 .brand svg{fill:none;stroke:var(--text);stroke-width:1.8}
 #back{position:absolute;left:56px;top:40px;opacity:0;visibility:hidden;transition:opacity .4s var(--ease-out),visibility 0s .4s}
 #topbtns{position:absolute;right:56px;top:40px;display:flex;gap:8px}

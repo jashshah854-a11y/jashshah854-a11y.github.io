@@ -484,7 +484,7 @@ function applyLook(s, sc){
   $('#shade').style.opacity = s.vig;
 }
 /* The paper cyclorama of the first beat is the one light surface behind the header. The same
-   amount drives --paper, which gives the wordmark a dark pill only while paper is behind it. */
+   amount drives --paper, which deepens the wordmark's dark pill while paper is behind it. */
 let lastPaper = -1;
 function paintBackdrop(v){
   hall.setBackdrop(v);
