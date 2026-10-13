@@ -222,7 +222,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
   centreGlow.rotation.x = -Math.PI/2; centreGlow.position.copy(L.RC); centreGlow.position.y = 0.08; root.add(centreGlow);
 
   /* ---------- stations ---------- */
-  let singularLoad = () => {}, cityLoad = () => {};
+  let singularLoad = () => {}, cityLoad = () => {}, dragonT = null;
   const GEAR_M = 0.16;
   /* Gears are instanced (one draw per gear type). Each gear keeps its base matrix in
      the world and only its angle changes per frame. */
@@ -293,11 +293,61 @@ export function buildHall({scene, lite, perpetua, video = true}){
     return g;
   }
 
-  /* Cyberpunk City: the case holds the block itself, not a picture of it. The 36 turntable renders of the real
-     model (cyberpunk/spin), their dark ground keyed out, are packed 6 x 6 into one picture. The plane turns to face
-     the camera and shows the render taken from that side, blending between neighbours, so moving past the case
-     moves round the block. Later frames are the camera further to the right (measured: the plinth's front slides
-     left from one frame to the next), hence the minus sign on the angle. */
+  /* The Corner Block dragon's shader, ported: its flight path is an oval here instead of a path texture, its size is two
+     uniforms, and the eye, tooth and gum branches are left out (at this size they are two pixels). */
+  const DRAGON_VERT = `uniform float uT; uniform vec3 uC; uniform vec2 uR; uniform float uRise; uniform float uL; uniform float uV; uniform float uLen; uniform float uK;
+  attribute vec4 color;
+  varying vec3 vN; varying vec3 vV; varying float vU; varying float vBelly; varying float vGold; varying float vMane; varying float vRidge; varying float vA; varying float vWy;
+  vec3 pAt(float q){ float a = q / uL * 6.2831853; return uC + vec3(uR.x*cos(a), uRise*sin(2.0*a), uR.y*sin(a)); }
+  vec3 sideH(float q){ vec3 t = pAt(q + 1.5) - pAt(q - 1.5); return normalize(vec3(-t.z, 0.0, t.x) + vec3(1e-5, 0.0, 0.0)); }
+  vec3 upv(float s){ float q = uV*uT - s*uLen; vec3 t1 = pAt(q + 4.0) - pAt(q), t0 = pAt(q) - pAt(q - 4.0);
+    float dh = atan(t1.z, t1.x) - atan(t0.z, t0.x); dh = mod(dh + 3.14159265, 6.2831853) - 3.14159265; float bank = clamp(dh/4.0*14.0, -.6, .6);
+    return normalize(vec3(0.0, cos(bank), 0.0) + sideH(q)*sin(bank)); }
+  vec3 path(float s){ float q = uV*uT - s*uLen; return pAt(q) + vec3(0.0, .75*sin(s*11.0 - uT*2.1), 0.0) + sideH(q)*(1.1*sin(s*8.0 - uT*1.6)); }
+  void main(){
+    float s = clamp((16.0 - position.x)/uLen, 0.0, 1.0);
+    vec3 P = path(s), Tg = normalize(path(s - .002) - path(s + .002));
+    vec3 N = normalize(cross(Tg, upv(s))), B = normalize(cross(N, Tg));
+    float s0 = 0.197; vec3 P0 = path(s0), T0 = normalize(path(s0 - .002) - path(s0 + .002));
+    vec3 N0 = normalize(cross(T0, upv(s0))), B0 = normalize(cross(N0, T0));
+    vec3 wR = P0 + (T0*(s0 - s)*uLen + B0*position.y + N0*position.z)*uK;     // the head stays rigid
+    vec3 wS = P + (B*position.y + N*position.z)*uK;
+    float kS = smoothstep(s0, s0 + .04, s); vec3 w = mix(wR, wS, kS);
+    vec4 wm = modelMatrix*vec4(w, 1.0);
+    vN = normalize(mat3(modelMatrix)*mix(T0*normal.x + B0*normal.y + N0*normal.z, Tg*normal.x + B*normal.y + N*normal.z, kS));
+    vV = normalize(cameraPosition - wm.xyz); vU = s; vBelly = color.r; vGold = color.g; vMane = color.b; vRidge = color.a; vA = atan(position.z, position.y); vWy = w.y;
+    gl_Position = projectionMatrix*viewMatrix*wm;
+  }`;
+  const DRAGON_FRAG = `uniform float uT;
+  varying vec3 vN; varying vec3 vV; varying float vU; varying float vBelly; varying float vGold; varying float vMane; varying float vRidge; varying float vA; varying float vWy;
+  float h(float n){ return fract(sin(n)*43758.5453); }
+  void main(){
+    float f = 1.0 - abs(dot(normalize(vN), normalize(vV)));
+    float rim = pow(f, 3.2)*2.1 + pow(f, 1.4)*.22;
+    float body = (1.0 - vBelly)*(1.0 - vGold)*(1.0 - vMane);
+    vec2 q = vec2(vU*112.5, vA*2.55); float row = floor(q.x); q.y += mod(row, 2.0)*.5;
+    vec2 cl = fract(q) - .5; float dd = length(vec2(cl.x + .5, cl.y*1.25));
+    float aa = max(fwidth(q.x), fwidth(q.y)), fade = 1.0 - smoothstep(.18, .45, aa);
+    float scale = (1.0 - smoothstep(.0, .09 + aa, abs(dd - .72)))*fade*body*smoothstep(.07, .15, vU);
+    float plates = smoothstep(.8, 1.0, fract(vU*120.0))*vBelly;
+    float wave = smoothstep(.0, .06, .06 - abs(fract(vU - uT*.08) - .5 + .47))*.9;
+    float sl = .82 + .18*sin(vWy*36.0 - uT*5.0), band = smoothstep(.985, 1.0, sin(vWy*.9 - uT*1.2))*.5;
+    vec3 col = mix(vec3(1.0, .26, .16), vec3(1.0, .12, .2), smoothstep(.1, .95, vU));
+    col = mix(col, vec3(1.0, .86, .6), vBelly*.85); col = mix(col, vec3(1.0, .74, .3), vGold); col = mix(col, mix(vec3(1.0, .26, .14), vec3(1.0, .78, .55), .16), vMane);
+    float gl = h(floor(uT*7.0) + 3.0) > .975 ? .45 : 1.0;
+    float a = (.04 + rim + plates*(.35 + f) + scale*(.2 + .4*f) + vGold*.25 - vMane*.02 + wave + band)*sl*gl;
+    float hd = 1.0 - smoothstep(.17, .21, vU);
+    float rimH = pow(f, 4.0)*2.6 + pow(f, 1.6)*.12;
+    float inkM = (1.0 - smoothstep(.04, .07, abs(vGold - .25)))*hd, antM = 1.0 - smoothstep(.03, .06, abs(vGold - .70));
+    float fillH = .07 + .20*max(dot(normalize(vN), normalize(vec3(.3, 1.0, .2))), 0.0)*(1.0 - vGold);
+    float aH = (fillH*(1.0 - inkM) + rimH*(1.0 - vGold)*(1.0 - inkM) + vGold*(1.0 - inkM)*(1.0 - .5*antM)*(.35 + f) + vRidge*(.18 + .55*f)*(1.0 - inkM) + vMane*(.30 + .4*f)*(1.0 - .55*vBelly) + wave*.5)*gl;
+    a = mix(a, aH, hd);
+    vec3 colH = mix(col, vec3(1.0, .82, .42), vGold*.6); colH = mix(colH, vec3(1.0, .80, .45), clamp(vRidge, 0.0, 1.0)*.5); colH = mix(colH, vec3(1.0, .86, .6), vBelly*vMane);
+    col = mix(col, colH, hd); a *= 1.0 - inkM;
+    gl_FragColor = vec4(col*a, 1.0);
+    #include <colorspace_fragment>
+  }`;
+
   /* Cyberpunk City: the block itself on the case floor. Blender cut the Corner Block scene to one 138k triangle mesh
      and baked its night lighting and signs into one texture, so it draws unlit in one call. The mesh starts as an
      empty triangle so its program compiles behind the veil; the real geometry and texture swap in when both arrive. */
@@ -309,11 +359,35 @@ export function buildHall({scene, lite, perpetua, video = true}){
     const empty = new THREE.BufferGeometry(); empty.setAttribute('position', new THREE.Float32BufferAttribute(9, 3)); empty.setAttribute('uv', new THREE.Float32BufferAttribute(6, 2));
     const city = new THREE.Mesh(empty, mat); city.userData.keep = true; g.add(city);     // kept out of the static batch: its geometry swaps later
     const S = 0.105;     // the block is 77 scene units deep; the case is 9
+    /* The dragon from the same scene, 9k of its 91k triangles. Its body is modelled straight; the shader bends it along
+       an oval above the roofs, as the Corner Block page does along its flight path. Units are the block's own; the
+       oval stays inside the case (about 43 either side front to back). The offset puts the block's own origin where
+       cityLoad() puts it (its box: x -37.0 to 38.3, y -8.85 up, z -39.9 to 37.2). */
+    const RX = 48, RZ = 30;
+    const dEmpty = new THREE.BufferGeometry(); dEmpty.setAttribute('position', new THREE.Float32BufferAttribute(9, 3)); dEmpty.setAttribute('normal', new THREE.Float32BufferAttribute(9, 3)); dEmpty.setAttribute('color', new THREE.Float32BufferAttribute(12, 4));
+    const orbit = new THREE.Sphere(new THREE.Vector3(0.634, 54, -1.362), RX + 12);     // where the bent body can be: its straight bounds would cull it wrongly
+    dEmpty.boundingSphere = orbit;
+    dragonT = {value:0};
+    const dMat = new THREE.ShaderMaterial({vertexShader:DRAGON_VERT, fragmentShader:DRAGON_FRAG, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+      uniforms:{uT:dragonT, uC:{value:orbit.center.clone()}, uR:{value:new THREE.Vector2(RX, RZ)}, uRise:{value:4}, uV:{value:8}, uLen:{value:46}, uK:{value:2.3},
+        uL:{value:Math.PI*(3*(RX + RZ) - Math.sqrt((3*RX + RZ)*(RX + 3*RZ)))}}});     // the oval's perimeter (Ramanujan)
+    const dragon = new THREE.Mesh(dEmpty, dMat); dragon.renderOrder = 5; dragon.userData.keep = true;
+    dragon.scale.setScalar(S); dragon.position.set(-0.634*S, 8.85*S, 1.362*S); g.add(dragon);
     cityLoad = () => {
       const tex = loadTexture('media/cyber-city.webp', {cap:false});
       let geo = null;
       const show = () => { if (!geo || !tex.ready) return; mat.map = tex.tex; city.geometry = geo; empty.dispose(); };
       tex.onload = show;
+      fetch('media/cyber-dragon.bin').then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(buf => {
+        // 'DRG1', u32 verts, u32 indices; f32 xyz; int8 normal + pad; uint8 region flags (belly, gold, mane, ridge); uint16 index
+        const dv = new DataView(buf), nv = dv.getUint32(4, true), ni = dv.getUint32(8, true), nAt = 12 + nv*12, cAt = nAt + nv*4, iAt = cAt + nv*4;
+        const d = new THREE.BufferGeometry();
+        d.setAttribute('position', new THREE.BufferAttribute(new Float32Array(buf, 12, nv*3), 3));
+        d.setAttribute('normal', new THREE.BufferAttribute(new Int8Array(buf, nAt, nv*4), 4, true));
+        d.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(buf, cAt, nv*4), 4, true));
+        d.setIndex(new THREE.BufferAttribute(new Uint16Array(buf, iAt, ni), 1));
+        d.boundingSphere = orbit; dragon.geometry = d; dEmpty.dispose();
+      }).catch(() => {});
       fetch('media/cyber-city.bin').then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(buf => {
         const dv = new DataView(buf), nv = dv.getUint32(4, true), ni = dv.getUint32(8, true);
         const size = [0, 1, 2].map(k => dv.getFloat32(24 + k*4, true));
@@ -629,6 +703,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
     if (reflector) { reflFade += ((reflWant ? 1 : 0) - reflFade)*Math.min(1, dt*3); reflector.material.uniforms.uStrength.value = reflFade*0.4; }
     rackActive = rackOn; rack.setLive(rackLive);
     for (const d of drivers) d(spin);
+    if (dragonT) dragonT.value = time;
     overhead.update(spin, time);
     for (const p of portals) p.update(time, dt);
   }
