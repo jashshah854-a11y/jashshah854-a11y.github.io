@@ -68,6 +68,7 @@ export function resolve(spec){
       const mid = A.portal.clone().lerp(B.portal, t).add(new THREE.Vector3(0, up, 0));
       if (spec.role === 'look') return mid;
       const inward = A.inward.clone().lerp(B.inward, t).normalize();
+      if (spec.side) { const along = B.portal.clone().sub(A.portal); along.y = 0; mid.addScaledVector(along.normalize(), spec.side); }   // toward b
       return mid.addScaledVector(inward, spec.d ?? 56);
     }
     case 'slot': {

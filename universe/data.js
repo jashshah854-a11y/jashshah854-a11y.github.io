@@ -68,10 +68,13 @@ const slot = (id, extra = {}) => ({
 /* Transit between two worlds: the camera backs off to where both vitrines fit in frame and looks at the
    gap between them. Cutting straight from one close-up to the next crossed bare wall (the gap between
    vitrines is wider than the frame at close-up distance) with the pair of vitrines cropped at both edges. */
+/* On a portrait phone the camera pulls back past the rotunda's centre to fit both vitrines, which put the central
+   pole straight down the middle of the frame. Standing 16 to the side keeps the pull-back and moves the pole to the edge. */
 const link = (a, b, extra = {}) => ({
   id: 'link:' + a + '-' + b, look: 'world', hold: 0, fov: extra.fov ?? 36,
   pos: {at:'between', a, b, d: extra.d ?? 62, up: extra.up ?? 9},
-  target: {at:'between', a, b, role:'look', up: extra.lookUp ?? -0.2}
+  target: {at:'between', a, b, role:'look', up: extra.lookUp ?? -0.2},
+  portrait: {pos: {at:'between', a, b, d: extra.d ?? 62, up: extra.up ?? 9, side: 16}, target: {at:'between', a, b, role:'look', up: extra.lookUp ?? -0.2}}
 });
 
 /* hold = dwell weight (the camera is still, the viewer reads).

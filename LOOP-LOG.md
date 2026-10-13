@@ -294,3 +294,12 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Change: the panel uses M.marble; a 0.4 brass edge (M.brass, 0.9 deep) frames it; columns are spaced 4.7 apart instead of 5.0, so the outer frames stay inside the edge (they overhung by up to 0.37); the wall glow is 0.15 instead of 0.22. Everything is an existing hall material.
 - Verify: same 50 programs (prog-diff zero); 27-stop walk 0 long frames; phone draw calls at Singular settle at 46 (max 49), under the 100 budget; check-all PASS.
 - Next queue: (1) a fresh tour of every stop at both sizes for the next weakest frame.
+
+### Round 44 (2026-10-13): on phones the central pole no longer splits the transit frames
+- Fresh tour (every stop, 1440x900 and 390x844, contact sheets): desktop clean. On phones, at all seven in-between (link) stops, the hall's central brass pole ran straight down the middle of the frame, between the camera and the two vitrines.
+- Cause: a portrait phone may pull the camera back up to 2.3x (pscale) to fit both vitrines; for link stops that carries it past the rotunda's centre, so the pole sits on the line of sight. The decks stop already caps pscale at 1 for the same reason.
+- Tried on live (runtime edits to the journey frames): A, cap link pscale at 1.0, and B, at 1.4. Both removed the pole but cropped both vitrines at the frame edges around an empty middle. Hiding the pole alone is not possible cheaply: it is part of the overhead mechanism's single merged mesh. D, shift the camera 6 units sideways: the pole landed on the right vitrine. E, 12 units: the pole moved to the frame edge and both vitrines sat clear.
+- Change: layout.js "between" placements take an optional side offset (toward the second vitrine); every link stop gets a portrait override standing 16 to the side (12 left the pole clipping two vitrines once the portrait weight of 0.92 applied). Desktop and landscape do not use the override (desktop link frames differ from before only by animation, 1.7 to 3.2 levels mean).
+- After (local, 390x844): the pole is out of all five checked link frames, both vitrines are whole, and the overhead gear ring still crowns the shot.
+- Verify: same 50 programs (prog-diff zero); 27-stop walk 0 long frames; phone draw calls peak 88 (the long-standing 89 ceiling); check-all PASS.
+- Next queue: (1) phone floor: pale grey rectangles under vitrines (the phone stand-in reflections) read as patches on the floor; (2) a fresh tour after that.
