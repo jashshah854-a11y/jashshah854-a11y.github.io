@@ -260,3 +260,13 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Tried and reverted: linking PMREM's own two shaders (GGX filter, background box) early through its private r186 fields. fromScene went from 557 to 506 ms, inside noise, not worth coupling to three's internals. Most of the remaining cost is ANGLE building each shader's D3D code at its first draw, which no GL compile call reaches.
 - check-all PASS. New tools: boot-inclusive.cjs, pmrem-time.cjs (uses a temporary tmp-pmrem.html at the server root; never commit it).
 - Lesson for the loop: on a shared, busy machine, compare by interleaved pairs, never by medians of separate batches. And precompiling only helps the GL link, not ANGLE's first-draw work; the real lever left is fewer programs.
+
+### Round 40 (2026-10-13): the opening headline reads on the cream wall
+- Why this round: Jash expected the loop to keep improving how the site looks. Rounds 37 to 39 were speed work with "no visual change" as a rule, so nothing on screen moved. The loop now targets visible quality, with the speed numbers as a guardrail.
+- Found (tour.cjs: every stop at 1440x900 and 390x844 from live; copy-contrast.cjs: text against the real pixels behind it, shadows ignored): the opening frame is the only light scene, and its copy failed everywhere. Headline 2.31:1 on desktop and 1.37:1 on phones (bar 3:1); the two lines under it 1.88 to 2.38:1 (bar 4.5:1). Every dark stop passed.
+- Tried on live by injected CSS before editing: A, the same full-width gradient made deeper and taller; B, a dark patch anchored bottom-left. A passed at both sizes. B failed on phones, where the copy spans the width.
+- Change: body[data-mode=inside] #shade-bottom now runs rgba(20,30,26) .8 at the bottom, .55 at 30%, 0 at 58% (was .5 to 0 at 42%). It is the machine's own green-black, so it reads as the floor falling into shadow, not a box.
+- After: desktop headline 5.6:1, lines 6.33 and 5.94:1; phone headline 3.42:1, lines 5.17 and 5.33:1. No other stop changed. check-all PASS.
+- Left on purpose: the Fieldfold caption measures 4.12:1 with its shadow ignored. Its 75% shadow makes it read cleanly in the screenshot, so recoloring every caption would change correct work.
+- New tools: tour.cjs (a screenshot per stop), copy-contrast.cjs (EXTRA_CSS tries a change on live, SHOT_DIR keeps the frames; rows of buttons are skipped).
+- Lesson for the loop: a "no visual change" checklist item keeps a loop from improving the look. Measure what the visitor sees (text against real pixels), and try candidates on live by injection before editing.
