@@ -300,16 +300,17 @@ export function buildHall({scene, lite, perpetua, video = true}){
     const body = roundedBox(1.7, 1.25, 2.5, 0.2, M.enamel); body.position.y = py + 0.2; prj.add(body);
     for (const dz of [-0.55, 0.55]) { const reel = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.95, 0.22, 28), M.brass); reel.rotation.z = Math.PI/2; reel.position.set(0, py + 1.25, dz); reel.userData.keep = true; prj.add(reel); drivers.push(spin => { reel.rotation.x = spin*2; }); }
     const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.5, 0.7, 20), M.steel); lens.rotation.x = Math.PI/2; lens.position.set(0, py + 0.2, -1.55); prj.add(lens);
-    // the beam: a cone from the lens to the portal
-    const lensW = new THREE.Vector3(0, py + 0.2, -1.9);
-    const target = new THREE.Vector3(2.0 - px, L.VIT.h/2 - 0.2, (-L.VIT.d/2 + 0.9) - pz);
-    const dist = target.length() - 1.0;
-    const half = Math.atan((L.PORTAL.w*0.5 + 0.5)/dist);
-    const coneGeo = new THREE.ConeGeometry(Math.tan(half)*dist, dist, 32, 1, true); coneGeo.translate(0, -dist/2, 0); coneGeo.rotateX(Math.PI/2);
-    const beamTex = beamTexture();
-    const beam = new THREE.Mesh(coneGeo, new THREE.MeshBasicMaterial({color:'#ffe2b0', alphaMap:beamTex, transparent:true, opacity:0.085, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide}));
-    beam.position.copy(lensW).add(new THREE.Vector3(0, 0, 0)); beam.renderOrder = 4; beam.userData.keep = true;
-    beam.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), target.clone().sub(lensW).normalize());
+    /* the beam: an open pyramid from the lens to just inside the picture's corners. A round cone wide enough for
+       a 16:9 screen spilled light about 4 units above and below it, which read as a pale dome over the art. */
+    const lensAt = new THREE.Vector3(0, py + 0.2, -1.9);
+    const sx = -px, sy = L.VIT.h/2 - 0.2, sz = (-L.VIT.d/2 + 0.9) - pz + 0.05, hw = L.PORTAL.w*0.485, hh = L.PORTAL.h*0.485;
+    const corners = [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]].map(([x, y]) => [sx + x, sy + y, sz]);
+    const pos = [], uv = [];
+    for (let k = 0; k < 4; k++) { pos.push(...lensAt.toArray(), ...corners[k], ...corners[(k + 1) % 4]); uv.push(0.5, 1, 0, 0, 1, 0); }   // v = 1 at the lens: the beam texture is brightest there
+    const beamGeo = new THREE.BufferGeometry();
+    beamGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); beamGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); beamGeo.computeVertexNormals();
+    const beam = new THREE.Mesh(beamGeo, new THREE.MeshBasicMaterial({color:'#ffe2b0', alphaMap:beamTexture(), transparent:true, opacity:0.085, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide}));
+    beam.renderOrder = 4; beam.userData.keep = true;
     prj.add(beam);
   }
 

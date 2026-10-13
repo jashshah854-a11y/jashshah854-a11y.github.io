@@ -270,3 +270,11 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Left on purpose: the Fieldfold caption measures 4.12:1 with its shadow ignored. Its 75% shadow makes it read cleanly in the screenshot, so recoloring every caption would change correct work.
 - New tools: tour.cjs (a screenshot per stop), copy-contrast.cjs (EXTRA_CSS tries a change on live, SHOT_DIR keeps the frames; rows of buttons are skipped).
 - Lesson for the loop: a "no visual change" checklist item keeps a loop from improving the look. Measure what the visitor sees (text against real pixels), and try candidates on live by injection before editing.
+
+### Round 41 (2026-10-13): Dead End Shop's projector beam ends on the picture
+- Found (tour.cjs frames, then beam on and off on the same page): a pale dome lay over the Dead End Shop artwork and showed as a ghost disc in the overview. It was the projector beam: a round cone with an 8.1-unit radius aimed at a 15.2 by 8.55 screen, so it overshot the picture by about 4 units above and below. The overshoot over the dark wall read as a solid dome.
+- Tried first, on live by runtime patch: fading the cone's edges by viewing angle (two strengths). The outline stayed; the shape, not the edges, was the fault.
+- Change: the beam is an open pyramid from the lens to just inside the picture's four corners (97%), with the same texture, colour, additive blend and opacity. Same 50 programs (prog-diff zero), nothing compiled after the veil, check-all PASS.
+- Tested and rejected: raising the opacity so the beam shows as a shaft (0.18, 0.3). From the front the beam overlaps the picture, so a stronger beam only lays haze over the art. Kept at 0.085; the projector and its spinning reels still say "film".
+- Measurement lesson: the portal is a slideshow, so comparing art brightness between two shots compared two different pictures. Judge such changes on regions the art does not cover, or pause and shoot within 250 ms.
+- New tools: beam-try.cjs and beam-opacity.cjs (runtime material and geometry trials on a live page); tour.cjs gains STOPS=.
