@@ -224,7 +224,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
   /* ---------- stations ---------- */
   let singularLoad = () => {}, dragonT = null;
   // worlds shown as their object, baked (see modelStation): the file under media/ and the scale into the case
-  const MODELS = {cyber:{file:'cyber-city', S:0.105}, round:{file:'round-machine', S:2.5}};
+  const MODELS = {cyber:{file:'cyber-city', S:0.105}, round:{file:'round-machine', S:2.5}, workbench:{file:'workbench-arm', S:3.2}};
   const modelLoads = [];
   const GEAR_M = 0.16;
   /* Gears are instanced (one draw per gear type). Each gear keeps its base matrix in
