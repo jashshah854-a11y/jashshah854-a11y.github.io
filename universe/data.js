@@ -63,6 +63,9 @@ const slot = (id, extra = {}) => ({
   pscale: extra.pscale ?? 1.4,
   pos: {at:'slot', id, d: extra.d ?? 38, up: extra.up ?? 5.0, side: extra.side ?? 0},
   target: {at:'slot', role:'look', id, shift: extra.shift ?? 6.2, up: extra.lookUp ?? -0.2},
+  // on a portrait phone the card covers the lower third: aiming 2.5 lower lifts the case clear of it (pAim:0 keeps the aim)
+  ...((extra.pAim ?? 2.5) ? {portrait: {pos: {at:'slot', id, d: extra.d ?? 38, up: extra.up ?? 5.0, side: extra.side ?? 0},
+    target: {at:'slot', role:'look', id, shift: extra.shift ?? 6.2, up: (extra.lookUp ?? -0.2) - (extra.pAim ?? 2.5)}}} : {}),
   pins: id === 'decks' ? 'decks' : 'none'
 });
 
@@ -104,9 +107,9 @@ export const JOURNEY = [
    pos:{at:'hall', p:[-30, 25, 108]}, target:{at:'hall', p:[30, 15, 6]}, pscale:1.3},
   /* Stand off the left end of the row and look along it. Square on from across the rotunda, the seven small cases sat
      in a thin band with the top 40% of the frame empty. pscale 1: a portrait pull-back would lose the near cases. */
-  slot('decks', {d:42, side:-37, up:8.0, shift:10.0, lookUp:-1.5, hold:3.6, pscale:1.0}),
+  slot('decks', {d:42, side:-37, up:8.0, shift:10.0, lookUp:-1.5, hold:3.6, pscale:1.0, pAim:0}),
   // higher and closer, looking down: the case holds a 3D block now, and from eye level it was a wall of facades
-  slot('cyber', {d:32, up:19, lookUp:-2.7}),
+  slot('cyber', {d:32, up:19, lookUp:-2.7, pAim:0}),
   link('cyber', 'launchboard'),
   slot('launchboard'),
   link('launchboard', 'mgmtio'),
@@ -122,7 +125,7 @@ export const JOURNEY = [
   link('jev', 'deadend'),
   slot('deadend'),
   // pscale 1.4: the wall is already the widest piece in the hall; the full phone pull-back shrank it to half the frame width
-  slot('singular', {d:54, up:3.4, shift:8.5, pscale:1.4}),
+  slot('singular', {d:54, up:3.4, shift:8.5, pscale:1.4, pAim:0}),
   {id:'all',     look:'far', hold:1.2, copy:'hall2',
    pos:{at:'hall', p:[0, 120, 215]}, target:{at:'hall', p:[0, 8, -8]}, fov:36, pscale:1.0},
   {id:'end',     copy:'end', look:'far', hold:2.6, label:'Built by Jash Shah', still:true,
