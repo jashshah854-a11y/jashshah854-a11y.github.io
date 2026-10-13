@@ -298,36 +298,36 @@ export function buildHall({scene, lite, perpetua, video = true}){
      the camera and shows the render taken from that side, blending between neighbours, so moving past the case
      moves round the block. Later frames are the camera further to the right (measured: the plinth's front slides
      left from one frame to the next), hence the minus sign on the angle. */
+  /* Cyberpunk City: the block itself on the case floor. Blender cut the Corner Block scene to one 138k triangle mesh
+     and baked its night lighting and signs into one texture, so it draws unlit in one call. The mesh starts as an
+     empty triangle so its program compiles behind the veil; the real geometry and texture swap in when both arrive. */
   function cityModel(g, cfg){
     const stage = new THREE.Mesh(new THREE.PlaneGeometry(L.VIT.w - 0.6, L.VIT.d - 0.6), additive(glow, cfg.tint, 0.26));
     stage.rotation.x = -Math.PI/2; stage.position.set(0, 0.05, 0); g.add(stage);
-    const clear = new THREE.DataTexture(new Uint8Array([0, 0, 0, 0]), 1, 1); clear.needsUpdate = true;
-    const W = 12, H = W*420/432, SINK = 0.085*H;     // a cell is 432 x 420; the plinth's lowest corner is 8.5% up it
-    const mat = new THREE.ShaderMaterial({transparent:true, depthWrite:false, toneMapped:false, fog:false, side:THREE.DoubleSide,
-      uniforms:{uMap:{value:clear}},
-      vertexShader:`varying vec2 vUv; varying float vFrame;
-        void main(){
-          vUv = uv;
-          vec3 c = (modelMatrix*vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-          vec2 to = normalize(cameraPosition.xz - c.xz), fr = normalize((modelMatrix*vec4(0.0, 0.0, 1.0, 0.0)).xz);
-          float a = atan(fr.x*to.y - fr.y*to.x, dot(fr, to));
-          vFrame = mod(36.0 - a/6.2831853*36.0, 36.0);
-          vec3 w = c + vec3(to.y, 0.0, -to.x)*position.x + vec3(0.0, position.y, 0.0);
-          gl_Position = projectionMatrix*viewMatrix*vec4(w, 1.0);
-        }`,
-      fragmentShader:`uniform sampler2D uMap; varying vec2 vUv; varying float vFrame;
-        vec4 cell(float i){ return texture2D(uMap, vec2((mod(i, 6.0) + vUv.x)/6.0, (5.0 - floor(i/6.0) + vUv.y)/6.0)); }
-        void main(){
-          if (vUv.y < 0.075) discard;      // under the plinth: stray floor reflections in the renders
-          float f0 = floor(vFrame);
-          vec4 c = mix(cell(f0), cell(mod(f0 + 1.0, 36.0)), vFrame - f0);
-          if (c.a < 0.02) discard;
-          gl_FragColor = c;
-          #include <colorspace_fragment>
-        }`});
-    const geo = new THREE.PlaneGeometry(W, H); geo.translate(0, H/2 - SINK, 0);
-    const m = new THREE.Mesh(geo, mat); m.renderOrder = 4; m.castShadow = false; g.add(m);
-    cityLoad = () => { const e = loadTexture('media/cyber-spin.webp', {cap:false}); const set = () => { mat.uniforms.uMap.value = e.tex; }; if (e.ready) set(); else e.onload = set; };
+    const blank = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1); blank.colorSpace = THREE.SRGBColorSpace; blank.needsUpdate = true;
+    const mat = new THREE.MeshBasicMaterial({map:blank});
+    const empty = new THREE.BufferGeometry(); empty.setAttribute('position', new THREE.Float32BufferAttribute(9, 3)); empty.setAttribute('uv', new THREE.Float32BufferAttribute(6, 2));
+    const city = new THREE.Mesh(empty, mat); city.userData.keep = true; g.add(city);     // kept out of the static batch: its geometry swaps later
+    const S = 0.105;     // the block is 77 scene units deep; the case is 9
+    cityLoad = () => {
+      const tex = loadTexture('media/cyber-city.webp', {cap:false});
+      let geo = null;
+      const show = () => { if (!geo || !tex.ready) return; mat.map = tex.tex; city.geometry = geo; empty.dispose(); };
+      tex.onload = show;
+      fetch('media/cyber-city.bin').then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(buf => {
+        const dv = new DataView(buf), nv = dv.getUint32(4, true), ni = dv.getUint32(8, true);
+        const size = [0, 1, 2].map(k => dv.getFloat32(24 + k*4, true));
+        const uvAt = 36 + nv*8, idxAt = uvAt + nv*4;
+        geo = new THREE.BufferGeometry();
+        // -1..1 across the block's box, padded to four: a three-short vertex format costs Direct3D a conversion on every draw
+        geo.setAttribute('position', new THREE.InterleavedBufferAttribute(new THREE.InterleavedBuffer(new Int16Array(buf, 36, nv*4), 4), 3, 0, true));
+        geo.setAttribute('uv', new THREE.BufferAttribute(new Uint16Array(buf, uvAt, nv*2), 2, true));
+        geo.setIndex(new THREE.BufferAttribute(new Uint32Array(buf, idxAt, ni), 1));
+        city.scale.set(size[0]/2*S, size[1]/2*S, size[2]/2*S); city.position.y = size[1]/2*S;
+        city.updateMatrixWorld(true);
+        show();
+      }).catch(() => {});
+    };
   }
 
   /* Dead End Shop: a projector beam inside the vitrine */
