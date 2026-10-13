@@ -328,3 +328,10 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Verify: same 50 programs at the veil and after the whole walk (prog-diff zero); check-all PASS; phone draw calls peak 88 (decks stop 64 to 60). Long frames: the machine was loaded (CPU 68%, other chats busy), so the walk ran interleaved with the live site under the same load: new code 9 and 3, live 33 and 27, all at the first stops this change does not touch.
 - Flight check: new travel.cjs shot the flights in and out at 25/50/75%; the camera passes close to the end cases without cutting through.
 - Next queue: (1) phone s24: the Singular wall reads small; (2) then a fresh tour.
+
+### Round 48 (2026-10-13): on phones the Singular wall fills the frame width
+- Found (round 47 queue): on a phone the Singular wall was a small panel mid-frame, about half the frame width, with the top third empty. A portrait phone pulls the camera back (up to 2.3x) to keep a set width in frame, and the wall (29 wide) is already the widest piece in the hall.
+- Tried on live (runtime pull-back caps): A, 1.4x: the wall spans the frame with a small margin, all 24 posters whole and larger. B, 1.2x: larger again, but the left column of posters is cut off at the edge.
+- Change: A. The Singular stop caps the phone pull-back at 1.4 (as the decks and vitrine stops already cap theirs). Desktop and landscape are unchanged.
+- Verify: same 50 programs (prog-diff zero, 50 after the whole walk); check-all PASS; phone draw calls peak 88 (Singular 46 to 44). Long frames, with the machine loaded by other chats: new code 26, live site 24 in the same run, all at stops 0 to 5; this change only moves the phone camera at stop 24.
+- Next queue: (1) a fresh tour of every stop at both sizes.

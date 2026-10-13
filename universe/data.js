@@ -119,7 +119,8 @@ export const JOURNEY = [
   slot('jev'),
   link('jev', 'deadend'),
   slot('deadend'),
-  slot('singular', {d:54, up:3.4, shift:8.5}),
+  // pscale 1.4: the wall is already the widest piece in the hall; the full phone pull-back shrank it to half the frame width
+  slot('singular', {d:54, up:3.4, shift:8.5, pscale:1.4}),
   {id:'all',     look:'far', hold:1.2, copy:'hall2',
    pos:{at:'hall', p:[0, 120, 215]}, target:{at:'hall', p:[0, 8, -8]}, fov:36, pscale:1.0},
   {id:'end',     copy:'end', look:'far', hold:2.6, label:'Built by Jash Shah', still:true,
