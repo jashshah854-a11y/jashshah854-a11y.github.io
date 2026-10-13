@@ -414,3 +414,11 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Verify: same 54 programs; 27-stop walk 0 long frames; phone draw calls peak 85, Round & Round stop 34; check-all PASS. The Cyberpunk stop is unchanged after the refactor (shot).
 - Note: the Round & Round and Cyberpunk screen pictures still sit in data.js and media but no longer load in the hall; leave them until a check shows nothing else uses them.
 - Next queue: (1) Robot Workbench the same way; (2) Fieldfold, half-folded and still; (3) the machine's mesh is 3 vertices per triangle (smart UV splits every curved face): unwrap before decimating to cut its 2 MB.
+
+### Round 60 (2026-10-13): the Robot Workbench case holds the bench and arm itself
+- Found (round 59 queue): the second object world from the counsel's order, still a screen.
+- Built: world-export.cjs hooks the page's root group (93 meshes, 7.8k triangles: no decimation needed); bl-slim.py baked it under the same warm studio rig as the marble lift (its page lights are a warm hemisphere, fff5df, and a key); 158 KB mesh, 176 KB texture.
+- Change: MODELS gains workbench (scale 3.2). One line; modelStation() does the rest.
+- Tried: scale 2.8 vs 3.2 (13.4 of 17 wide, 5.8 of 9 deep, 8.7 of 11 tall). 3.2 matches the marble lift's presence. Kept 3.2.
+- Verify: same 54 programs; 27-stop walk 0 long frames; phone draw calls peak 84, Robot Workbench stop 35; check-all PASS.
+- Next queue: (1) Fieldfold, half-folded and still (counsel: folding is subtle at phone size); (2) unwrap the marble lift before decimating to cut its 2 MB mesh; (3) light motion for the object in focus (the arm's pick, one marble rolling), only if it stays at 0 long frames.
