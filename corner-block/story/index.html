@@ -128,7 +128,7 @@ figcaption { margin-top: 8px; color: var(--muted); font-size: 15px; max-width: 7
       <h2>What it is</h2>
       <div class="prose">
         <p>Corner Block is one web page. It draws a rain-soaked, isometric cyberpunk city block on a collectible display plinth, live in your browser. You can orbit it, zoom into any street, and jump between a few fixed views: the whole city, the district, the cinema and the junction.</p>
-        <p>The traffic is a simulation with a fixed seed, so it runs the same way every time. A train comes in from the distance through a glass tube and crosses the block on a raised viaduct. A hologram dragon circles the towers. An airship drifts overhead, glass elevators climb the towers, and a giant hologram figure stands on a rooftop deck.</p>
+        <p>The traffic is a simulation with a fixed seed, so it runs the same way every time. A train comes in from the distance through a glass tube and crosses the block on a raised viaduct. A hologram dragon circles the towers. An airship drifts overhead, glass elevators climb the towers, and a giant hologram figure stands on a rooftop deck. A Tour button flies the camera through the block for you.</p>
       </div>
     </section>
 
@@ -257,10 +257,22 @@ figcaption { margin-top: 8px; color: var(--muted); font-size: 15px; max-width: 7
         <figcaption>Two versions of the flying car, Run 205 and Run 215.</figcaption>
       </figure>
 
+      <h3>Weather that looked fake</h3>
+      <div class="split">
+        <div class="prose">
+          <p>I told the agent the lightning felt fake and the rain was too much. The bolt was a flat picture pasted on the sky, and the flash lit the whole screen. It went. Now a faint cloud deck sits high over the block, and the flash lights the cloud from inside. The rain got lighter too.</p>
+          <p>Releases came fast after that. Version 1 shipped on 6 October and 1.2 on 7 October. Versions 1.3 to 1.5 all shipped on 8 October: the dragon stayed on for good, the weather was redone, and the edges of the block and the phone framing were fixed. Version 1.6 on 11 October shows a still picture of the city at once, cut the desktop download from 190 MB to 82 MB, and added the Tour button.</p>
+        </div>
+        <figure class="narrow">
+          <img src="img/lightning-deck.jpg" width="600" height="667" loading="lazy" alt="The whole block at night during a lightning flash: a lit cloud deck glows above the airship, with the dragon, the hologram figure and the curved train tube around the towers.">
+          <figcaption>A frame from the phone video, at the peak of a flash. The light comes from inside the cloud deck.</figcaption>
+        </figure>
+      </div>
+
       <h3>A city that felt dead</h3>
       <div class="prose">
         <p>After the realism passes I watched it live and said the quality was up but the city felt dead: "there was so much more stuff." That was not a rollback. It was a call for more life on top.</p>
-        <p>I approved a whole wave of it: drones landing on roof pads, glass elevators, a rooftop crane, living windows, video billboards, an ad airship, a rooftop bar with a DJ, street-sweeper robots, rain swells with lightning and synthesized city sound. Everything except birds. Then I handed over the PC for the night. Eleven agents ran in parallel, held back by a memory guard so the 16 GB machine wouldn't thrash. The elevators, the crane, the airship and the lightning made it into the city.</p>
+        <p>I approved a whole wave of it: drones landing on roof pads, glass elevators, a rooftop crane, living windows, video billboards, an ad airship, a rooftop bar with a DJ, street-sweeper robots, rain swells with lightning and synthesized city sound. Everything except birds. Then I handed over the PC for the night. Eleven agents ran in parallel, held back by a memory guard so the 16 GB machine wouldn't thrash. The elevators, the crane, the airship and the lightning made it into the city. Later I said there were too many drones, "a nuisance", and they went from 12 to 5.</p>
         <p>I also said the back of the block looked a little boring. I wanted something perpetual, a loop, a good surprise when people look back. The agent built the city's source code: a data waterfall that only fades in when you orbit round to the back.</p>
       </div>
     </section>
@@ -273,6 +285,9 @@ figcaption { margin-top: 8px; color: var(--muted); font-size: 15px; max-width: 7
         <p>Those numbers come from headless runs at 1280x720 on an integrated AMD GPU, with the PC often busy. I trust them as comparisons inside one session, not as a score.</p>
         <p>Several speed ideas did nothing, and I threw them out: culling the shadow pass, culling the road mirror, and merging the material tables. One bad promotion got through once and the verify step caught it, which is why verifying comes before promoting.</p>
         <p>The dragon was a switch for a while, because I thought it took a lot of rendering. Now it is always on.</p>
+        <p>In October I ran a stricter loop just for speed, on my laptop's RTX 3050. A profile showed the problem plainly: about 1,300 draw calls a frame at about 18 microseconds each, which is about 23 ms on its own. Switching shader programs took 42 percent of the frame. One change stuck: skipping the matrix updates for objects that never move, worth about 1 ms. The city settled at about 24 ms a frame, around 40 frames a second.</p>
+        <p>Then I went after the big levers, and the agents measured before building anything. Merging draws looked like a 1.9 ms win on paper. When they checked which draws could really be merged, it was 29 out of 1,016, so that project stopped before anyone built it.</p>
+        <p>WebGPU was next. On my laptop, the WebGPU renderer in three.js r170 was slower, not faster: on the same models, 25 ms became 41 ms. Its render bundles, which record static draws once and replay them, looked far faster but drew the wrong picture. The cause was a bug inside three.js. A shadow render inside the bundle cuts the recording short, so the bundle replays with its camera frozen. The tell was two camera angles giving a difference of exactly zero. With a one-line fix the bundles really were about 2.6 times faster in the lab. But only 37 to 47 percent of the city's draws stay still enough to live in a bundle, and it needed about 80. So I closed that road.</p>
       </div>
 
       <h3>Bugs you cannot see</h3>
@@ -284,14 +299,22 @@ figcaption { margin-top: 8px; color: var(--muted); font-size: 15px; max-width: 7
       <div class="split">
         <div class="prose">
           <p>On a phone the full city runs out of memory and iOS Safari kills the tab. So phones go to a lighter page: a looping recording of the live city, with the camera orbiting the block.</p>
-          <p>I am building a phone mode to change that. On a test page, it brings the memory estimate for the city from about 1,420 MB down to about 582 MB. It does that by capping textures at 1,024 pixels, sharing duplicate textures, freeing the CPU copies of images after they upload, and halving the render targets. The phone asset set is 117 MB, against 190 MB for the full one. The desktop city does not change.</p>
-          <p>It has not run on a real iPhone yet, and those figures are estimates from my own memory probe, not Safari's. Until it does, phones get the recording.</p>
+          <p>I built a phone mode to change that. It brings the memory estimate for the city from about 1,420 MB down to about 538 MB, by capping textures at 1,024 pixels, sharing duplicate textures, freeing the CPU copies of images after they upload, and halving the render targets. Compression then cut the phone download from 117 MB to 58 MB. The desktop city does not change.</p>
+          <p>The first time I opened it on my iPhone, it sat on "Loading the city" and never drew. Nobody could tell a slow download from a killed tab. So the next version keeps a log on the phone that survives a crash, and its memory peak while loading fell from 511 MB to 342 MB. Those figures are estimates from my own memory probe, not Safari's. The main link keeps sending iPhones to the recording until my phone passes that test.</p>
           <p>My own PC hit the same wall. With nine agents running at once it lagged, so I capped it at six.</p>
         </div>
         <figure class="narrow">
           <img src="img/phone-lab.jpg" width="600" height="1304" loading="lazy" alt="The Corner Block on the phone test page in an iPhone 15 Pro profile: the city fits the narrow screen, with a small Menu button at the top and a one-line readout at the bottom.">
           <figcaption>The phone test page in an iPhone 15 Pro profile. The line at the bottom reports the memory estimate, draw calls and frame rate. This ran on software rendering in a test browser, so the frame rate shown is not a phone's.</figcaption>
         </figure>
+      </div>
+    </section>
+
+    <section>
+      <h2>How the work changed</h2>
+      <div class="prose">
+        <p>Early on I made every keep-or-cut call myself. Later I stopped answering every judgment call. I told the agents to ask an Opus advisor for a senior engineer's opinion and to bring me only what needs me, like a test on my own phone.</p>
+        <p>The loop also kept a file of its own mistakes and turned each one into a rule for the next job. One of them: check what can really be changed before measuring the best case. Another came from my 16 GB laptop. With several chats open, timing runs use one browser at a time and wait for a quiet machine, often at night.</p>
       </div>
     </section>
 
@@ -303,7 +326,7 @@ figcaption { margin-top: 8px; color: var(--muted); font-size: 15px; max-width: 7
         </a>
         <a class="btn quiet" href="../../cyberpunk/">The phone page</a>
       </div>
-      <p class="note">The live city builds the whole block in your browser, so the first load takes a minute or two. Best on a desktop with a graphics card. On a phone, use the phone page.</p>
+      <p class="note">The live city builds the whole block in your browser. A still picture shows at once, and the live city follows in about a minute. Best on a desktop with a graphics card. On a phone, use the phone page.</p>
     </section>
   </main>
 </div>
