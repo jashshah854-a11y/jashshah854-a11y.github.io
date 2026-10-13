@@ -59,7 +59,8 @@ export const LOOK = {
 
 const slot = (id, extra = {}) => ({
   id: 'world:' + id, world: id, look: 'world', hold: extra.hold ?? 3,
-  pscale: extra.pscale,
+  // a portrait phone pulls back at most 1.4x: the case then spans the frame; the default 2.3x left it a small box mid-frame
+  pscale: extra.pscale ?? 1.4,
   pos: {at:'slot', id, d: extra.d ?? 38, up: extra.up ?? 5.0, side: extra.side ?? 0},
   target: {at:'slot', role:'look', id, shift: extra.shift ?? 6.2, up: extra.lookUp ?? -0.2},
   pins: id === 'decks' ? 'decks' : 'none'

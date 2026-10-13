@@ -368,3 +368,10 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Tried on live first (an injected impostor): sized 10.5 then 12 wide; the merged glow and backing slab of the old screen could not be hidden at runtime, so the final look was judged locally.
 - Verify: 52 programs at the veil and after the whole walk (2 new: the city's shader and its mirror variant; one existing pair changed one flag); new baseline saved (old kept as prog-keys-base-50.json); 27-stop walk 0 long frames; phone draw calls peak 85 (the Cyberpunk stop 38 to 35); check-all PASS.
 - Next queue: (1) phones frame every world case from far back (the default pull-back), so the city and the screens read small: try capping it for world stops; (2) the same idea for the other worlds that are objects (Round & Round, Robot Workbench, Fieldfold, Dead End Shop), once there are renders to build from.
+
+### Round 53 (2026-10-13): on phones every world case is framed close enough to read
+- Found (round 52 queue): a portrait phone pulled every world camera back up to 2.3x (the default pscale), so each case sat as a small box mid-frame: the new city model and every screen read small.
+- Tried on live (runtime cap on every world frame without its own cap): A, 1.4x: the case spans the frame width with a small margin, the city and the screens about 1.4x larger, the Launchboard screen readable. B, 1.15x: larger again, but the case's edges are cut off.
+- Change: A. slot() defaults pscale to 1.4 (the decks stop keeps 1.0, Singular already had 1.4). Desktop and landscape unchanged.
+- Verify: same 52 programs; 27-stop walk 0 long frames; check-all PASS. Spot checks: Cyberpunk, Launchboard, Round & Round, Robot Workbench, Dead End Shop on a phone.
+- Next queue: (1) on phones the case now sits low with the top third of the frame empty: aim the portrait camera a little lower at world stops so the case rises above the card; (2) objects for the other worlds once there are renders to build from.
