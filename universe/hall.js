@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import * as L from './layout.js';
 import { DECKS } from './data.js';
-import { Portal, capTexture, texAniso, phoneCopy, loadPicture } from './portal.js';
+import { Portal, capTexture, texAniso, phoneCopy, loadPicture, loadTexture } from './portal.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { makeMaterials, glowTexture, washTexture, beamTexture, gearGeometry, makeShaft, makeVitrine, roundedBox } from './parts.js';
@@ -222,7 +222,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
   centreGlow.rotation.x = -Math.PI/2; centreGlow.position.copy(L.RC); centreGlow.position.y = 0.08; root.add(centreGlow);
 
   /* ---------- stations ---------- */
-  let singularLoad = () => {};
+  let singularLoad = () => {}, cityLoad = () => {};
   const GEAR_M = 0.16;
   /* Gears are instanced (one draw per gear type). Each gear keeps its base matrix in
      the world and only its angle changes per frame. */
@@ -265,7 +265,8 @@ export function buildHall({scene, lite, perpetua, video = true}){
     const cfg = PORTALS[slot.id];
     const cy = L.VIT.h/2 - 0.2;
     const pz = -L.VIT.d/2 + 0.9;
-    if (cfg) {
+    if (cfg && slot.id === 'cyber') cityModel(g, cfg);
+    else if (cfg) {
       const portal = new Portal({...cfg, video:video ? cfg.video : undefined, plane:L.PORTAL.w/L.PORTAL.h, phase:i*1.7});
       const pm = new THREE.Mesh(new THREE.PlaneGeometry(L.PORTAL.w, L.PORTAL.h), portal.material);
       pm.position.set(0, cy, pz); g.add(pm); backs.push({obj:pm, z:0});
@@ -290,6 +291,43 @@ export function buildHall({scene, lite, perpetua, video = true}){
     axles.push({L:wL, R:wR, group:g});
     anchors.push({id:slot.id, label:null, kind:'world', pos:slot.pos.clone().add(new THREE.Vector3(0, L.VIT.h + 2.2, 0)), normal:slot.inward.clone()});
     return g;
+  }
+
+  /* Cyberpunk City: the case holds the block itself, not a picture of it. The 36 turntable renders of the real
+     model (cyberpunk/spin), their dark ground keyed out, are packed 6 x 6 into one picture. The plane turns to face
+     the camera and shows the render taken from that side, blending between neighbours, so moving past the case
+     moves round the block. Later frames are the camera further to the right (measured: the plinth's front slides
+     left from one frame to the next), hence the minus sign on the angle. */
+  function cityModel(g, cfg){
+    const stage = new THREE.Mesh(new THREE.PlaneGeometry(L.VIT.w - 0.6, L.VIT.d - 0.6), additive(glow, cfg.tint, 0.26));
+    stage.rotation.x = -Math.PI/2; stage.position.set(0, 0.05, 0); g.add(stage);
+    const clear = new THREE.DataTexture(new Uint8Array([0, 0, 0, 0]), 1, 1); clear.needsUpdate = true;
+    const W = 12, H = W*420/432, SINK = 0.085*H;     // a cell is 432 x 420; the plinth's lowest corner is 8.5% up it
+    const mat = new THREE.ShaderMaterial({transparent:true, depthWrite:false, toneMapped:false, fog:false, side:THREE.DoubleSide,
+      uniforms:{uMap:{value:clear}},
+      vertexShader:`varying vec2 vUv; varying float vFrame;
+        void main(){
+          vUv = uv;
+          vec3 c = (modelMatrix*vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+          vec2 to = normalize(cameraPosition.xz - c.xz), fr = normalize((modelMatrix*vec4(0.0, 0.0, 1.0, 0.0)).xz);
+          float a = atan(fr.x*to.y - fr.y*to.x, dot(fr, to));
+          vFrame = mod(36.0 - a/6.2831853*36.0, 36.0);
+          vec3 w = c + vec3(to.y, 0.0, -to.x)*position.x + vec3(0.0, position.y, 0.0);
+          gl_Position = projectionMatrix*viewMatrix*vec4(w, 1.0);
+        }`,
+      fragmentShader:`uniform sampler2D uMap; varying vec2 vUv; varying float vFrame;
+        vec4 cell(float i){ return texture2D(uMap, vec2((mod(i, 6.0) + vUv.x)/6.0, (5.0 - floor(i/6.0) + vUv.y)/6.0)); }
+        void main(){
+          if (vUv.y < 0.075) discard;      // under the plinth: stray floor reflections in the renders
+          float f0 = floor(vFrame);
+          vec4 c = mix(cell(f0), cell(mod(f0 + 1.0, 36.0)), vFrame - f0);
+          if (c.a < 0.02) discard;
+          gl_FragColor = c;
+          #include <colorspace_fragment>
+        }`});
+    const geo = new THREE.PlaneGeometry(W, H); geo.translate(0, H/2 - SINK, 0);
+    const m = new THREE.Mesh(geo, mat); m.renderOrder = 4; m.castShadow = false; g.add(m);
+    cityLoad = () => { const e = loadTexture('media/cyber-spin.webp', {cap:false}); const set = () => { mat.uniforms.uMap.value = e.tex; }; if (e.ready) set(); else e.onload = set; };
   }
 
   /* Dead End Shop: a projector beam inside the vitrine */
@@ -653,7 +691,7 @@ export function buildHall({scene, lite, perpetua, video = true}){
   let loadingStarted = false;
   function startLoading(){
     if (loadingStarted) return; loadingStarted = true;
-    singularLoad();
+    cityLoad(); singularLoad();
     // every vitrine's lead picture first, then the second and later pictures of the ones that cycle
     portals.forEach((p, i) => setTimeout(() => p.ensureLoaded(false), 60 + i*140));
     portals.forEach((p, i) => setTimeout(() => p.ensureLoaded(true), 60 + (portals.length + i)*140));

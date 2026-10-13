@@ -61,7 +61,7 @@ let gpu = null, maxSize = 0, aniso = 4;
    On phones every picture is capped at maxSize px wide (1024): 26 pictures at 1600 px with mipmaps are
    about 190 MB of GPU memory, at 1024 about 80 MB, and a portal never covers more than ~1000 device px. */
 // Phones fetch the 1024 px copy kept under m/ at the same path, instead of the full picture shrunk on the device.
-export const phoneCopy = url => maxSize === 1024 && /^(media|assets)[/][^/]+[.]jpg$/.test(url) ? 'm/' + url : null;
+export const phoneCopy = url => maxSize === 1024 && /^(media|assets)[/][^/]+[.](jpg|webp)$/.test(url) ? 'm/' + url : null;
 export function setRenderer(r, opts = {}){ gpu = r; maxSize = opts.maxSize || 0; aniso = opts.aniso || 4; }
 export const texAniso = () => aniso;
 export function capTexture(t){
@@ -85,12 +85,13 @@ export function bump(url){
   const i = queue.findIndex(j => j.url === url);
   if (i > 0) queue.unshift(queue.splice(i, 1)[0]);
 }
-export function loadTexture(url){
+// cap:false keeps a picture's own size on phones (an atlas whose phone copy is already sized for them)
+export function loadTexture(url, {cap = true} = {}){
   if (texCache.has(url)) return texCache.get(url);
   const entry = {tex:placeholder, aspect:16/9, ready:false};
   texCache.set(url, entry);
   const got = (t, done) => {
-    capTexture(t);
+    if (cap) capTexture(t);
     t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; t.generateMipmaps = true;
     entry.tex = t; entry.aspect = t.image.width / t.image.height; entry.ready = true; entry.onload?.();
     if (gpu) gpu.initTexture(t);
