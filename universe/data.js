@@ -24,7 +24,11 @@ export const WORLDS = [
   {id:'deadend', pin:'Dead End Shop', title:['Dead End','Shop'],
    line:'Music video. My song.', still:'media/deadend-kf20.jpg'},
   {id:'singular', pin:'Singular', title:['Singular'],
-   line:'A new design every day for 24 days.', still:'media/sing-museum.jpg'}
+   line:'A new design every day for 24 days.', still:'media/sing-museum.jpg'},
+  /* No case in the hall: the ring's open arc is the entrance, and a case there blocks the hall's opening shot.
+     Reached from the Worlds list and the plain links instead. */
+  {id:'moneymap', pin:'Money Map', title:['Money','Map'],
+   line:'Which New York nonprofits run on government money. 20,244 filings.', href:'money-map/'}
 ];
 
 export const DECKS = [

@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Money Map Method</title>
+<meta name="description" content="How the Nonprofit Money Map measures government revenue, overhead and pay from IRS Form 990 filings, and where the numbers are a lower bound.">
+<meta name="theme-color" content="#F6F6F3">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Jash Shah">
+<meta property="og:title" content="Money Map Method">
+<meta property="og:description" content="What counts as government money in the Nonprofit Money Map, every filter with its row count, and where the numbers are a lower bound.">
+<meta property="og:url" content="https://jashshah854-a11y.github.io/money-map/method.html">
+<meta property="og:image" content="https://jashshah854-a11y.github.io/media/share/moneymap.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://jashshah854-a11y.github.io/media/share/moneymap.jpg">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../universe/hallpill.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <a class="home" href="./">Nonprofit Money Map</a>
+    <span class="meta">New York · Tax year 2023 · 20,244 Form 990 filers</span>
+    <nav><a href="./">Back to the map</a></nav>
+  </header>
+
+  <main class="prose">
+    <h1>What counts as government money, and what does not</h1>
+    <p class="dek">The map uses each organization's own Form 990. This page lists the sources, every filter with its row count, each definition, and the limits.</p>
+
+    <div class="callout">
+      <p><b>Patterns, not verdicts.</b> A high government share says nothing about how well an organization uses the money. Many public services in New York are delivered by nonprofits under government contract, so a share near 100% is often the expected result.</p>
+    </div>
+
+    <h2>Sources</h2>
+    <ul>
+      <li><a href="https://www.irs.gov/pub/irs-soi/eo_ny.csv">IRS Exempt Organizations Business Master File, New York</a>: names, NTEE category codes and 501(c)(3) status.</li>
+      <li>Urban Institute NCCS e-file tables, version 3.1, public bucket <code>nccs-efile</code>: Form 990 Part VIII revenue (<code>F9-P08-T00-REVENUE</code>), Part VIII line 2 program revenue lines (<code>F9-P08-T01-REVENUE-PROGRAMS</code>) and Part IX expenses (<code>F9-P09-T00-EXPENSES</code>). NCCS parses these from the IRS e-file XML.</li>
+      <li><a href="https://www.irs.gov/pub/irs-soi/24eoextract990.zip">IRS annual Form 990 extract, 2024</a>: used only as a cross-check.</li>
+      <li><a href="https://projects.propublica.org/nonprofits/">ProPublica Nonprofit Explorer</a>: every organization links to its filings there.</li>
+    </ul>
+
+    <h2>Which filings are included</h2>
+    <table class="steps">
+      <thead><tr><th>Step</th><th style="text-align:right">Rows</th></tr></thead>
+      <tbody>
+        <tr><td>New York organizations in the IRS master file</td><td class="num">125,130</td></tr>
+        <tr><td>Of those, section 501(c)(3)</td><td class="num">107,063</td></tr>
+        <tr><td>NCCS revenue records for those organizations with a tax period ending in 2023</td><td class="num">30,109</td></tr>
+        <tr><td>Form 990 only (Form 990-EZ has no line 1e and no expense split)</td><td class="num">21,380</td></tr>
+        <tr><td>Revenue and expense records joined, latest filing per organization (amended returns replace originals)</td><td class="num">20,739</td></tr>
+        <tr><td>Total revenue and total expenses above zero</td><td class="num">20,255</td></tr>
+        <tr><td>Foreign organizations removed (EINs starting 98, for example a UK university with a New York address)</td><td class="num">20,244</td></tr>
+      </tbody>
+    </table>
+    <p>Tax year 2023 means a tax period ending in 2023. Paper filers are missing, because NCCS covers e-filed returns only. Since 2021 almost all Form 990 returns are filed electronically.</p>
+
+    <h2>Government share</h2>
+    <p>Government share = (government grants + government-named program revenue) ÷ total revenue.</p>
+    <ul>
+      <li><b>Government grants</b> are Part VIII, line 1e. Organizations report these on their own line.</li>
+      <li><b>Government-named program revenue</b> comes from Part VIII, line 2. Line 2 has no government checkbox, only a free-text description for each revenue line. A line counts as government when its description names a government payer or agency: Medicaid, Medicare, managed long-term care, HARP, the Essential Plan, Child Health Plus, per-pupil payments, a city, county, state or federal agency (for example NYC DOE, OPWDD, OMH, HUD), or the words "government contract". Lines that also say "private" or "non-government" do not count.</li>
+      <li><b>Total revenue</b> is Part VIII, line 12.</li>
+    </ul>
+    <p>Of 24,232 line 2 revenue lines worth $214.3B, $30.0B names a government payer, $102.1B is patient or medical revenue that names no payer, and $82.1B is other revenue such as tuition, rent and fees. 13 organizations come out above 100% (their total revenue is below their grants, for example after investment losses). They are shown as 100%. One organization reports negative government grants (a repayment); it counts as none and is shown as 0%.</p>
+
+    <div class="callout">
+      <p><b>Health figures are a lower bound.</b> Hospitals, clinics and home care agencies usually report one "patient service revenue" line that mixes Medicaid, Medicare and private insurance. The Form 990 does not split it, so that money is not counted as government. 334 health organizations, with $99.1B in revenue, get most of their revenue this way. Across all categories, 731 organizations report some payer-mixed patient revenue; the map marks their share with ≥.</p>
+    </div>
+
+    <h2>Overhead, staff pay and officer pay</h2>
+    <ul>
+      <li><b>Overhead</b> = management and general expenses plus fundraising expenses, ÷ total functional expenses (Part IX, line 25, columns C and D ÷ column A). Organizations allocate these costs themselves, so overhead is self-reported.</li>
+      <li><b>Staff pay share</b> = officer pay, pay to disqualified persons, other salaries and wages, pension contributions, other employee benefits and payroll taxes, ÷ total expenses (Part IX, lines 5 to 10).</li>
+      <li><b>Officer pay</b> = compensation of current officers, directors, trustees and key employees (Part IX, line 5), counting only organizations that pay any.</li>
+    </ul>
+
+    <h2>Peer groups</h2>
+    <p>Each organization is grouped by NTEE category (the first letter of its code) and revenue band: under $500K, $500K to $2M, $2M to $10M, $10M to $50M, and $50M and over. Inside each group, the median for organizations above 50% government is compared with the median for the rest. A group counts only if it has at least 10 organizations on each side. The map averages the group medians, weighted by the number of organizations above 50%. 44 groups qualify, covering 2,059 of the 2,836 organizations above 50%. The 2,912 organizations with no category code are left out of peer groups.</p>
+
+    <h2>Checks</h2>
+    <ul>
+      <li>For the 18,474 organizations in both NCCS and the IRS annual extract, total revenue matches exactly for 98.1%, total contributions for 98.4% and total expenses for 98.0%.</li>
+      <li>Three filings were checked against the original IRS XML: line 1e, total revenue, and management plus fundraising expenses all match.</li>
+      <li>Three organizations at the median, 95th and 99.9th revenue percentile match ProPublica's figures exactly.</li>
+    </ul>
+
+    <h2>Limits</h2>
+    <ul>
+      <li>One tax year. A single year can include one-time grants, such as late pandemic relief.</li>
+      <li>New York means a New York address in the IRS master file. Some organizations are based in New York but spend most of their money elsewhere. A few foreign organizations hold a US EIN and a New York address, so the 98- rule does not catch them (for example the University of Cambridge). They stay in the data as filed.</li>
+      <li>Government means federal, state and local together. The filing does not say which level paid.</li>
+      <li>The line 2 rules read descriptions written by each filer. They miss lines with vague wording, such as "contract revenue", so the government share is a lower bound for every category, not only health.</li>
+    </ul>
+
+    <h2>Rebuild it</h2>
+    <p>The pipeline is Python with DuckDB. Scripts: <code>load.py</code>, <code>join.py</code>, <code>pull_nccs.py</code>, <code>xcheck.py</code>, <code>pull_prog.py</code>, <code>classify.py</code>, <code>analyze2.py</code>, <code>finalize.py</code> and <code>export.py</code>. The NCCS tables are read over HTTP, so the full pipeline needs under 300 MB of disk. Built 21 October 2026.</p>
+  </main>
+
+  <footer>
+    <a href="./">Back to the map</a>
+    <span class="muted">Every organization links to its filing on ProPublica Nonprofit Explorer. Patterns, not verdicts.</span>
+  </footer>
+</div>
+<a class="hall-pill" href="../index.html#hall" data-at="bl" data-late><svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true"><path d="M15 6H2M6 1L1 6l5 5"/></svg>Back to the hall</a>
+<script src="../universe/hallpill.js"></script>
+</body>
+</html>

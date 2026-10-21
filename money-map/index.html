@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nonprofit Money Map</title>
+<meta name="description" content="How much of each New York nonprofit's revenue comes from government, from IRS Form 990 filings for tax year 2023.">
+<meta name="theme-color" content="#F6F6F3">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Jash Shah">
+<meta property="og:title" content="Nonprofit Money Map">
+<meta property="og:description" content="Most New York nonprofits take little government money. About 1 in 7 runs mostly on it. 20,244 Form 990 filings, tax year 2023.">
+<meta property="og:url" content="https://jashshah854-a11y.github.io/money-map/">
+<meta property="og:image" content="https://jashshah854-a11y.github.io/media/share/moneymap.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Chart of New York nonprofits by government share of revenue: a large group near zero and a second group above 90 percent.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Nonprofit Money Map">
+<meta name="twitter:description" content="Most New York nonprofits take little government money. About 1 in 7 runs mostly on it.">
+<meta name="twitter:image" content="https://jashshah854-a11y.github.io/media/share/moneymap.jpg">
+<meta name="twitter:image:alt" content="Chart of New York nonprofits by government share of revenue: a large group near zero and a second group above 90 percent.">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../universe/hallpill.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <a class="home" href="./">Nonprofit Money Map</a>
+    <span class="meta">New York · Tax year 2023 · <span data-n>20,244</span> Form 990 filers · <span class="mono">Part VIII, lines 1e &amp; 2</span></span>
+    <nav><a href="method.html">Method</a><a href="../index.html#hall">Back to the hall</a></nav>
+  </header>
+
+  <main>
+    <h1>Most New York nonprofits take little government money. About 1 in 7 runs mostly on it.</h1>
+    <p class="dek">Government grants and government-named program revenue as a share of each organization's total revenue. Source: IRS Form 990 e-filings, parsed by the Urban Institute's NCCS.</p>
+
+    <figure style="margin:0">
+      <figcaption class="fig-cap">
+        <span class="title">Government share of revenue, <span data-n>20,244</span> New York 501(c)(3) filers</span>
+        <span><span class="key"><i class="g"></i>50% or less</span><span class="key"><i class="r"></i>Above 50%</span></span>
+      </figcaption>
+      <div id="dist" role="img" aria-label="Distribution of New York nonprofits by government share of revenue. Most report none or under 10 percent; a second cluster gets over 90 percent.">
+        <p class="state">Loading the distribution…</p>
+        <div class="tip" aria-hidden="true"></div>
+      </div>
+      <details class="data"><summary>Show the numbers behind this chart</summary><div id="dist-table"></div></details>
+    </figure>
+
+    <div class="stats" id="stats"></div>
+
+    <section id="cats-sec">
+      <div class="head">
+        <div>
+          <h2>Where it concentrates</h2>
+          <p class="sub">Share of organizations in each category that get more than half their revenue from government.</p>
+        </div>
+      </div>
+      <table class="cats">
+        <thead><tr><th>Category</th><th colspan="2">Above 50% government</th><th style="text-align:right">Organizations</th><th class="stripcell">Spread, 0 to 100%</th></tr></thead>
+        <tbody id="cats"></tbody>
+      </table>
+      <div class="more"><button id="cats-more" type="button">Show all categories</button></div>
+    </section>
+
+    <section id="peers-sec">
+      <div class="head">
+        <div>
+          <h2>Compared with similar organizations</h2>
+          <p class="sub">Organizations above 50% government against peers in the same category and revenue band.</p>
+        </div>
+        <span class="muted" id="peer-groups" style="font-size:14px"></span>
+      </div>
+      <div class="peer-key"><span><i style="background:var(--graphite)"></i>Peers, 50% or less</span><span><i style="background:var(--gov)"></i>Above 50% government</span></div>
+      <div id="peers"></div>
+      <p class="fine" id="peer-note"></p>
+    </section>
+
+    <section id="find">
+      <div class="head">
+        <div>
+          <h2>Find an organization</h2>
+          <p class="sub">Search by name, EIN or category. Each row links to the organization's filings on ProPublica Nonprofit Explorer.</p>
+        </div>
+      </div>
+      <div class="tools">
+        <label class="sr" for="q">Search organizations</label>
+        <input id="q" type="search" placeholder="Search by name, EIN or category" autocomplete="off" disabled>
+        <label class="chk"><input id="only-hi" type="checkbox" disabled> Only above 50% government</label>
+        <span class="count" id="count" aria-live="polite"></span>
+      </div>
+      <table class="orgs">
+        <thead><tr>
+          <th><button type="button" data-sort="name">Organization</button></th>
+          <th class="ein"><button type="button" data-sort="ein">EIN</button></th>
+          <th><button type="button" data-sort="cat">Category</button></th>
+          <th class="num"><button type="button" data-sort="rev">Revenue</button></th>
+          <th class="gov"><button type="button" data-sort="gs">Government share</button></th>
+          <th class="num ovh"><button type="button" data-sort="overhead">Overhead</button></th>
+          <th class="num"><button type="button" data-sort="payShare">Staff pay share</button></th>
+          <th><span class="sr">Filing</span></th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <p class="state" id="table-state">Loading <span data-n>20,244</span> organizations…</p>
+      <div class="more"><button id="rows-more" type="button" hidden>Show 25 more</button></div>
+      <p class="fine">≥ marks a lower bound: the organization reports patient or medical revenue that names no payer, so some government money may be uncounted.</p>
+    </section>
+  </main>
+
+  <footer>
+    <a href="method.html">Method: what counts as government money, and what does not</a>
+    <span class="muted">Every organization links to its filing on ProPublica Nonprofit Explorer. Patterns, not verdicts.</span>
+  </footer>
+</div>
+<script src="app.js"></script>
+<a class="hall-pill" href="../index.html#hall" data-at="bl" data-late><svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true"><path d="M15 6H2M6 1L1 6l5 5"/></svg>Back to the hall</a>
+<script src="../universe/hallpill.js"></script>
+</body>
+</html>

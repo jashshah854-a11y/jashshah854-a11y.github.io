@@ -430,3 +430,9 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Tried: deployed 0.5 vs 1.0. Fully open lifts the arm higher; half folded keeps the arm mid-fold, which reads as the folding the card promises (the counsel's call too). Kept 0.5.
 - Verify: same 54 programs; 27-stop walk 0 long frames; phone draw calls peak 84, Fieldfold stop 34; check-all PASS.
 - Next queue: (1) unwrap the marble lift before decimating to cut its 2 MB mesh; (2) light motion for the object in focus (the arm's pick, one marble rolling, the fold), only if it stays at 0 long frames; (3) otherwise a fresh tour at both sizes.
+
+### 2026-10-21 (not a loop round): Money Map added at /money-map/
+- New sub-page from the Money Map chat: NY nonprofits by government share of revenue (IRS Form 990 via NCCS, TY2023). Static HTML/CSS/JS, data/orgs.json 1.8 MB. Own type identity (Public Sans, IBM Plex Mono); hall pill with data-late.
+- Linked from the hall's Worlds list and both plain-link lists (WORLDS entry with href, no case). A case was tried as an 11th slot after Singular and rejected: the ring's open arc is the entrance, and the hall camera stands outside the ring looking in, so the case's back covered the left fifth of the hall stop (desktop) and a large slab on phones. A case needs the ring re-laid out.
+- Lists updated: sitemap.mjs (+2 pages), loop-tools/pages.cjs (+2), fallback-verify.cjs expects 18 links. share-check.cjs gains money-map/ after deploy (its image is checked on live).
+- Verify: check-all 8/9 PASS on the full run; the 9th (fallback) failed only on the old 17-link count and passed after the update.

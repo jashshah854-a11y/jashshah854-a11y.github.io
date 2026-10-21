@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const SITE = 'https://jashshah854-a11y.github.io/';
 const PAGES = ['', 'perpetua/', 'cyberpunk/', 'corner-block/', 'corner-block/story/', 'launchboard/', 'mgmtio/index.html',
-  'round-and-round/', 'fieldfold/', 'workbench/', 'jev/',
+  'round-and-round/', 'fieldfold/', 'workbench/', 'jev/', 'money-map/', 'money-map/method.html',
   ...['russia-free-hand', 'houthis-saudi-pipeline', 'pakistan-india', 'right-question', 'agents-internet', 'over-engineering', 'posting-backfires'].map(s => `decks/${s}/index.html`)];
 
 const file = p => (p === '' || p.endsWith('/') ? p + 'index.html' : p);
