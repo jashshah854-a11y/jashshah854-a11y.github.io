@@ -19,6 +19,8 @@ const $ = s => document.querySelector(s);
 const bootTimes = {module:performance.now()};   // ms since navigation: before this is download and parse
 const params = new URLSearchParams(location.search);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches || params.has('stills');
+// The setting is read once at load, so a change mid-session reloads the page. The stop is kept in the hash.
+matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', () => { if (!params.has('stills')) location.reload(); });
 /* Device tier. A phone or tablet is any of: a touch-only pointer, a small viewport, or a mobile UA
    (iPadOS reports as a Mac, so touch points count too). The GPU probe below can only lower it. */
 const mq = q => matchMedia(q).matches;

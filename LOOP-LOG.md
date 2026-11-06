@@ -4,7 +4,7 @@ One verified change per round. Numbers are phone tier (390x844, iPhone UA) draw 
 Gate per round: no console errors; deep link, Back restore and back-to-hall pass at 390x844, 1366x768, 1440x900; all 14 stops reachable; live routes 200 after the Pages build.
 
 ## Backlog (top = next)
-- [ ] Reduced motion: the OS setting is read once at load (a mid-session change needs a reload). Launchboard has no prefers-reduced-motion rule.
+- [x] Reduced motion on the home page: a mid-session change now reloads into stills at the same stop (2026-11-06, portfolio rebuild). Launchboard still has no prefers-reduced-motion rule: it is a built Next export, so the fix belongs in its source, not here.
 - [x] Resume link: resume.pdf added 2026-10-11 (Resume B, Oct 2; public copy without phone, HubSpot or "AI-assisted"; source pf/resume-work).
 
 - [ ] Launchboard All launches window: 17 of 19 bars too narrow for their titles on phones (List tab shows them in full). Tried labels under narrow bars (worker K): rejected in review, read busier and still clipped at the screen edge. Needs a design call, not a patch.
@@ -436,3 +436,8 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Linked from the hall's Worlds list and both plain-link lists (WORLDS entry with href, no case). A case was tried as an 11th slot after Singular and rejected: the ring's open arc is the entrance, and the hall camera stands outside the ring looking in, so the case's back covered the left fifth of the hall stop (desktop) and a large slab on phones. A case needs the ring re-laid out.
 - Lists updated: sitemap.mjs (+2 pages), loop-tools/pages.cjs (+2), fallback-verify.cjs expects 18 links. share-check.cjs gains money-map/ after deploy (its image is checked on live).
 - Verify: check-all 8/9 PASS on the full run; the 9th (fallback) failed only on the old 17-link count and passed after the update.
+
+### Portfolio rebuild (2026-11-06, local commits, not yet published)
+- Phones: tapping a Worlds entry with no case in the hall (Money Map) flew to a stop that does not exist and did nothing. Entries without a stop now walk in at once (ui.js). The 14 camera stops are unchanged.
+- Worlds list and both plain-link lists gain Corner Block, Slides, Films and Log. fallback-verify.cjs link count and loop-tools/pages.cjs need the new pages added.
+- Gate (loop-tools/gate.cjs against a local server): PASS at 390x844, 1366x768, 1440x900.
