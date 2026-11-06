@@ -3,17 +3,42 @@
 <head>
 <meta charset="utf-8" />
 <script>
-// Phones run out of memory on the full city (iOS Safari kills the tab), so send them to the
-// lightweight Cyberpunk page before anything heavy starts. iOS always goes, even with ?force=1;
-// ?force=1 still opens the live city on every other device.
+// Phone gate. Phones keep the live city (the page picks its own phone tier) unless this device cannot
+// finish loading it; then they go to the video page, and that is remembered for 7 days.
+// ?video=1 sends anyone to the video page. ?force=1 and ?tier=full keep the city and skip every check.
 (function () {
   try {
+    var p = new URLSearchParams(location.search), V = '../cyberpunk/', D = 864e5, now = Date.now(), ls = null;
+    if (p.get('video') === '1') { location.replace(V); return; }
+    if (p.get('force') === '1' || p.get('tier') === 'full') return;
     var ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    if (ios) { location.replace('../cyberpunk/'); return; }
-    if (new URLSearchParams(location.search).get('force') === '1') return;
-    var coarse = window.matchMedia('(pointer: coarse)').matches;
-    var small = Math.min(screen.width, screen.height) < 820;
-    if (coarse && small) location.replace('../cyberpunk/');
+    if (!ios && !(matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 820)) return;
+    try { ls = localStorage; } catch (e) {}
+    var g = function (k) { try { return ls.getItem(k); } catch (e) { return null; } };
+    var s = function (k, v) { try { ls.setItem(k, v); } catch (e) {} };
+    var go = function (mem) { if (mem) s('cb-phone-fallback', now + 7 * D); location.replace(V); };
+    if (+g('cb-phone-fallback') > now) return go();
+    if (navigator.deviceMemory < 4) return go();
+    var gl = document.createElement('canvas').getContext('webgl2');
+    if (!gl) return go();
+    var x = gl.getExtension('WEBGL_lose_context'); if (x) x.loseContext();
+    // The last phone attempt never drew a frame (cb352.run still says loading) and the page was not closed on purpose.
+    var t = +g('cb-phone-try'), left = +g('cb-phone-left'), r = null;
+    try { r = JSON.parse(g('cb352.run')); } catch (e) {}
+    if (r && r.loading && t && now - t < D && !(left >= t)) return go(1);
+    s('cb-phone-try', now);
+    addEventListener('pagehide', function () { s('cb-phone-left', Date.now()); });
+    // Watchdog: 150 s of visible wall-clock time without a drawn frame (timers can be late while the page builds, so count time, not ticks).
+    var lim = +p.get('cbwd'), max = (lim > 0 && lim < 150 ? lim : 150) * 1000, seen = 0, since = document.hidden ? 0 : now;
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { if (since) seen += Date.now() - since; since = 0; } else since = Date.now();
+    });
+    var h = setInterval(function () {
+      var c = (window.__CB__ && window.__CB__.renderer) || (window.__PHONE352__ && window.__PHONE352__.renderer);
+      var i = c && c.info && c.info.render;
+      if (i && (i.calls > 0 || i.frame > 0)) { clearInterval(h); return; }
+      if (seen + (since ? Date.now() - since : 0) >= max) { clearInterval(h); go(1); }
+    }, 1000);
   } catch (e) { /* fall through to the live city */ }
 })();
 </script>
@@ -172,11 +197,11 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Corner Block — a live cyberpunk intersection</title>
-<meta name="description" content="A rain-soaked cyberpunk city block you can orbit and zoom, running live in the browser. Best on a desktop; phones get a recorded version.">
+<meta name="description" content="A rain-soaked cyberpunk city block you can orbit and zoom, running live in the browser. Best on a desktop; newer phones get a lighter version and the rest a recording.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Jash Shah">
 <meta property="og:title" content="Corner Block">
-<meta property="og:description" content="A rain-soaked cyberpunk city block you can orbit and zoom, running live in the browser. Best on a desktop; phones get a recorded version.">
+<meta property="og:description" content="A rain-soaked cyberpunk city block you can orbit and zoom, running live in the browser. Best on a desktop; newer phones get a lighter version and the rest a recording.">
 <meta property="og:url" content="https://jashshah854-a11y.github.io/corner-block/">
 <meta property="og:image" content="https://jashshah854-a11y.github.io/media/corner-block-share.jpg">
 <meta property="og:image:type" content="image/jpeg">
@@ -185,7 +210,7 @@
 <meta property="og:image:alt" content="The Corner Block, a lit isometric cyberpunk city block on a dark plinth, with a red dragon hologram and an airship above it.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Corner Block">
-<meta name="twitter:description" content="A rain-soaked cyberpunk city block you can orbit and zoom, running live in the browser. Best on a desktop; phones get a recorded version.">
+<meta name="twitter:description" content="A rain-soaked cyberpunk city block you can orbit and zoom, running live in the browser. Best on a desktop; newer phones get a lighter version and the rest a recording.">
 <meta name="twitter:image" content="https://jashshah854-a11y.github.io/media/corner-block-share.jpg">
 <meta name="twitter:image:alt" content="The Corner Block, a lit isometric cyberpunk city block on a dark plinth, with a red dragon hologram and an airship above it.">
 <style>
@@ -20623,11 +20648,29 @@ await (async function run340hHolo() {
       const st2 = st + du + .12 + hash(k, 13) * .2, du2 = .07 + hash(k, 14) * .1; if (hash(k, 15) > .55 && u > st2 && u < st2 + du2) { g = .75; sd = k * 3.7 + 40 + Math.floor((u - st2) * 24); }
       GL[0] = g; GL[1] = sd; return GL; };
     let lastT = NaN;
+    /* RUN362F_FOLLOW: the figure turns to face the active camera (default on; ?follow=0 gives the old timer sway). Ported from the walk prototype (diorama-walk/walk.js era patch).
+       Target = bearing figure -> camera + h340fwd. It notices after 0.7 s (it chases the target from 0.7 s ago), then a critically damped turn (smooth-damp) capped at 40 deg/s,
+       shortest way round. Wall-clock time, so it also runs while the sim is paused. No extra draw calls: only fgrp.rotation.y changes. */
+    const FQ = new URLSearchParams(location.search), FOLLOW = FQ.get('follow') !== '0';
+    const F = { on: FOLLOW, off: parseFloat(FQ.get('h340fwd')) || 0, cur: YAW0, vel: 0, q: [], t0: performance.now(), tgt: 0 };
+    const wrapA = a => { a = (a + Math.PI) % (2 * Math.PI); if (a < 0) a += 2 * Math.PI; return a - Math.PI; };
+    const follow = () => {
+      const now = performance.now(), dt = Math.min(.1, (now - F.t0) / 1000); F.t0 = now; if (dt <= 0) return;
+      const dx = camera.position.x - SX, dz = camera.position.z - SZ; F.tgt = Math.atan2(dx, dz) + F.off;
+      F.q.push([now, F.tgt]); let a = F.q[0][1]; while (F.q.length > 1 && F.q[1][0] <= now - 700) F.q.shift(); a = F.q[0][0] <= now - 700 ? F.q[0][1] : F.cur;
+      const ST = .55, MAXV = 40 * Math.PI / 180, om = 2 / ST, x = om * dt, ex = 1 / (1 + x + .48 * x * x + .235 * x * x * x);
+      let ch = -wrapA(a - F.cur); const mc = MAXV * ST; ch = Math.max(-mc, Math.min(mc, ch));
+      const tmp = (F.vel + om * ch) * dt; F.vel = (F.vel - om * tmp) * ex; F.vel = Math.max(-MAXV, Math.min(MAXV, F.vel));
+      F.cur = wrapA((F.cur - ch) + (ch + tmp) * ex);
+      fgrp.rotation.y = F.cur; fgrp.updateMatrixWorld(true);
+    };
+    window.__HOLO_FOLLOW__ = F;
     const upd = t => {
+      if (F.on) follow();
       if (t === lastT) return; lastT = t;
       U.uT.value = t % 1024; const gl = glitchAt(t); U.uGlitch.value = gl[0]; U.uSeed.value = gl[1] % 4096;
       U.uPose.value = sm01(.5 - .5 * Math.cos(t * .13 + .4));
-      fgrp.rotation.y = YAW0 + .85 * Math.sin(t * .07) + .15 * Math.sin(t * .19 + 1.0); fgrp.updateMatrixWorld(true);
+      if (!F.on) { fgrp.rotation.y = YAW0 + .85 * Math.sin(t * .07) + .15 * Math.sin(t * .19 + 1.0); fgrp.updateMatrixWorld(true); }
       mLed.emissiveIntensity = 2.1 + .55 * Math.sin(t * 1.7) + .3 * Math.sin(t * 4.3 + 1);
     };
     upd(0);
