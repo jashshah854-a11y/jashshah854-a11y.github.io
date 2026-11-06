@@ -35,6 +35,8 @@ export const WORLDS = [
    line:'The live city: one block at 2:14 AM in the rain, to orbit and explore.', href:'corner-block/'},
   {id:'slides', pin:'Slides', title:['Slides'],
    line:'Seven interactive decks, each its own small machine.', href:'slides/'},
+  {id:'films', pin:'Films', title:['Films'],
+   line:'Short films on stories in the news.', href:'films/'},
   {id:'log', pin:'Log', title:['Log'],
    line:'What I made, and when.', href:'log/'}
 ];
