@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slides | Jash Shah</title>
+<meta name="description" content="Seven interactive decks by Jash Shah on geopolitics, AI agents and how people decide. Each one runs in the browser on a phone or a laptop.">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../universe/page.css">
+<link rel="stylesheet" href="../universe/frame.css">
+<style>
+.decks{margin-top:clamp(48px,8vw,110px)}
+.deck{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(24px,4vw,64px);align-items:center;padding:clamp(24px,3vw,48px) 0}
+.deck.alt{grid-template-columns:minmax(0,5fr) minmax(0,7fr)}
+.deck.alt .shot{order:2}
+.shot{display:block;border-radius:6px;overflow:hidden;background:var(--raise)}
+.shot img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover}
+@media (hover:hover) and (pointer:fine){.shot img{transition:transform .6s cubic-bezier(0,0,.2,1)}.shot:hover img{transform:scale(1.03)}}
+.txt h2{margin:0;font:400 clamp(32px,4.4vw,56px)/1.02 var(--serif);letter-spacing:-.015em;max-width:16ch;text-wrap:balance}
+.txt h2 a{text-decoration:none}
+.txt p{margin:16px 0 0;max-width:42ch;color:var(--muted)}
+.open{display:inline-flex;align-items:center;gap:10px;min-height:44px;margin-top:18px;padding:0 20px;border-radius:999px;background:var(--gold);color:var(--night);font-weight:600;font-size:16px;text-decoration:none}
+@media (hover:hover) and (pointer:fine){.open:hover{background:#d8b36b;color:var(--night)}}
+@media (max-width:760px){.deck,.deck.alt{grid-template-columns:minmax(0,1fr);gap:18px;padding:22px 0}.deck.alt .shot{order:0}.open{width:100%;justify-content:center}}
+@media (prefers-reduced-motion:reduce){.shot img{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="../index.html" aria-label="Jash Shah, home">
+      <svg width="38" height="26" viewBox="0 0 38 26" fill="none" stroke="#efeee8" stroke-width="1.8" aria-hidden="true"><path d="M19 13C14 3 4 3 4 13s10 10 15 0S34 3 34 13s-10 10-15 0Z"/></svg>
+      <span>Jash Shah</span>
+    </a>
+    <a class="back" href="../index.html#decks"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 8H3M7 4L3 8l4 4"/></svg>Back to the hall</a>
+  </header>
+  <main id="main">
+    <h1>Seven decks. Each its own small machine.</h1>
+    <p class="lede">Open one and it runs in your browser, on a phone or a laptop.</p>
+    <div class="decks">
+  <article class="deck">
+    <a class="shot" href="../decks/russia-free-hand/index.html" tabindex="-1" aria-hidden="true"><img src="../decks/russia-free-hand/cover.jpg" width="1672" height="941" alt="" loading="eager" decoding="async"></a>
+    <div class="txt"><h2><a href="../decks/russia-free-hand/index.html">Russia has a free hand. In the air.</a></h2><p>Scenario analysis of Russia's strike campaign on Kyiv and what still constrains it, as of 3 October 2026.</p><a class="open" href="../decks/russia-free-hand/index.html">Open the deck<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a></div>
+  </article>
+  <article class="deck alt">
+    <a class="shot" href="../decks/houthis-saudi-pipeline/index.html" tabindex="-1" aria-hidden="true"><img src="../decks/houthis-saudi-pipeline/cover.jpg" width="1672" height="941" alt="" loading="eager" decoding="async"></a>
+    <div class="txt"><h2><a href="../decks/houthis-saudi-pipeline/index.html">The bypass is under fire at both ends.</a></h2><p>Saudi Arabia routed its oil around Hormuz through a 1,200 km pipe to the Red Sea. In 2026 both the strait and the detour came under attack.</p><a class="open" href="../decks/houthis-saudi-pipeline/index.html">Open the deck<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a></div>
+  </article>
+  <article class="deck">
+    <a class="shot" href="../decks/pakistan-india/index.html" tabindex="-1" aria-hidden="true"><img src="../decks/pakistan-india/cover.jpg" width="1672" height="941" alt="" loading="lazy" decoding="async"></a>
+    <div class="txt"><h2><a href="../decks/pakistan-india/index.html">Two gates. One river.</a></h2><p>Pakistan and India, sixteen months after the four-day war: each side's account, what is verified, and what the Indus treaty does.</p><a class="open" href="../decks/pakistan-india/index.html">Open the deck<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a></div>
+  </article>
+  <article class="deck alt">
+    <a class="shot" href="../decks/right-question/index.html" tabindex="-1" aria-hidden="true"><img src="../decks/right-question/cover.jpg" width="1672" height="941" alt="" loading="lazy" decoding="async"></a>
+    <div class="txt"><h2><a href="../decks/right-question/index.html">The right question</a></h2><p>Most hard problems are hard because the question is too wide. Change the mesh and the pour changes what it keeps.</p><a class="open" href="../decks/right-question/index.html">Open the deck<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a></div>
+  </article>
+  <article class="deck">
+    <a class="shot" href="../decks/agents-internet/index.html" tabindex="-1" aria-hidden="true"><img src="../decks/agents-internet/cover.jpg" width="1672" height="941" alt="" loading="lazy" decoding="async"></a>
+    <div class="txt"><h2><a href="../decks/agents-internet/index.html">The internet is getting a second user.</a></h2><p>Your company's agent will talk to their company's agent. A deck about the space between us becoming something AI runs, with the protocols that already exist.</p><a class="open" href="../decks/agents-internet/index.html">Open the deck<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a></div>
+  </article>
+  <article class="deck alt">
+    <a class="shot" href="../decks/over-engineering/index.html" tabindex="-1" aria-hidden="true"><img src="../decks/over-engineering/cover.jpg" width="1672" height="941" alt="" loading="lazy" decoding="async"></a>
+    <div class="txt"><h2><a href="../decks/over-engineering/index.html">Everything is possible. That is the problem.</a></h2><p>When building is nearly free, the danger is carrying too much. A watch movement shows what every extra part costs, and a sundial shows what is left when you chuck it.</p><a class="open" href="../decks/over-engineering/index.html">Open the deck<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a></div>
+  </article>
+  <article class="deck">
+    <a class="shot" href="../decks/posting-backfires/index.html" tabindex="-1" aria-hidden="true"><img src="../decks/posting-backfires/cover.jpg" width="1672" height="941" alt="" loading="lazy" decoding="async"></a>
+    <div class="txt"><h2><a href="../decks/posting-backfires/index.html">Posting about it can kill the sale.</a></h2><p>Five experiments on why sharing a product you love can make you less likely to buy it, told as a live-sound feedback loop where every post raises the gain.</p><a class="open" href="../decks/posting-backfires/index.html">Open the deck<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a></div>
+  </article>
+    </div>
+  </main>
+</div>
+<script src="../universe/frame.js" data-footer></script>
+</body>
+</html>
