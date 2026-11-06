@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Films | Jash Shah</title>
+<meta name="description" content="Short films by Jash Shah on stories in the news. Each one has its sources in its post on X.">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../universe/page.css">
+<link rel="stylesheet" href="../universe/frame.css">
+<style>
+h1{font-size:clamp(40px,5.2vw,68px)}
+.films{margin-top:clamp(24px,4vw,48px);display:grid;gap:clamp(48px,7vw,96px)}
+.film{width:min(100%,calc((100svh - 250px)*16/9));min-width:min(100%,320px)}
+.player{position:relative;display:block;width:100%;padding:0;border:0;border-radius:6px;overflow:hidden;background:var(--raise);cursor:pointer;aspect-ratio:16/9;color:var(--paper)}
+.player img,.film video{display:block;width:100%;height:100%;object-fit:cover;aspect-ratio:16/9;background:#000}
+.film video{border-radius:6px}
+.play{position:absolute;right:clamp(12px,2vw,24px);bottom:clamp(12px,2vw,24px);display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 18px 0 14px;border-radius:999px;background:var(--gold);color:var(--night);font:600 16px var(--sans);font-variant-numeric:tabular-nums}
+@media (hover:hover) and (pointer:fine){.player img{transition:transform .6s cubic-bezier(0,0,.2,1)}.player:hover img{transform:scale(1.02)}.player:hover .play{background:#d8b36b}}
+.meta{margin-top:18px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 32px;align-items:start}
+.meta h2{grid-column:1/-1;margin:0;font:400 clamp(30px,3.8vw,48px)/1.04 var(--serif);letter-spacing:-.015em;max-width:26ch;text-wrap:balance}
+.meta p{margin:0;max-width:60ch}
+.meta .by{display:flex;flex-direction:column;align-items:flex-end;gap:0;color:var(--muted);text-align:right;font-size:15px}
+.meta .by a{color:var(--paper);display:inline-flex;align-items:center;min-height:44px}
+@media (min-width:1024px){.film{width:100%;display:grid;grid-template-columns:minmax(0,8fr) minmax(0,5fr);gap:clamp(32px,4vw,64px);align-items:start}.meta{margin-top:0;grid-template-columns:minmax(0,1fr);gap:14px}.meta .by{align-items:flex-start;text-align:left;margin-top:6px}}
+@media (max-width:760px){.meta{grid-template-columns:minmax(0,1fr)}.meta .by{align-items:flex-start;text-align:left;flex-direction:row;flex-wrap:wrap;gap:0 20px}}
+@media (prefers-reduced-motion:reduce){.player img{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="../index.html" aria-label="Jash Shah, home">
+      <svg width="38" height="26" viewBox="0 0 38 26" fill="none" stroke="#efeee8" stroke-width="1.8" aria-hidden="true"><path d="M19 13C14 3 4 3 4 13s10 10 15 0S34 3 34 13s-10 10-15 0Z"/></svg>
+      <span>Jash Shah</span>
+    </a>
+    <a class="back" href="../index.html#hall"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 8H3M7 4L3 8l4 4"/></svg>Back to the hall</a>
+  </header>
+  <main id="main">
+    <h1>Two-minute films.</h1>
+    <div class="films">
+    <article class="film" id="tech-rout-2026-11">
+      <button class="player" type="button" data-src="tech-rout-2026-11/film.mp4" data-poster="tech-rout-2026-11/poster.jpg" aria-label="Play: The worst day for US chip stocks since March 2020"><img src="tech-rout-2026-11/poster.jpg" width="1280" height="720" alt="" loading="eager" decoding="async"><span class="play" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 1.5v13l11-6.5z" fill="currentColor"/></svg>1:55</span></button>
+      <div class="meta"><h2>The worst day for US chip stocks since March 2020</h2><p>Analysts blamed fears that Democrats will curb data center building, above all in Texas.</p><p class="by"><time datetime="2026-11-06">6 Nov 2026</time><a href="https://x.com/JashShah1028160/status/2118774204409524613" rel="noopener noreferrer">Sources and credits on X</a></p></div>
+    </article>
+    <article class="film" id="undersea-cables-2026-11">
+      <button class="player" type="button" data-src="undersea-cables-2026-11/film.mp4" data-poster="undersea-cables-2026-11/poster.jpg" aria-label="Play: The internet is about 600 cables on the sea floor"><img src="undersea-cables-2026-11/poster.jpg" width="1280" height="720" alt="" loading="lazy" decoding="async"><span class="play" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 1.5v13l11-6.5z" fill="currentColor"/></svg>2:19</span></button>
+      <div class="meta"><h2>The internet is about 600 cables on the sea floor</h2><p>On Christmas Day 2024, a tanker dragged its anchor at least 90 km across the Gulf of Finland. Five cables broke.</p><p class="by"><time datetime="2026-11-05">5 Nov 2026</time><a href="https://x.com/JashShah1028160/status/2118464227929178616" rel="noopener noreferrer">Sources and credits on X</a></p></div>
+    </article>
+    <article class="film" id="hormuz-pass-list-2026-11">
+      <button class="player" type="button" data-src="hormuz-pass-list-2026-11/film.mp4" data-poster="hormuz-pass-list-2026-11/poster.jpg" aria-label="Play: A Hormuz exemption list that nobody has published"><img src="hormuz-pass-list-2026-11/poster.jpg" width="1280" height="720" alt="" loading="lazy" decoding="async"><span class="play" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 1.5v13l11-6.5z" fill="currentColor"/></svg>2:03</span></button>
+      <div class="meta"><h2>A Hormuz exemption list that nobody has published</h2><p>A viral headline says Iran exempts India, China, Iraq and Qatar from Hormuz restrictions. It traces to one Iranian lawmaker, via Iranian media.</p><p class="by"><time datetime="2026-11-05">5 Nov 2026</time><a href="https://x.com/JashShah1028160/status/2118345054968500562" rel="noopener noreferrer">Sources and credits on X</a></p></div>
+    </article>
+    <article class="film" id="india-poverty-2026-11">
+      <button class="player" type="button" data-src="india-poverty-2026-11/film.mp4" data-poster="india-poverty-2026-11/poster.jpg" aria-label="Play: About 500 million Indians crossed the $4.20-a-day line"><img src="india-poverty-2026-11/poster.jpg" width="1280" height="720" alt="" loading="lazy" decoding="async"><span class="play" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 1.5v13l11-6.5z" fill="currentColor"/></svg>1:56</span></button>
+      <div class="meta"><h2>About 500 million Indians crossed the $4.20-a-day line</h2><p>The World Bank says about 500 million Indians crossed its $4.20-a-day poverty line in 12 years. But India published no household survey for 11 of those years, and the method changed.</p><p class="by"><time datetime="2026-11-05">5 Nov 2026</time><a href="https://x.com/JashShah1028160/status/2118345273084875062" rel="noopener noreferrer">Sources and credits on X</a></p></div>
+    </article>
+    <article class="film" id="real-buddha-2026-11">
+      <button class="player" type="button" data-src="real-buddha-2026-11/film.mp4" data-poster="real-buddha-2026-11/poster.jpg" aria-label="Play: The Buddha, before the statues"><img src="real-buddha-2026-11/poster.jpg" width="1280" height="720" alt="" loading="lazy" decoding="async"><span class="play" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 1.5v13l11-6.5z" fill="currentColor"/></svg>2:14</span></button>
+      <div class="meta"><h2>The Buddha, before the statues</h2><p>One line on a stone pillar at Lumbini, carved for the emperor Ashoka: &quot;Here the Buddha, the sage of the Sakyas, was born.&quot; No palace. No golden statue.</p><p class="by"><time datetime="2026-11-02">2 Nov 2026</time><a href="https://x.com/JashShah1028160/status/2117403527555551390" rel="noopener noreferrer">Sources and credits on X</a></p></div>
+    </article>
+    </div>
+  </main>
+</div>
+<script>
+(function(){
+  var cur=null;
+  document.querySelectorAll('.player').forEach(function(b){
+    b.addEventListener('click',function(){
+      var v=document.createElement('video');
+      v.controls=true;v.autoplay=true;v.playsInline=true;v.preload='auto';v.poster=b.dataset.poster;v.src=b.dataset.src;
+      v.setAttribute('aria-label',b.getAttribute('aria-label').replace('Play: ',''));
+      if(cur&&cur!==v)cur.pause();
+      cur=v;b.replaceWith(v);v.focus();
+    });
+  });
+})();
+</script>
+<script src="../universe/frame.js" data-footer></script>
+</body>
+</html>
