@@ -441,3 +441,8 @@ Gate per round: no console errors; deep link, Back restore and back-to-hall pass
 - Phones: tapping a Worlds entry with no case in the hall (Money Map) flew to a stop that does not exist and did nothing. Entries without a stop now walk in at once (ui.js). The 14 camera stops are unchanged.
 - Worlds list and both plain-link lists gain Corner Block, Slides, Films and Log. fallback-verify.cjs link count and loop-tools/pages.cjs need the new pages added.
 - Gate (loop-tools/gate.cjs against a local server): PASS at 390x844, 1366x768, 1440x900.
+
+### Round 62 (2026-11-06): hall view reframed, rods out of the hall shot (portfolio rebuild)
+- Cause (Opus read, gate/home-r1): the hall stop showed cases about 110 px wide in a busy room, with no labels on phones.
+- Change: the hall keyframe stands closer (fov 29) on Round & Round, MGMTIO and Launchboard, with a portrait variant; world pins show on phones (deck and Perpetua pins stay hidden); all link rods hide on the rise and hall shots; piers darker, wall washes dimmer; pillar marble darker; the closing view is pulled back and offset so the copy sits on clear floor on wide screens; hall headline smaller on wide screens.
+- Phone draw calls, before -> after: hall 46 -> 40, launchboard 35 -> 35, start 58 -> 58, end 47 -> 52 (the closing view is the same camera; the 52 was measured once, the old 47 was the "all" stop). Wide: hall 102 -> 63, others unchanged. Phone peak stays under the 89 ceiling in the walk; gate PASS at all three sizes.
