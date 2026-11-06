@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Log | Jash Shah</title>
+<meta name="description" content="Dated work by Jash Shah: films, builds, decks and experiments, newest first.">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../universe/page.css">
+<link rel="stylesheet" href="../universe/frame.css">
+<style>
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-top:36px}
+.filters button{min-height:44px;padding:0 18px;border-radius:999px;border:0;background:var(--raise);color:var(--paper);font:500 15px var(--sans);cursor:pointer}
+.filters button[aria-pressed=true]{background:var(--gold);color:var(--night)}
+@media (hover:hover) and (pointer:fine){.filters button[aria-pressed=false]:hover{background:#26251e}}
+.month{margin:clamp(56px,9vw,120px) 0 0;font:400 clamp(40px,7vw,84px)/1 var(--serif);letter-spacing:-.02em;color:var(--gold)}
+.entries{list-style:none;margin:0;padding:0}
+.entry{display:grid;grid-template-columns:minmax(80px,150px) minmax(0,1fr);gap:4px 28px;padding:28px 0 0}
+.entry[hidden]{display:none}
+.entry time{font:400 clamp(28px,4vw,44px)/1 var(--serif);color:var(--paper);font-variant-numeric:tabular-nums}
+.entry h2{margin:0;font:400 clamp(28px,4vw,44px)/1.05 var(--serif);letter-spacing:-.01em;max-width:24ch}
+.entry h2 a{text-decoration:none}
+@media (hover:hover) and (pointer:fine){.entry h2 a:hover{text-decoration:underline;text-decoration-color:var(--gold);text-underline-offset:6px}}
+.entry p{margin:10px 0 0;max-width:60ch;color:var(--paper)}
+.entry .kind{color:var(--muted);font-size:15px}
+.empty{margin-top:48px;color:var(--muted)}
+@media (max-width:640px){.entry{grid-template-columns:minmax(0,1fr);padding-top:36px}.entry time{font-size:24px;color:var(--gold)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="../index.html" aria-label="Jash Shah, home">
+      <svg width="38" height="26" viewBox="0 0 38 26" fill="none" stroke="#efeee8" stroke-width="1.8" aria-hidden="true"><path d="M19 13C14 3 4 3 4 13s10 10 15 0S34 3 34 13s-10 10-15 0Z"/></svg>
+      <span>Jash Shah</span>
+    </a>
+    <a class="back" href="../index.html#hall"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 8H3M7 4L3 8l4 4"/></svg>Back to the hall</a>
+  </header>
+  <main id="main">
+    <h1>What I made, and when.</h1>
+    <p class="lede">Films, builds, decks and experiments, newest first. Every entry links to the thing itself.</p>
+    <div class="filters" role="group" aria-label="Filter by kind" id="filters" hidden>
+      <button type="button" data-kind="all" aria-pressed="true">All</button>
+      <button type="button" data-kind="film" aria-pressed="false">Films</button>
+      <button type="button" data-kind="build" aria-pressed="false">Builds</button>
+      <button type="button" data-kind="deck" aria-pressed="false">Decks</button>
+      <button type="button" data-kind="experiment" aria-pressed="false">Experiments</button>
+    </div>
+    <div id="log"><!--log:start--><h2 class="month">November 2026</h2><ul class="entries"><li class="entry" data-kind="film"><time datetime="2026-11-06">6 Nov</time><div><h2><a href="https://x.com/JashShah1028160/status/2118774204409524613" rel="noopener noreferrer">The worst day for US chip stocks since March 2020</a></h2><p>Analysts blamed fears that Democrats will curb data center building, above all in Texas. A two-minute film on what is known. <span class="kind">Film, on X</span></p></div></li><li class="entry" data-kind="film"><time datetime="2026-11-05">5 Nov</time><div><h2><a href="https://x.com/JashShah1028160/status/2118464227929178616" rel="noopener noreferrer">The internet is about 600 cables on the sea floor</a></h2><p>On Christmas Day 2024 a tanker dragged its anchor at least 90 km across the Gulf of Finland and five cables broke. A two-minute film on why they keep getting cut. <span class="kind">Film, on X</span></p></div></li><li class="entry" data-kind="film"><time datetime="2026-11-05">5 Nov</time><div><h2><a href="https://x.com/JashShah1028160/status/2118345054968500562" rel="noopener noreferrer">A Hormuz exemption list that nobody has published</a></h2><p>A viral headline said Iran exempts India, China, Iraq and Qatar. It traces to one Iranian lawmaker, with no published list and no Reuters or AP report. <span class="kind">Film, on X</span></p></div></li><li class="entry" data-kind="film"><time datetime="2026-11-05">5 Nov</time><div><h2><a href="https://x.com/JashShah1028160/status/2118345273084875062" rel="noopener noreferrer">About 500 million Indians crossed the $4.20-a-day line</a></h2><p>The World Bank says it took 12 years. India published no household survey for 11 of them, and the method changed. <span class="kind">Film, on X</span></p></div></li><li class="entry" data-kind="film"><time datetime="2026-11-02">2 Nov</time><div><h2><a href="https://x.com/JashShah1028160/status/2117403527555551390" rel="noopener noreferrer">The Buddha, before the statues</a></h2><p>One line on a stone pillar at Lumbini names his birthplace. A film on what the oldest texts say about the man. <span class="kind">Film, on X</span></p></div></li></ul><h2 class="month">October 2026</h2><ul class="entries"><li class="entry" data-kind="build"><time datetime="2026-10-21">21 Oct</time><div><h2><a href="../money-map/">Nonprofit Money Map</a></h2><p>Most New York nonprofits take little government money. About 1 in 7 runs mostly on it. Built from 20,244 Form 990 filers. <span class="kind">Build</span></p></div></li><li class="entry" data-kind="experiment"><time datetime="2026-10-11">11 Oct</time><div><h2><a href="../index.html">The machine loads faster on phones</a></h2><p>Boot files now load in parallel. First content on a throttled 4G phone fell from 2,527 ms to 2,235 ms. <span class="kind">Experiment</span></p></div></li><li class="entry" data-kind="build"><time datetime="2026-10-11">11 Oct</time><div><h2><a href="../resume.pdf">Resume added to the hall</a></h2><p>A public PDF copy of my resume, linked from the home page. <span class="kind">Build</span></p></div></li><li class="entry" data-kind="build"><time datetime="2026-10-03">3 Oct</time><div><h2><a href="../cyberpunk/">Cyberpunk City</a></h2><p>Walk into the live Corner Block diorama. <span class="kind">Build</span></p></div></li><li class="entry" data-kind="deck"><time datetime="2026-10-03">3 Oct</time><div><h2><a href="../index.html#decks">The universe home and seven interactive decks</a></h2><p>The first version of this site: one machine to walk through, and seven decks, each its own small machine. <span class="kind">Deck</span></p></div></li></ul><!--log:end--></div>
+    <p class="empty" id="empty" hidden>Nothing of that kind yet.</p>
+  </main>
+</div>
+<script>
+(function(){
+  var f=document.getElementById('filters'); f.hidden=false;
+  var btns=f.querySelectorAll('button'), entries=document.querySelectorAll('.entry'), months=document.querySelectorAll('.month');
+  function apply(k){
+    btns.forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.kind===k));});
+    var any=false;
+    entries.forEach(function(e){var on=k==='all'||e.dataset.kind===k;e.hidden=!on;if(on)any=true;});
+    months.forEach(function(m){var ul=m.nextElementSibling;var vis=ul&&ul.querySelector('.entry:not([hidden])');m.hidden=!vis;ul.hidden=!vis;});
+    document.getElementById('empty').hidden=any;
+    if(history.replaceState)history.replaceState(null,'',k==='all'?location.pathname:'#'+k);
+  }
+  btns.forEach(function(b){b.addEventListener('click',function(){apply(b.dataset.kind);});});
+  var h=location.hash.slice(1); if(h&&f.querySelector('[data-kind="'+h+'"]'))apply(h);
+})();
+</script>
+<script src="../universe/frame.js" data-footer></script>
+</body>
+</html>
