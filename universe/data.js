@@ -28,7 +28,15 @@ export const WORLDS = [
   /* No case in the hall: the ring's open arc is the entrance, and a case there blocks the hall's opening shot.
      Reached from the Worlds list and the plain links instead. */
   {id:'moneymap', pin:'Money Map', title:['Money','Map'],
-   line:'Which New York nonprofits run on government money. 20,244 filings.', href:'money-map/'}
+   line:'Which New York nonprofits run on government money. 20,244 filings.', href:'money-map/'},
+  /* Index pages with no case in the hall, like Money Map: reached from the Worlds list and the plain links.
+     The 14 camera stops do not change. */
+  {id:'cornerblock', pin:'Corner Block', title:['Corner','Block'],
+   line:'The live city: one block at 2:14 AM in the rain, to orbit and explore.', href:'corner-block/'},
+  {id:'slides', pin:'Slides', title:['Slides'],
+   line:'Seven interactive decks, each its own small machine.', href:'slides/'},
+  {id:'log', pin:'Log', title:['Log'],
+   line:'What I made, and when.', href:'log/'}
 ];
 
 export const DECKS = [
