@@ -70,7 +70,7 @@ export function createUI({worlds, decks, stops, anchors, actions, contact}){
   nav.addEventListener('click', e => {
     const a = e.target.closest('a'); if (!a) return;
     if (a.dataset.start !== undefined) { e.preventDefault(); openNav(false); actions.toStart(); }
-    else if (a.dataset.world && (fullSheet() || a.dataset.walk === undefined)) { e.preventDefault(); openNav(false); actions.goWorld(a.dataset.world); }
+    else if (a.dataset.world && worldStops.some(s => s.world === a.dataset.world) && (fullSheet() || a.dataset.walk === undefined)) { e.preventDefault(); openNav(false); actions.goWorld(a.dataset.world); }
     else if (a.dataset.walk !== undefined) { if (actions.walkIn(a.getAttribute('href'), e)) e.preventDefault(); openNav(false); }
   });
   /* Desktop command bar (":" or "/"). Not while a sheet or the renders dialog is open. */
