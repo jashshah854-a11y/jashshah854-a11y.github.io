@@ -31,7 +31,7 @@ for (const e of entries) {
   const key = `${MONTHS[m - 1]} ${y}`;
   if (key !== cur) { if (cur) html += '</ul>'; html += `<h2 class="month">${key}</h2><ul class="entries">`; cur = key; }
   const ext = /^https?:/.test(e.href);
-  html += `<li class="entry" data-kind="${e.kind}"><time datetime="${e.date}">${d} ${MONTHS[m - 1].slice(0, 3)}</time><div><h2><a href="${esc(e.href)}"${ext ? ' rel="noopener noreferrer"' : ''}>${esc(e.title)}</a></h2><p>${esc(e.text)} <span class="kind">${LABEL[e.kind]}${ext ? ', on X' : ''}</span></p></div></li>`;
+  html += `<li class="entry" data-kind="${e.kind}"><div class="when dating"><time datetime="${e.date}">${d} ${MONTHS[m - 1].slice(0, 3)}</time><span class="kind">${LABEL[e.kind]}${ext ? ', on X' : ''}</span></div><div><h2><a href="${esc(e.href)}"${ext ? ' rel="noopener noreferrer"' : ''}>${esc(e.title)}</a></h2><p>${esc(e.text)}</p></div></li>`;
 }
 if (cur) html += '</ul>';
 const page = fs.readFileSync(htmlPath, 'utf8');
