@@ -298,9 +298,9 @@ figcaption { margin-top: 8px; color: var(--muted); font-size: 15px; max-width: 7
       <h3>Phones and memory</h3>
       <div class="split">
         <div class="prose">
-          <p>On a phone the full city runs out of memory and iOS Safari kills the tab. So phones go to a lighter page: a looping recording of the live city, with the camera orbiting the block.</p>
+          <p>At first, the full city ran out of memory on a phone and iOS Safari killed the tab. So phones went to a lighter page: a looping recording of the live city, with the camera orbiting the block.</p>
           <p>I built a phone mode to change that. It brings the memory estimate for the city from about 1,420 MB down to about 538 MB, by capping textures at 1,024 pixels, sharing duplicate textures, freeing the CPU copies of images after they upload, and halving the render targets. Compression then cut the phone download from 117 MB to 58 MB. The desktop city does not change.</p>
-          <p>The first time I opened it on my iPhone, it sat on "Loading the city" and never drew. Nobody could tell a slow download from a killed tab. So the next version keeps a log on the phone that survives a crash, and its memory peak while loading fell from 511 MB to 342 MB. Those figures are estimates from my own memory probe, not Safari's. The main link keeps sending iPhones to the recording until my phone passes that test.</p>
+          <p>The first time I opened it on my iPhone, it sat on "Loading the city" and never drew. Nobody could tell a slow download from a killed tab. So the next version keeps a log on the phone that survives a crash, and its memory peak while loading fell from 511 MB to 342 MB. Those figures are estimates from my own memory probe, not Safari's. My phone passed that test: the city drew at about 16 frames a second with no crash, and the first view took about 30 seconds. So phones now open the live city, and fall back to the recording if the city cannot finish loading.</p>
           <p>My own PC hit the same wall. With nine agents running at once it lagged, so I capped it at six.</p>
         </div>
         <figure class="narrow">
@@ -326,7 +326,7 @@ figcaption { margin-top: 8px; color: var(--muted); font-size: 15px; max-width: 7
         </a>
         <a class="btn quiet" href="../../cyberpunk/">The phone page</a>
       </div>
-      <p class="note">The live city builds the whole block in your browser. A still picture shows at once, and the live city follows in about a minute. Best on a desktop with a graphics card. On a phone, use the phone page.</p>
+      <p class="note">The live city builds the whole block in your browser. A still picture shows at once, and the live city follows in about a minute. Best on a desktop with a graphics card. If a phone cannot finish loading it, the phone page has the recording.</p>
     </section>
   </main>
 </div>
