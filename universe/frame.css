@@ -36,3 +36,4 @@
 .site-strip a:focus-visible{outline:2px solid #c9a35b;outline-offset:4px}
 .frame-hide{opacity:0!important;pointer-events:none!important}
 @media (max-width:520px){.site-foot a{font-size:14px;padding:0 10px}.site-foot .pdf{display:none}}
+.site-foot .pdf{margin-left:.3em}
