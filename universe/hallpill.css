@@ -20,3 +20,9 @@
 .hall-pill[data-late]{opacity:0;pointer-events:none}
 .hall-pill[data-late].on{opacity:1;pointer-events:auto}
 @media (prefers-reduced-motion:reduce){.hall-pill{transition:none}}
+/* The shared top rail. Every world page with a floating pill puts it, and Contact beside it, in the same top-left slot at
+   every size, so it is never in a different corner. Pages keep that slot free (see --rail-w) instead of moving the pills.
+   Pages with data-late (they scroll and carry their own back link) keep their own place. */
+:root{--rail-t:10px;--rail-l:8px;--rail-w:116px}
+@media (min-width:701px){:root{--rail-l:16px;--rail-w:320px}}
+.hall-pill:not([data-late]),.hall-pill:not([data-late])[data-at]{top:calc(var(--rail-t) + env(safe-area-inset-top))!important;bottom:auto!important;left:max(var(--rail-l),env(safe-area-inset-left))!important}
