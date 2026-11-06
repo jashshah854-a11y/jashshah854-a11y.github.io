@@ -248,7 +248,7 @@ dialog#renders img{width:100%;height:auto;border-radius:12px;display:block}
   #cardTitle{font-size:44px}
   #cardTitle em{display:inline}
   #cardLine{font-size:16px}
-  .pin{display:none}
+  .pin.perp,.pin.deck{display:none}
   /* Worlds: a full-screen list. Contact: a bottom sheet. */
   #worlds{inset:0;width:auto;max-height:none;border-radius:0;border:0;background:rgba(12,11,10,.97);padding:0 14px calc(24px + env(safe-area-inset-bottom));z-index:60}
   #contact{left:0;right:0;top:auto;bottom:0;width:auto;max-height:80dvh;border-radius:22px 22px 0 0;padding:0 14px calc(18px + env(safe-area-inset-bottom));z-index:60}

@@ -11,7 +11,7 @@ export function makeMaterials(lite){
     brassDk: std({color:'#7d6034', metalness:0.85, roughness:0.42}),
     steel:   std({color:'#9aa3a5', metalness:0.92, roughness:0.28}),
     enamel:  std({color:'#1b2924', metalness:0.25, roughness:0.38}),
-    marble:  std({color:'#d6d0c0', metalness:0.0,  roughness:0.52}),
+    marble:  std({color:'#9d9583', metalness:0.0,  roughness:0.52}),
     plaster: std({color:'#e4dfd0', metalness:0.0,  roughness:0.85, emissive:'#c9b894', emissiveIntensity:0.05}),
     dark:    std({color:'#0e0d0b', metalness:0.2, roughness:0.7}),
     glass: new THREE.MeshStandardMaterial({color:'#cfe8de', transparent:true, opacity:0.11, roughness:0.04, metalness:0, side:THREE.DoubleSide, depthWrite:false, envMapIntensity:4.2}),

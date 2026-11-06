@@ -149,11 +149,11 @@ export function buildHall({scene, lite, perpetua, video = true}){
   const side = new THREE.Vector3(L.LINE_DIR.z, 0, -L.LINE_DIR.x);
   const WALL_END = 118;                         // the back wall stops before the rotunda
   const pierGeo = new THREE.BoxGeometry(9, 80, 5); pierGeo.translate(0, 40, 0);
-  const pierMat = new THREE.MeshStandardMaterial({color:'#7b7465', metalness:0, roughness:0.9, emissive:'#6d5a3c', emissiveIntensity:0.12});
+  const pierMat = new THREE.MeshStandardMaterial({color:'#4a453a', metalness:0, roughness:0.9, emissive:'#6d5a3c', emissiveIntensity:0.06});
   const washGeo = new THREE.PlaneGeometry(1, 1); washGeo.translate(0, 0.5, 0);
-  const washMat = additive(wash, '#ffffff', 0.9);
+  const washMat = additive(wash, '#ffffff', 0.5);
   const floorWashGeo = new THREE.PlaneGeometry(1, 1); floorWashGeo.translate(0, 0.5, 0); floorWashGeo.rotateX(Math.PI/2);
-  const floorWashMat = additive(wash, '#ffd9a0', 0.32); floorWashMat.side = THREE.DoubleSide;
+  const floorWashMat = additive(wash, '#ffd9a0', 0.2); floorWashMat.side = THREE.DoubleSide;
   const piers = [];
   for (let a = -52; a <= WALL_END; a += 44) piers.push({p:L.LINE_P0.clone().addScaledVector(L.LINE_DIR, a).addScaledVector(side, 58), yaw:Math.atan2(-side.x, -side.z)});
   for (let a = -10; a <= WALL_END - 20; a += 70) piers.push({p:L.LINE_P0.clone().addScaledVector(L.LINE_DIR, a).addScaledVector(side, -100), yaw:Math.atan2(side.x, side.z), dim:true});
@@ -726,8 +726,9 @@ export function buildHall({scene, lite, perpetua, video = true}){
     const key = (a || '') + '|' + (b || '');
     if (key === focused) return;
     focused = key; shaftHide.clear();
+    if (a === '*') linkShafts.forEach((g, i) => shaftHide.add(i));     // the hall view: no rod crosses a case
     for (const id of [a, b]) {
-      if (!id) continue;
+      if (!id || id === '*') continue;
       for (const p of portals) if (p.slot === id || (id === 'decks' && p.slot.startsWith('deck-'))) p.prioritize();
       const k = SLOT_INDEX[id];
       shaftHide.add(k); shaftHide.add(k - 1);

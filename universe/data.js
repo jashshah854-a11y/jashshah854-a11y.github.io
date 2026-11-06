@@ -118,7 +118,8 @@ export const JOURNEY = [
    pos:{at:'hall', p:[30, 20, 188]}, target:{at:'hall', p:[0, 10, 30]}, pscale:1.4,
    portrait:{pos:{at:'hall', p:[3, 22, 188]}, target:{at:'hall', p:[0, 9, 30]}}},
   {id:'hall',    copy:'hall', look:'hall', hold:3.4, label:'The hall of worlds', pins:'hall',
-   pos:{at:'hall', p:[-30, 25, 108]}, target:{at:'hall', p:[30, 15, 6]}, pscale:1.3},
+   pos:{at:'hall', p:[46, 22, 60]}, target:{at:'hall', p:[36, 22, -60]}, fov:29, pscale:1.0,
+   portrait:{pos:{at:'hall', p:[46, 27, 52]}, target:{at:'hall', p:[50, 15, -58]}}},
   /* Stand off the left end of the row and look along it. Square on from across the rotunda, the seven small cases sat
      in a thin band with the top 40% of the frame empty. pscale 1: a portrait pull-back would lose the near cases. */
   slot('decks', {d:42, side:-37, up:8.0, shift:10.0, lookUp:-1.5, hold:3.6, pscale:1.0, pAim:0}),
@@ -143,7 +144,8 @@ export const JOURNEY = [
   {id:'all',     look:'far', hold:1.2, copy:'hall2',
    pos:{at:'hall', p:[0, 120, 215]}, target:{at:'hall', p:[0, 8, -8]}, fov:36, pscale:1.0},
   {id:'end',     copy:'end', look:'far', hold:2.6, label:'Built by Jash Shah', still:true,
-   pos:{at:'hall', p:[-120, 175, 120]}, target:{at:'hall', p:[0, 0, -6]}, fov:36, pscale:1.0}
+   pos:{at:'hall', p:[-150, 215, 150]}, target:{at:'hall', p:[-26, 34, 0]}, fov:36, pscale:1.0,
+   portrait:{pos:{at:'hall', p:[-120, 175, 120]}, target:{at:'hall', p:[0, 0, -6]}}}
 ];
 
 /* Share of the whole scroll that is dwell (vs. travel). */

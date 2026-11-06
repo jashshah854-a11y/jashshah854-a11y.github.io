@@ -501,6 +501,7 @@ function activeStop(sc){
    of the one being approached, so no drive line crosses the transit shot. */
 function focusShafts(sample){
   const fr = journey.frames;
+  if (fr[sample.i].id === 'rise' || fr[sample.i].id === 'hall') { hall.focusWorld('*'); return; }   // the hall shot: rods stay out of the cases' way
   if (sample.dwelling) { hall.focusWorld(fr[sample.i].world || null); return; }
   let a = null, b = null;
   for (let k = sample.i; k >= 0 && !a; k--) a = fr[k].world || null;
@@ -572,7 +573,7 @@ function stillsFrame(time, deltaMs){
   perpetua.update(state.theta);
   place(stillSample, stillSc); applyLook(stillSample, stillSc);
   paintBackdrop(stillSample.i === 0 ? 1 - smooth((stillSample.f - 0.15)/0.7) : 0);
-  hall.focusWorld(journey.frames[stillSample.near].world || null);
+  hall.focusWorld(['rise', 'hall'].includes(journey.frames[stillSample.near].id) ? '*' : journey.frames[stillSample.near].world || null);
   hall.update({spin:0, time:clock, dt, camPos:camera.position, view:lite ? {camera, h:renderer.domElement.height} : null});
   if (key.intensity > 0.02) renderer.shadowMap.needsUpdate = true;
   ui.updatePins(camera, innerWidth, innerHeight, true);
