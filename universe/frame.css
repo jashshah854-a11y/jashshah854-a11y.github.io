@@ -1,0 +1,36 @@
+/* Shared frame, second half: the Contact control that sits beside the hall pill on every world, and the one footer
+   for pages that scroll. Colours are the real tokens from universe.css :root (--night, --paper, --gold, --muted);
+   hallpill.css already uses the same literals, so the two read as one piece. */
+.contact-pill{position:fixed;z-index:2147483000;display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 16px 0 13px;border-radius:999px;background:rgba(12,11,10,.82);border:1px solid rgba(239,238,232,.38);color:#efeee8;font:500 15px/1 "Instrument Sans",system-ui,sans-serif;letter-spacing:0;white-space:nowrap;cursor:pointer;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 2px 14px rgba(0,0,0,.25);transition:opacity .3s,background .2s}
+.contact-pill svg{fill:none;stroke:currentColor;stroke-width:1.6;flex:none}
+@media (hover:hover) and (pointer:fine){.contact-pill:hover{background:rgba(12,11,10,.95);color:#fff}}
+.contact-pill:active,.contact-pill[aria-expanded=true]{background:rgba(12,11,10,.95)}
+.contact-pill:focus-visible{outline:2px solid #c9a35b;outline-offset:3px}
+@media (max-width:700px){.contact-pill{width:44px;height:44px;padding:0;gap:0;justify-content:center;font-size:0}}
+.contact-pill[data-late]{opacity:0;pointer-events:none}
+.contact-pill[data-late].on{opacity:1;pointer-events:auto}
+.contact-panel{position:fixed;z-index:2147483001;min-width:200px;padding:6px;border-radius:14px;background:rgba(12,11,10,.94);border:1px solid rgba(239,238,232,.38);box-shadow:0 8px 28px rgba(0,0,0,.4);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.contact-panel[hidden]{display:none}
+.contact-panel a{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:44px;padding:0 14px;border-radius:9px;color:#efeee8;font:500 15px/1 "Instrument Sans",system-ui,sans-serif;text-decoration:none}
+.contact-panel a span{color:#c9c4b6;font-weight:400;font-size:13px}
+@media (hover:hover) and (pointer:fine){.contact-panel a:hover{background:rgba(239,238,232,.1);color:#fff}}
+.contact-panel a:focus-visible{outline:2px solid #c9a35b;outline-offset:-2px}
+/* The footer: one line of real links, quiet, for pages that scroll to an end. */
+.site-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 28px;padding:28px max(20px,4vw) calc(28px + env(safe-area-inset-bottom));background:#14130f;color:#c9c4b6;font:400 15px/1.4 "Instrument Sans",system-ui,sans-serif;border-top:1px solid rgba(239,238,232,.14)}
+.site-foot b{font-weight:500;color:#efeee8}
+.site-foot nav{display:flex;flex-wrap:wrap;gap:4px 8px}
+.site-foot a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border-radius:999px;border:1px solid rgba(239,238,232,.28);color:#efeee8;text-decoration:none}
+@media (hover:hover) and (pointer:fine){.site-foot a:hover{background:rgba(239,238,232,.1);color:#fff}}
+.site-foot a:focus-visible{outline:2px solid #c9a35b;outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.contact-pill{transition:none}}
+/* The strip for app pages. Same night colour and 12.5px type as MGMTIO's own back strip, which it extends. */
+.site-strip{height:30px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px;background:#14130f;border-bottom:1px solid rgba(239,238,232,.1);font:400 12.5px/1 "Instrument Sans",system-ui,sans-serif;position:relative;z-index:50}
+.site-strip>a{position:relative;display:inline-flex;align-items:center;gap:7px;color:#c9c4b6;text-decoration:none;font-size:12.5px}
+.site-strip>a::after{content:"";position:absolute;inset:-13px -12px}
+.site-strip a svg{fill:none;stroke:currentColor;stroke-width:1.6}
+.strip-links{display:flex;gap:18px}
+.strip-links a{position:relative;color:#c9c4b6;text-decoration:none;font-size:12.5px}
+.strip-links a::after{content:"";position:absolute;inset:-13px -8px}
+@media (hover:hover) and (pointer:fine){.site-strip a:hover{color:#efeee8}}
+.site-strip a:focus-visible{outline:2px solid #c9a35b;outline-offset:4px}
+.frame-hide{opacity:0!important;pointer-events:none!important}
