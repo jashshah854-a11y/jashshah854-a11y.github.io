@@ -35,7 +35,7 @@
       var strip = document.querySelector('.back-strip') || document.createElement('div');
       if (!strip.parentNode) {
         strip.className = 'back-strip site-strip';
-        strip.innerHTML = '<a href="' + base + 'index.html#' + (s.dataset.hall || 'hall') + '">' + ARROW + 'Jash Shah</a>';
+        strip.innerHTML = '<a href="' + base + 'index.html#' + (s.dataset.hall || 'hall') + '">' + ARROW + 'Back to the hall</a>';
         document.body.insertBefore(strip, document.body.firstChild);
       }
       strip.classList.add('site-strip');
@@ -50,7 +50,7 @@
       var f = document.createElement('footer');
       f.className = 'site-foot';
       f.innerHTML = '<span><b>Jash Shah</b>. Growth marketer who builds working tools, not just reports.</span><nav aria-label="Contact">' +
-        LINKS.map(function (k) { return '<a href="' + k[1] + '"' + rel(k[1]) + '>' + k[0] + (k[2] ? ' (' + k[2] + ')' : '') + '</a>'; }).join('') +
+        LINKS.map(function (k) { return '<a href="' + k[1] + '"' + rel(k[1]) + '>' + k[0] + (k[2] ? '<span class="pdf"> (' + k[2] + ')</span>' : '') + '</a>'; }).join('') +
         '<a href="' + base + 'index.html#hall">Back to the hall</a></nav>';
       document.body.appendChild(f);
       // The footer carries the same links and a way back, so the floating pills step aside while it is on screen.
@@ -87,10 +87,18 @@
       btn.style.left = (r.right + 8) + 'px';
       btn.style.top = r.top + 'px';
       var b = btn.getBoundingClientRect();
+      // The three links open as one row to the right of Contact, level with the pills, so the panel covers a strip, not a block.
+      // When the row would run off the screen it drops under the pair instead.
       var below = r.top < innerHeight / 2;
-      panel.style.left = Math.max(8, Math.min(b.left, innerWidth - 216)) + 'px';
-      panel.style.top = below ? (b.bottom + 8) + 'px' : 'auto';
-      panel.style.bottom = below ? 'auto' : (innerHeight - b.top + 8) + 'px';
+      var w = panel.offsetWidth || 300;
+      if (b.right + 8 + w <= innerWidth - 8) {
+        panel.style.left = (b.right + 8) + 'px';
+        panel.style.top = r.top + 'px'; panel.style.bottom = 'auto';
+      } else {
+        panel.style.left = Math.max(8, r.left) + 'px';
+        panel.style.top = below ? (b.bottom + 8) + 'px' : 'auto';
+        panel.style.bottom = below ? 'auto' : (innerHeight - b.top + 8) + 'px';
+      }
     }
     function close() { panel.hidden = true; btn.setAttribute('aria-expanded', 'false'); }
     btn.addEventListener('click', function (e) {
